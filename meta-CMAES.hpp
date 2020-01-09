@@ -12,10 +12,7 @@
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/include/for_each.hpp>
 
-#include <sferes/stc.hpp>
-#include <sferes/ea/ea.hpp>
-#include <safety_measures.hpp/gen/sampled.hpp>
-#include <sferes/fit/fitness.hpp>
+
 
 #include <Eigen>
 
@@ -29,11 +26,11 @@
 
 #include <sferes2/modules/map_elites.hpp>
 
-#include <meta-map-elites/fit_bottom.hpp>
+#include <meta-cmaes/fit_bottom.hpp>
 
-#include <meta-map-elites/fit_top.hpp>
+#include <<meta-cmaes/fit_top.hpp>
 
-#include <meta-map-elites/params.hpp>
+#include <<meta-cmaes/params.hpp>
 
 namespace sferes
 {
