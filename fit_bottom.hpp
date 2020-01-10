@@ -4,6 +4,8 @@
 
 
 #include <modules/map_elites/fit_map.hpp>
+#include <rhex_dart/safety_measures.hpp>
+#include <rhex_dart/descriptors.hpp>
 
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
@@ -81,7 +83,7 @@ protected:
         {
             desc.resize(3);
             std::vector<double> v;
-            desc = indiv.get_desc();
+            desc = indiv.get_desc(simu);
 
                         //simu.get_descriptor<rhex_dart::descriptors::BodyOrientation>(v);
             // desc[0] = v[0];

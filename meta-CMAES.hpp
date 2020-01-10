@@ -14,7 +14,7 @@
 
 
 
-#include <Eigen>
+#include <Eigen/Dense>
 
 #ifdef BINARY
 #include <modules/map_elites/stat_map_binary.hpp>
@@ -24,19 +24,32 @@
 
 #include <modules/map_elites/stat_progress.hpp>
 
-#include <sferes2/modules/map_elites.hpp>
+#include <modules/map_elites/map_elites.hpp>
 
 #include <meta-cmaes/fit_bottom.hpp>
 
-#include <<meta-cmaes/fit_top.hpp>
+#include <meta-cmaes/fit_top.hpp>
 
-#include <<meta-cmaes/params.hpp>
+
+#include <meta-cmaes/phenotype.hpp>
+#include <meta-cmaes/bottom_typedefs.hpp>
+//#include <meta-cmaes/params.hpp>
 
 namespace sferes
 {
 
 namespace ea
 {
+/* struct to store all of a bottom-level individual's information 
+        -base-features
+        -fitness
+        -phenotype
+*/
+struct DataEntry
+{
+    base_features_t base_features;
+    bottom_indiv_t individual; // bottom-level genotype, bottom-level fitness
+};
 
 // we code meta-map-elites as simply map-elites with three differences:
 // 1. the first features describe the top-level
@@ -66,7 +79,7 @@ public:
     const size_t num_maps = 5;
     
 
-    std::vector<boost::shared_ptr<DataEntry>> database_t;
+    std::vector<DataEntry> database_t;
     datahase_t data;
 
     MetaCmaes()
@@ -126,9 +139,9 @@ public:
     {
         // do bottom-level random pop only, adding bottom-level individuals to the database
         database.resize(Params::pop::init_size);
-        BOOST_FOREACH (boost::shared_ptr<Phen> &indiv, database)
+        BOOST_FOREACH (indiv_t &indiv, database)
         {
-            indiv = boost::shared_ptr<Phen>(new Phen());
+            indiv = indiv_t(new indiv_t());
             indiv->random();
         }
     }

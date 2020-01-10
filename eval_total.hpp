@@ -1,6 +1,7 @@
 #include <boost/shared_ptr.hpp>
 #include <sferes/dbg/dbg.hpp>
 #include <sferes/stc.hpp>
+#include <sferes/eval/eval.hpp>
 
 // eval class which allows us to:
 // 1. 
@@ -9,7 +10,7 @@
 namespace sferes {
   namespace eval {
     const size_t bottom_epochs = 10;
-    SFERES_EVAL(EvalTotal) {
+    SFERES_EVAL(EvalTotal,Eval) {
     public:
       EvalTotal() : _nb_evals(0) {}
       template<typename Phen>

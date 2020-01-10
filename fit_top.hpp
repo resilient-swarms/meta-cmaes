@@ -3,6 +3,7 @@
 #define FIT_TOP_HPP_
 
 #include <modules/map_elites/fit_map.hpp>
+#include <meta-cmaes/bottom_typedefs.hpp>
 
 
 const size_t num_world_options = 10;
@@ -16,7 +17,6 @@ FIT_MAP(FitTop)
 public:
     /* current bottom-level map (new candidate to be added to _pop)*/
     
-    indiv_t current_map;
     template <typename MetaIndiv>
     void eval(MetaIndiv & indiv)
     {
@@ -26,7 +26,7 @@ public:
         this->_objs.resize(1);
         std::fill(this->_objs.begin(), this->_objs.end(), 0);
         this->_dead = false;
-        _eval(indiv);
+        _eval<MetaIndiv>(indiv);
         //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         // std::cout << "Time difference = " <<     std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
     }
@@ -47,13 +47,12 @@ protected:
     bool _dead;
     std::vector<double> _ctrl;
     float num_bd_calcs;
-    size_t nb_evals = 0;
     
     // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
     std::unordered_set<size_t> pickSet(size_t N, size_t k, std::mt19937& gen)
     {
         std::uniform_int_distribution<> dis(1, N);
-        std::unordered_set<size_t elems;
+        std::unordered_set<size_t> elems;
 
         while (elems.size() < k) {
             elems.insert(dis(gen));
@@ -66,7 +65,8 @@ protected:
         std::mt19937 gen(rd());
 
         std::unordered_set<size_t> elems = pickSet(N, k, gen);
-        return  std::vector<int> result(elems.begin(), elems.end());
+        std::vector<int> result(elems.begin(), elems.end());
+        return result;
     }
 
     // descriptor work done here, in this case duty cycle
@@ -74,35 +74,28 @@ protected:
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        num_bd_calcs = 0.0;
-        std::vector<float> avg_bd = {0.0, 0.0, 0.0};
-        size_t num_individuals = std::max(1, (size_t)0.10 * current_map->_pop.size());
-        std::vector<size_t> individuals = pick(num_individuals, current_map->_pop.size());
+        size_t num_individuals = std::max(1, (size_t)0.10 * meta_indiv->_pop.size());
+        std::vector<size_t> individuals = pick(num_individuals, meta_indiv->_pop.size());
         for(size_t individual: individuals)
         {
-            Indiv indiv = current_map->_pop[index];
+            bottom_indiv_t indiv = meta_indiv->_pop[individual];
             for (size_t world_option = 0; world_option < num_world_options; ++world_option)
             {
-                eval_single_envir<Indiv>(indiv, world_option, avg_fitness, avg_bd);
+                _eval_single_envir(indiv, world_option, avg_fitness);
             }
         }
-
-        avg_bd[0] /= num_bd_calcs;
-        avg_bd[1] /= num_bd_calcs;
-        avg_bd[2] /= num_bd_calcs;
-        this->set_desc(avg_bd);
-        this->_value = avg_fitness / num_calcs; // no need to divide
+        this->_value = avg_fitness / (float) (num_individuals*num_world_options); // no need to divide
         this->_dead = false;
         nb_evals = individuals.size() * num_world_options;
     }
-
-    void _eval_single_envir(Indiv & indiv, size_t world_option, float &avg_fitness, std::vector<float> &avg_bd)
+ 
+    void _eval_single_envir(bottom_indiv_t & indiv, size_t world_option, float &avg_fitness)
     {
         // copy of controller's parameters
         _ctrl.clear();
 
         for (size_t i = 0; i < 24; i++)
-            _ctrl.push_back(indiv.data(i));
+            _ctrl.push_back(indiv->gen().data(i));
 
         // launching the simulation
         auto robot = global::global_robot->clone();
@@ -124,19 +117,8 @@ protected:
         }
         else
         {
-            desc.resize(3);
-            std::vector<double> v;
-            simu.get_descriptor<rhex_dart::descriptors::BodyOrientation>(v);
-            desc[0] = safety();
-            desc[1] = power_consumption();
-            desc[2] = 0.0;
             // update the meta-fitness
             avg_fitness += fitness;
-            // update the meta-descriptor
-            bd[0] += desc[0];
-            bd[1] += desc[1];
-            bd[2] += desc[2];
-            ++num_bd_calcs;
         }
     }
 

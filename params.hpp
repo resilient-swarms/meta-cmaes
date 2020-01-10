@@ -1,35 +1,21 @@
-#include <boost/random.hpp>
-#include <iostream>
-#include <mutex>
+#ifndef META_CMAES_PARAMS_HPP
+#define META_CMAES_PARAMS_HPP
+
+
+#include <sferes/phen/parameters.hpp>
+#include <sferes/fit/fitness.hpp>
 
 #include <sferes/gen/evo_float.hpp>
-#include <sferes/gen/sampled.hpp>
-#include <sferes/modif/dummy.hpp>
-#include <sferes/phen/parameters.hpp>
-#include <sferes/run.hpp>
-#include <sferes/stat/pareto_front.hpp>
+
+using namespace sferes;
+using namespace sferes::gen::evo_float;
 
 
-
-#include <meta-map-elites/phenotype.hpp>
-#include <chrono>
-
-#ifdef GRAPHIC
-// #define NO_PARALLEL
-#endif
-
-#define NO_MPI
-
-#ifndef NO_PARALLEL
-#include <sferes/eval/parallel.hpp>
-#ifndef NO_MPI
-#include <sferes/eval/mpi.hpp>
-#endif
-#else
-#include <sferes/eval/eval.hpp>
-#endif
-
-
+namespace global
+{
+    std::shared_ptr<rhex_dart::Rhex> global_robot;
+    std::vector<rhex_dart::RhexDamage> damages;
+}; // namespace global
 
 /* params for the bottom-level map */
 struct BottomParams {
@@ -74,7 +60,6 @@ struct BottomParams {
 
 /* params for the top-level map */
 struct Params {
-
     // grid properties, discretise 3 dimensions into 10 bins each
     struct ea {
         SFERES_CONST size_t behav_dim = 2;
@@ -111,3 +96,6 @@ struct Params {
         SFERES_CONST float max = 1.0f;
     };
 };
+
+
+#endif
