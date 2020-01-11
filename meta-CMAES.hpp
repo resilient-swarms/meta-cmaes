@@ -12,27 +12,15 @@
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/include/for_each.hpp>
 
-
-
 #include <Eigen/Dense>
-
-#ifdef BINARY
-#include <modules/map_elites/stat_map_binary.hpp>
-#else
-#include <modules/map_elites/stat_map.hpp>
-#endif
-
-#include <modules/map_elites/stat_progress.hpp>
-
-#include <modules/map_elites/map_elites.hpp>
 
 #include <meta-cmaes/fit_bottom.hpp>
 
 #include <meta-cmaes/fit_top.hpp>
 
+#include <meta-cmaes/top_typedefs.hpp>
 
-#include <meta-cmaes/phenotype.hpp>
-#include <meta-cmaes/bottom_typedefs.hpp>
+#include <sferes/ea/cmaes.hpp>
 //#include <meta-cmaes/params.hpp>
 
 namespace sferes
@@ -45,11 +33,6 @@ namespace ea
         -fitness
         -phenotype
 */
-struct DataEntry
-{
-    base_features_t base_features;
-    bottom_indiv_t individual; // bottom-level genotype, bottom-level fitness
-};
 
 // we code meta-map-elites as simply map-elites with three differences:
 // 1. the first features describe the top-level
@@ -59,51 +42,61 @@ struct DataEntry
 const size_t MAP_REFRESH = 5;
 
 // Main class
-SFERES_EA(MetaCmaes, Cmaes)
+SFERES_EA(MetaCmaes, sferes::ea::Cmaes)
 {
 public:
-
-    typedef boost::shared_ptr<MapElitesPhenotype> indiv_t;
+    typedef boost::shared_ptr<phen_t> indiv_t;
     typedef typename std::vector<indiv_t> pop_t;
     typedef typename pop_t::iterator it_t;
     typedef typename std::vector<std::vector<indiv_t>> front_t;
-    typedef boost::shared_ptr<MapElitesPhenotype> phen_ptr_t;
-    static const size_t behav_dim = Params::ea::behav_dim;
-
-    typedef std::array<float, behav_dim> point_t;
-    typedef boost::multi_array<phen_ptr_t, behav_dim> array_t;
-    typedef std::array<typename array_t::index, behav_dim> behav_index_t;
-
-    behav_index_t behav_shape;
+    typedef boost::shared_ptr<phen_t> phen_ptr_t;
 
     const size_t num_maps = 5;
-    
 
-    std::vector<DataEntry> database_t;
-    datahase_t data;
 
-    MetaCmaes()
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::dim;
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::cmaes_t;
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_evo;
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_ar_funvals;
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_cmaes_pop;
+    using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_lambda;
+
+    struct DataEntry
+    {
+        base_features_t base_features;
+        float fitness; // bottom-level fitness
+    };
+
+    typedef std::vector<DataEntry> database_t;
+    database_t database;
+
+    MetaCmaes() 
     {
     }
 
-
-    bottom_indiv_t entry_to_bottomindividual(const DataEntry &entry)
+    bottom_indiv_t entry_to_bottomindividual(const DataEntry &entry, const weight_t& weight)
     {
-        bottom_indiv_t individual;
-        individual->get_weights();
+        
+        // use weight and base features --> bottom-level features
+        
+        // create new individual
+        base_phen_t individual = base_phen_t();
+        //
+        individual.fit().set_desc(individual.obtain_descriptor(weight, entry.base_features));
+        individual.fit().set_value(entry.fitness);
+        return individual;
+
     }
- 
 
     /* fill map j with individuals */
     void fill_new_map(size_t j)
     {
         for (int i = 0; i < database.size(); ++i)
         {
-            bottom_indiv_t individual = entry_to_bottomindividual(database[i],this->_pop[i]->gen().data());
+            bottom_indiv_t individual = entry_to_bottomindividual(database[i], this->_pop[i]->gen().data());
             this->_pop[j]->_add_to_archive(individual);
         }
     }
-
 
     /* main loop here */
     void epoch()
@@ -113,35 +106,34 @@ public:
         // copy pop
         for (size_t i = 0; i < this->_pop.size(); ++i)
         {
-          for (size_t j = 0; j < this->_pop[i]->size(); ++j) {
-            this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
-            this->_pop[i]->develop();
-          }
-          fill_new_map(i); // after genotype is assigned, compute the resulting map accordingly
+            for (size_t j = 0; j < this->_pop[i]->size(); ++j)
+            {
+                this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
+                this->_pop[i]->develop();
+            }
+            fill_new_map(i); // after genotype is assigned, compute the resulting map accordingly
         }
 
-        // evaluate the population of maps
-        pop_t ptmp;
-        ptmp.push_back(current_map);
+        
         // eval
         this->_eval_pop(this->_pop, 0, this->_pop.size());
         this->apply_modifier();
-        for (size_t i = 0; i < this->_pop.size(); ++i) {
-          //warning: CMAES minimizes the fitness...
-          _ar_funvals[i] = - this->_pop[i]->fit().value();
+        for (size_t i = 0; i < this->_pop.size(); ++i)
+        {
+            //warning: CMAES minimizes the fitness...
+            _ar_funvals[i] = -this->_pop[i]->fit().value();
         }
         // update CMAES distribution
         cmaes_UpdateDistribution(&_evo, _ar_funvals);
     }
 
-
     void random_pop()
     {
         // do bottom-level random pop only, adding bottom-level individuals to the database
-        database.resize(Params::pop::init_size);
-        BOOST_FOREACH (indiv_t &indiv, database)
+        database.resize(BottomParams::pop::init_size);
+        BOOST_FOREACH (indiv_t indiv, database)
         {
-            indiv = indiv_t(new indiv_t());
+            indiv = indiv_t();
             indiv->random();
         }
     }

@@ -11,11 +11,6 @@ using namespace sferes;
 using namespace sferes::gen::evo_float;
 
 
-namespace global
-{
-    std::shared_ptr<rhex_dart::Rhex> global_robot;
-    std::vector<rhex_dart::RhexDamage> damages;
-}; // namespace global
 
 /* params for the bottom-level map */
 struct BottomParams {
@@ -59,34 +54,34 @@ struct BottomParams {
 
 
 /* params for the top-level map */
-struct Params {
+struct CMAESParams {
     // grid properties, discretise 3 dimensions into 10 bins each
-    struct ea {
-        SFERES_CONST size_t behav_dim = 2;
-        SFERES_ARRAY(size_t, behav_shape, 4, 4); // 16 cells based on two meta-descriptors
-        SFERES_CONST float epsilon = 0.00;
-    };
+    // struct ea {
+    //     SFERES_CONST size_t behav_dim = 2;
+    //     SFERES_ARRAY(size_t, behav_shape, 4, 4); // 16 cells based on two meta-descriptors
+    //     SFERES_CONST float epsilon = 0.00;
+    // };
 
-    struct evo_float {
-        // we choose the polynomial mutation type
-        SFERES_CONST mutation_t mutation_type = polynomial;
-        // we choose the polynomial cross-over type
-        SFERES_CONST cross_over_t cross_over_type = sbx;
-        // the mutation rate of the real-valued vector
-        SFERES_CONST float mutation_rate = 0.1f;
-        // the cross rate of the real-valued vector
-        SFERES_CONST float cross_rate = 0.5f;
-        // a parameter of the polynomial mutation
-        SFERES_CONST float eta_m = 15.0f;
-        // a parameter of the polynomial cross-over
-        SFERES_CONST float eta_c = 10.0f;
-    };
+    // struct evo_float {
+    //     // we choose the polynomial mutation type
+    //     SFERES_CONST mutation_t mutation_type = polynomial;
+    //     // we choose the polynomial cross-over type
+    //     SFERES_CONST cross_over_t cross_over_type = sbx;
+    //     // the mutation rate of the real-valued vector
+    //     SFERES_CONST float mutation_rate = 0.1f;
+    //     // the cross rate of the real-valued vector
+    //     SFERES_CONST float cross_rate = 0.5f;
+    //     // a parameter of the polynomial mutation
+    //     SFERES_CONST float eta_m = 15.0f;
+    //     // a parameter of the polynomial cross-over
+    //     SFERES_CONST float eta_c = 10.0f;
+    // };
 
     // save map every 50 iterations
     struct pop {
         SFERES_CONST unsigned nb_gen = 100001;// used 
         SFERES_CONST int dump_period = 50;// used
-        SFERES_CONST int size        = 0;//not used
+        SFERES_CONST int size        = 5;// number of 
         SFERES_CONST int initial_aleat = 1;
     };
 
@@ -96,6 +91,9 @@ struct Params {
         SFERES_CONST float max = 1.0f;
     };
 };
+
+
+
 
 
 #endif

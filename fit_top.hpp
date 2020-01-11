@@ -2,22 +2,25 @@
 #ifndef FIT_TOP_HPP_
 #define FIT_TOP_HPP_
 
-#include <modules/map_elites/fit_map.hpp>
+#include <sferes/fit/fitness.hpp>
+#include <meta-cmaes/global.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
-
 
 const size_t num_world_options = 10;
 
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
 */
+namespace sferes{
 
-FIT_MAP(FitTop)
+namespace fit{
+
+SFERES_FITNESS(FitTop, sferes::fit::Fitness)
 {
 public:
+    size_t nb_evals = 0;
     /* current bottom-level map (new candidate to be added to _pop)*/
-    
-    template <typename MetaIndiv>
+    template <typename MetaIndiv> 
     void eval(MetaIndiv & indiv)
     {
 
@@ -46,7 +49,6 @@ public:
 protected:
     bool _dead;
     std::vector<double> _ctrl;
-    float num_bd_calcs;
     
     // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
     std::unordered_set<size_t> pickSet(size_t N, size_t k, std::mt19937& gen)
@@ -74,11 +76,11 @@ protected:
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        size_t num_individuals = std::max(1, (size_t)0.10 * meta_indiv->_pop.size());
-        std::vector<size_t> individuals = pick(num_individuals, meta_indiv->_pop.size());
+        size_t num_individuals = std::max(1, (size_t)(0.10 * meta_indiv._pop.size()));
+        std::vector<size_t> individuals = pick(num_individuals, meta_indiv._pop.size());
         for(size_t individual: individuals)
         {
-            bottom_indiv_t indiv = meta_indiv->_pop[individual];
+            bottom_indiv_t indiv = meta_indiv._pop[individual];
             for (size_t world_option = 0; world_option < num_world_options; ++world_option)
             {
                 _eval_single_envir(indiv, world_option, avg_fitness);
@@ -88,8 +90,8 @@ protected:
         this->_dead = false;
         nb_evals = individuals.size() * num_world_options;
     }
- 
-    void _eval_single_envir(bottom_indiv_t & indiv, size_t world_option, float &avg_fitness)
+
+    void _eval_single_envir(bottom_indiv_t indiv, size_t world_option, float &avg_fitness)
     {
         // copy of controller's parameters
         _ctrl.clear();
@@ -99,8 +101,6 @@ protected:
 
         // launching the simulation
         auto robot = global::global_robot->clone();
-        using safe_t = boost::fusion::vector<rhex_dart::safety_measures::BodyColliding, rhex_dart::safety_measures::MaxHeight, rhex_dart::safety_measures::TurnOver>;
-        using desc_t = boost::fusion::vector<rhex_dart::descriptors::BodyOrientation>;
 
         rhex_dart::RhexDARTSimu<rhex_dart::safety<safe_t>, rhex_dart::desc<desc_t>> simu(_ctrl, robot, world_option);
         simu.run(5); // run simulation for 5 seconds
@@ -121,11 +121,7 @@ protected:
             avg_fitness += fitness;
         }
     }
-
-    size_t nb_evals()
-    {
-        return nb_evals;
-    }
 };
-
+}
+}
 #endif

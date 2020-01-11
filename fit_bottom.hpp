@@ -3,39 +3,62 @@
 #define FIT_BOTTOM_HPP_
 
 
-#include <modules/map_elites/fit_map.hpp>
+#include <boost/random.hpp>
+#include <iostream>
+#include <mutex>
+
+
 #include <rhex_dart/safety_measures.hpp>
 #include <rhex_dart/descriptors.hpp>
+#include <meta-cmaes/global.hpp>
+
+
 
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
 */
 
-FIT_MAP(FitBottom)
+class FitBottom
 {
+
 public:
-    size_t nb_evals = 0;
-    template <typename Indiv>
-    void eval(Indiv & indiv)
+    void set_desc(const std::vector<float>& d)
+    {
+        _desc = d;
+    }
+
+    void set_value(float v)
+    {
+        _value = v;
+    }
+    std::vector<float> desc()
+    {
+        return _desc;
+    }
+
+    float value()
+    {
+        return _value;
+    }
+    template <typename Indiv, typename Safe, typename Desc>
+    void eval(Indiv &indiv)
     {
 
         //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-        this->_objs.resize(1);
-        std::fill(this->_objs.begin(), this->_objs.end(), 0);
+        this->_value = 0;
         this->_dead = false;
-        _eval(indiv);
+        _eval<Indiv, Safe, Desc>(indiv);
         //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         // std::cout << "Time difference = " <<     std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
     }
 
     template <class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void serialize(Archive &ar, const unsigned int version)
     {
         dbg::trace trace("fit", DBG_HERE);
 
         ar &boost::serialization::make_nvp("_value", this->_value);
-        ar &boost::serialization::make_nvp("_objs", this->_objs);
     }
 
     bool dead() { return _dead; }
@@ -44,10 +67,12 @@ public:
 protected:
     bool _dead;
     std::vector<double> _ctrl;
+    float _value = 0.0f;
+    std::vector<float> _desc;
 
     // descriptor work done here, in this case duty cycle
-    template <typename Indiv>
-    void _eval(Indiv & indiv)
+    template <typename Indiv, typename Safe, typename Desc>
+    void _eval(Indiv &indiv)
     {
         // copy of controller's parameters
         _ctrl.clear();
@@ -57,10 +82,8 @@ protected:
 
         // launching the simulation
         auto robot = global::global_robot->clone();
-        using safe_t = boost::fusion::vector<rhex_dart::safety_measures::BodyColliding, rhex_dart::safety_measures::MaxHeight, rhex_dart::safety_measures::TurnOver>;
-        using desc_t = boost::fusion::vector<rhex_dart::descriptors::BodyOrientation>;
 
-        rhex_dart::RhexDARTSimu<rhex_dart::safety<safe_t>, rhex_dart::desc<desc_t>> simu(_ctrl, robot);
+        rhex_dart::RhexDARTSimu<rhex_dart::safety<Safe>, rhex_dart::desc<Desc>> simu(_ctrl, robot);
         simu.run(5); // run simulation for 5 seconds
 
         this->_value = simu.covered_distance();
@@ -82,17 +105,16 @@ protected:
         else
         {
             desc.resize(3);
-            std::vector<double> v;
+            std::vector<float> v;
             desc = indiv.get_desc(simu);
 
-                        //simu.get_descriptor<rhex_dart::descriptors::BodyOrientation>(v);
+            //simu.get_descriptor<rhex_dart::descriptors::BodyOrientation>(v);
             // desc[0] = v[0];
             // desc[1] = v[1];
             // desc[2] = v[2];
-
         }
 
-        this->set_desc(desc);
+        this->_desc = desc;
     }
 };
 
