@@ -15,12 +15,14 @@
 #include <sferes/eval/eval.hpp>
 #include <sferes/modif/dummy.hpp>
 
+
 #include <sferes/stat/best_fit.hpp>
 
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/fit_top.hpp>
 #include <meta-cmaes/eval_total.hpp>
+#include <meta-cmaes/stat_maps.hpp>
 
 
 
@@ -40,9 +42,8 @@ typedef sferes::fit::FitTop<CMAESParams>  fit_t;
 typedef sferes::phen::Parameters<gen_t, fit_t, CMAESParams> meta_phen_t;
 typedef MapElitesPhenotype<meta_phen_t> phen_t; 
 
-typedef sferes::stat::BestFit<phen_t, CMAESParams> best_fit_stat_t;
+typedef boost::fusion::vector<sferes::stat::BestFit<phen_t, CMAESParams>,sferes::stat::Stat_Maps<phen_t, CMAESParams>> stat_t;
 
-typedef boost::fusion::vector<best_fit_stat_t> stat_t;
 typedef modif::Dummy<> modifier_t;
 
 

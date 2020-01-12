@@ -7,6 +7,12 @@
 
 #include <meta-cmaes/global.hpp>
 
+#include <boost/serialization/vector.hpp>  // serialising database vector
+
+#include <boost/serialization/array.hpp>
+#define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
+#include <Eigen/Dense>
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////// BOTTOM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,12 +48,20 @@ namespace global
 {
 struct DataEntry
 {
+  friend class boost::serialization::access;
+    
   base_features_t base_features;
   float fitness;
   DataEntry() {}
   DataEntry(const base_features_t &b, const float &f) : base_features(b), fitness(f)
   {
   }
+  template<class Archive>
+  void serialize(Archive&ar, const unsigned int version)
+    {
+      ar &boost::serialization::make_nvp("base_features", base_features);
+      ar &boost::serialization::make_nvp("fitness", fitness);
+    }
 };
 
 typedef std::vector<DataEntry> database_t;

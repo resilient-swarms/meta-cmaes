@@ -12,7 +12,8 @@
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/include/for_each.hpp>
 
-#include <Eigen/Dense>
+
+
 
 #include <meta-cmaes/fit_top.hpp>
 
@@ -21,6 +22,7 @@
 #include <meta-cmaes/global.hpp>
 
 #include <sferes/ea/cmaes.hpp>
+#include <sferes/ea/cmaes_interface.h>  // to access parameter initialisation functions
 //#include <meta-cmaes/params.hpp>
 
 namespace sferes
@@ -111,8 +113,16 @@ public:
             indiv.fit() = FitBottom(w);
             indiv.fit().eval<base_phen_t>(indiv);
         }
+
+
         
     }
+    // for resuming; we don't need it as develop() takes care of initialising the maps again 
+    // furthermore: CMAES re-samples individuals and we halt based on top-level generations rather than 
+    // bottom-level generations
+    // void _set_pop(const std::vector<boost::shared_ptr<Phen> >& pop) {
+
+    // }
 };
 } // namespace ea
 } // namespace sferes
