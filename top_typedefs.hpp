@@ -19,7 +19,6 @@
 
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/params.hpp>
-#include <meta-cmaes/fit_bottom.hpp>
 #include <meta-cmaes/fit_top.hpp>
 #include <meta-cmaes/eval_total.hpp>
 
