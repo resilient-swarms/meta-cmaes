@@ -62,20 +62,20 @@ struct CMAESParams {
     //     SFERES_CONST float epsilon = 0.00;
     // };
 
-    // struct evo_float {
-    //     // we choose the polynomial mutation type
-    //     SFERES_CONST mutation_t mutation_type = polynomial;
-    //     // we choose the polynomial cross-over type
-    //     SFERES_CONST cross_over_t cross_over_type = sbx;
-    //     // the mutation rate of the real-valued vector
-    //     SFERES_CONST float mutation_rate = 0.1f;
-    //     // the cross rate of the real-valued vector
-    //     SFERES_CONST float cross_rate = 0.5f;
-    //     // a parameter of the polynomial mutation
-    //     SFERES_CONST float eta_m = 15.0f;
-    //     // a parameter of the polynomial cross-over
-    //     SFERES_CONST float eta_c = 10.0f;
-    // };
+    struct evo_float {
+        // we choose the polynomial mutation type
+        SFERES_CONST mutation_t mutation_type = polynomial;
+        // we choose the polynomial cross-over type
+        SFERES_CONST cross_over_t cross_over_type = sbx;
+        // the mutation rate of the real-valued vector
+        SFERES_CONST float mutation_rate = 0.1f;
+        // the cross rate of the real-valued vector
+        SFERES_CONST float cross_rate = 0.5f;
+        // a parameter of the polynomial mutation
+        SFERES_CONST float eta_m = 15.0f;
+        // a parameter of the polynomial cross-over
+        SFERES_CONST float eta_c = 10.0f;
+    };
 
     // save map every 50 iterations
     struct pop {

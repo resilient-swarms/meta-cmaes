@@ -67,7 +67,7 @@ protected:
         std::mt19937 gen(rd());
 
         std::unordered_set<size_t> elems = pickSet(N, k, gen);
-        std::vector<int> result(elems.begin(), elems.end());
+        std::vector<size_t> result(elems.begin(), elems.end());
         return result;
     }
 
@@ -76,7 +76,7 @@ protected:
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        size_t num_individuals = std::max(1, (size_t)(0.10 * meta_indiv._pop.size()));
+        size_t num_individuals = std::max(1, (int)std::round(0.10 * meta_indiv._pop.size()));
         std::vector<size_t> individuals = pick(num_individuals, meta_indiv._pop.size());
         for(size_t individual: individuals)
         {
@@ -102,7 +102,7 @@ protected:
         // launching the simulation
         auto robot = global::global_robot->clone();
 
-        rhex_dart::RhexDARTSimu<rhex_dart::safety<safe_t>, rhex_dart::desc<desc_t>> simu(_ctrl, robot, world_option);
+        simulator_t simu(_ctrl, robot, world_option);
         simu.run(5); // run simulation for 5 seconds
 
         float fitness = simu.covered_distance();
