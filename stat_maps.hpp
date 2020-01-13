@@ -1,5 +1,5 @@
-#ifndef STAT_MAP_HPP_
-#define STAT_MAP_HPP_
+#ifndef STAT_POP_HPP_
+#define STAT_POP_HPP_
 
 #include <numeric>
 #include <boost/multi_array.hpp>
@@ -38,11 +38,16 @@ public:
     template <typename E>
     void refresh(const E &ea)
     {
+
         if (ea.gen() % CMAESParams::pop::dump_period == 0)
         {
+#ifdef PRINTING
+    std::cout<< "starting dump of Stat_Map" <<std::endl;
+#endif
 
             for (size_t map = 0; map < ea.pop().size(); ++map)
             {
+                
                 auto archive = ea.pop()[map]->archive();
                 // write all current archives to a file
 
@@ -88,7 +93,7 @@ public:
             ++offset;
         }
     }
-}; // namespace stat
+}; 
 } // namespace stat
 } // namespace sferes
 

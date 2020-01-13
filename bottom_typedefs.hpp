@@ -1,16 +1,16 @@
 #ifndef BOTTOM_TYPEDEFS_HPP
 #define BOTTOM_TYPEDEFS_HPP
 
+#define PRINTING
 #include <rhex_dart/descriptors.hpp>
 #include <sferes/eval/eval.hpp>
 #include <meta-cmaes/params.hpp>
 
 #include <meta-cmaes/global.hpp>
 
-#include <boost/serialization/vector.hpp>  // serialising database vector
+#include <boost/serialization/vector.hpp> // serialising database vector
 
 #include <boost/serialization/array.hpp>
-#define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
 #include <Eigen/Dense>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,17 +19,17 @@
 
 const int NUM_BASE_FEATURES = 12;  // number of base features
 const int NUM_TOP_CELLS = 15;      // number of cells in the meta-map
-const int NUM_BOTTOM_FEATURES = 6; // number of features for bottom level maps
+const int NUM_BOTTOM_FEATURES = 3; // number of features for bottom level maps
 const int NUM_GENES = NUM_BASE_FEATURES * NUM_BOTTOM_FEATURES;
 
 /* base-features */
-typedef Eigen::Matrix<float, NUM_BASE_FEATURES, 1, 0, NUM_BASE_FEATURES, 1> base_features_t; // 0 options and size cannot grow
+typedef Eigen::Matrix<float, NUM_BASE_FEATURES, 1, Eigen::DontAlign, NUM_BASE_FEATURES, 1> base_features_t; // 0 options and size cannot grow
 
 /* weights to construct bottom-level map features from base_features */
-typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, NUM_BASE_FEATURES, 0, NUM_BOTTOM_FEATURES, NUM_BASE_FEATURES> weight_t;
+typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, NUM_BASE_FEATURES, Eigen::DontAlign, NUM_BOTTOM_FEATURES, NUM_BASE_FEATURES> weight_t;
 
 /* bottom-level map features */
-typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, 1, 0, NUM_BOTTOM_FEATURES, 1> bottom_features_t;
+typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BOTTOM_FEATURES, 1> bottom_features_t;
 
 // // bottom-level typedefs
 //typedef sferes::eval::Eval<BottomParams> bottom_eval_t;
@@ -37,31 +37,32 @@ typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, 1, 0, NUM_BOTTOM_FEATURES, 1> 
 typedef sferes::gen::Sampled<24, BottomParams> bottom_gen_t; // 24 parameters for our controller
 
 typedef boost::fusion::vector<rhex_dart::safety_measures::BodyColliding, rhex_dart::safety_measures::MaxHeight, rhex_dart::safety_measures::TurnOver> base_safe_t;
-typedef rhex_dart::descriptors::BodyOrientation base_desc_t;
+typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation> base_desc_t;
 typedef rhex_controller::RhexControllerBuehler base_controller_t;
 typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<base_desc_t>> simulator_t;
-// note to self: 
+// note to self:
 // adding rhex_dart::rhex_control<base_controller_t> as first argument to Simu type seems to fail
-
 
 namespace global
 {
 struct DataEntry
 {
   friend class boost::serialization::access;
-    
+
   base_features_t base_features;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   float fitness;
   DataEntry() {}
   DataEntry(const base_features_t &b, const float &f) : base_features(b), fitness(f)
   {
   }
-  template<class Archive>
-  void serialize(Archive&ar, const unsigned int version)
-    {
-      ar &boost::serialization::make_nvp("base_features", base_features);
-      ar &boost::serialization::make_nvp("fitness", fitness);
-    }
+
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &boost::serialization::make_nvp("base_features", base_features);
+    ar &boost::serialization::make_nvp("fitness", fitness);
+  }
 };
 
 typedef std::vector<DataEntry> database_t;
@@ -76,6 +77,7 @@ class FitBottom
 
 public:
   weight_t W;
+
   FitBottom(){};
   FitBottom(const weight_t &w) : W(w)
   {
@@ -125,9 +127,17 @@ public:
 
   std::vector<float> get_desc(const base_features_t &b)
   {
+#ifdef PRINTING
+
+#endif
     bottom_features_t D = W * b;
     std::vector<float> vec(D.data(), D.data() + D.rows() * D.cols());
-
+#ifdef PRINTING
+    std::cout << " getting descriptor " << std::endl;
+    std::cout << " w =  " << W << std::endl;
+    std::cout << " b = " << b << std::endl;
+    std::cout << " D = " << D << std::endl;
+#endif
     return vec;
   }
 
@@ -151,7 +161,7 @@ protected:
     auto robot = global::global_robot->clone();
 
     simulator_t simu(_ctrl, robot);
-    simu.run(5); // run simulation for 5 seconds
+    simu.run(BottomParams::simu::time); // run simulation for 5 seconds
 
     this->_value = simu.covered_distance();
 
@@ -182,7 +192,10 @@ protected:
     }
 
     this->_desc = desc;
-    //push to the database
+//push to the database
+#ifdef PRINTING
+    std::cout << " adding entry with fitness " << this->_value << std::endl;
+#endif
     global::database.push_back(global::DataEntry(b, this->_value));
   }
 
@@ -191,11 +204,17 @@ protected:
   {
 
     std::vector<double> results;
-    simu.get_descriptor<base_desc_t, std::vector<double>>(results);
+    simu.get_descriptor<rhex_dart::descriptors::DutyCycle, std::vector<double>>(results);
 
     for (size_t i = 0; i < results.size(); ++i)
     {
       base_features(i, 0) = results[i];
+    }
+
+    simu.get_descriptor<rhex_dart::descriptors::BodyOrientation, std::vector<double>>(results);
+    for (size_t i = 0; i < results.size(); ++i)
+    {
+      base_features(i + results.size(), 0) = results[i];
     }
   }
 };
@@ -203,61 +222,6 @@ protected:
 typedef FitBottom bottom_fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, bottom_fit_t, BottomParams> base_phen_t;
 typedef boost::shared_ptr<base_phen_t> bottom_indiv_t;
-
-namespace rhex_dart
-{
-namespace descriptors
-{
-
-template <typename D1, typename D2>
-struct CombinedDescriptor
-{
-  D1 first_desc;
-  D2 second_desc;
-  CombinedDescriptor()
-  {
-    first_desc = D1();
-    second_desc = D2();
-  }
-
-  template <typename Simu, typename robot>
-  void operator()(Simu &simu, std::shared_ptr<robot> rob, const Eigen::Vector6d &init_trans)
-  {
-    first_desc(simu, rob, init_trans);
-    second_desc(simu, rob, init_trans);
-  }
-
-  void get(base_features_t &b)
-  {
-    std::vector<float> results;
-    first_desc.get(results);
-
-    std::vector<float> results2;
-    second_desc.get(results2);
-
-    // std::vector<float> results;
-    // simu.get_descriptor<D1, std::vector<float>>(results);
-
-    // std::vector<float> results2;
-    // simu.get_descriptor<D2, std::vector<float>>(results2);
-
-    // results.insert(results.end(), results2.begin(), results2.end());
-    // float *v = &results[0];
-    // b(v, results.size());
-    for (size_t i = 0; i < results.size(); ++i)
-    {
-      b(i, 0) = results[i];
-    }
-    for (size_t i = results.size(); i < results.size() + results2.size(); ++i)
-    {
-      b(i, 0) = results2[i];
-    }
-  }
-};
-
-} // namespace descriptors
-
-} // namespace rhex_dart
 
 class MapElites
 {
@@ -277,7 +241,7 @@ public:
   bottom_pop_t _pop;
 
   weight_t W; //characteristic weight matrix of this map
-
+  // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
   MapElites()
   {
     assert(behav_dim == BottomParams::ea::behav_shape_size());
@@ -288,21 +252,16 @@ public:
 
   void random_pop()
   {
-    // parallel::init();// we do not need this
-    this->_pop.resize(BottomParams::pop::init_size);
-    BOOST_FOREACH (boost::shared_ptr<base_phen_t> &indiv, this->_pop)
-    {
-      indiv = boost::shared_ptr<base_phen_t>(new base_phen_t());
-      indiv->random();
-    }
-    eval(this->_pop, 0, this->_pop.size());
-    BOOST_FOREACH (boost::shared_ptr<base_phen_t> &indiv, this->_pop)
-      _add_to_archive(indiv);
+    // do not need it; random pop comes from meta-cmaes
   }
 
   // for resuming
   void _set_pop(const std::vector<boost::shared_ptr<base_phen_t>> &pop)
   {
+#ifdef PRINTING
+
+    std::cout << "setting pop " << std::endl;
+#endif
     assert(!pop.empty());
 
     //        std::cout << this->res_dir() << " " << this->gen() << std::endl;
@@ -342,7 +301,10 @@ public:
     for (const bottom_phen_ptr_t *i = _array.data(); i < (_array.data() + _array.num_elements()); ++i)
       if (*i)
         this->_pop.push_back(*i);
-
+#ifdef PRINTING
+    std::cout << "start new epoch with " << this->_pop.size() << " individuals " << std::endl;
+    std::cout << "start new epoch with " << this->_array.size() << " individuals " << std::endl;
+#endif
     bottom_pop_t ptmp;
     for (size_t i = 0; i < BottomParams::pop::size; ++i)
     {
@@ -401,7 +363,7 @@ public:
     return pop[x1];
   }
 
-  void eval(std::vector<boost::shared_ptr<base_phen_t>> pop, size_t begin, size_t end)
+  void eval(std::vector<boost::shared_ptr<base_phen_t>> &pop, size_t begin, size_t end)
   {
     dbg::trace trace("eval", DBG_HERE);
     assert(pop.size());
@@ -484,51 +446,79 @@ public:
   MapElitesPhenotype(){}; // will create random genotype and no fitness
 
   /*  set the weights (genotype)    */
-  void set_weights()
-  {
-    W = this->gen().data(); // get the genotype
+  // void set_weights()
+  // {
+  //   W = this->gen().data(); // get the genotype
 
+  //   // #ifdef PRINTING
+  //   //     std::cout << "setting weights (genotype) of the phenotype "<< std::endl;
+  //   //     for (float w : weights)
+  //   //     {
+  //   //       std::cout << w <<",";
+  //   //     }
+  //   //     std::cout <<" \n " << W << std::endl;
+  //   // #endif
+  // }
+  void genotype_to_mat(const std::vector<float> &weights)
+  {
+    size_t count = 0;
 #ifdef PRINTING
-    for (float w : weights)
+    std::cout << "before conversion " << std::endl;
+#endif
+    for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
     {
-      std::cout << w <<, ;
+      float sum = 0;
+      sum = std::accumulate(weights.begin() + j * NUM_BASE_FEATURES, weights.begin() + (j + 1) * NUM_BASE_FEATURES, 0);
+      for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+      {
+        W(j, k) = weights[count] / sum; // put it available for the MapElites parent class
+        ++count;
+#ifdef PRINTING
+        std::cout<<weights[count]<<std::endl;
+        std::cout << W(j,k) << ","<< std::endl;
+#endif
+      }
     }
-    std::cout <<\n W << std::endl;
+#ifdef PRINTING
+    std::cout << "after conversion " << std::endl;
+    std::cout << W << std::endl;
 #endif
   }
-
   void develop()
   {
+#ifdef PRINTING
+    std::cout << "start developing the map-phenotype" << std::endl;
+#endif
     /* do develop of the subclass phenotype*/
     Phen::develop();
 
     /* fill map j with individuals */
-    std::vector<float> weights = this->gen().data(); // get the new weight matrix
-    size_t count = 0;
-    for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
-      for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
-        W(j, k) = weights[count]; // put it available for the MapElites parent class
-    ++count;
+    genotype_to_mat(this->gen().data());
     for (int i = 0; i < global::database.size(); ++i)
     {
-      bottom_indiv_t individual = entry_to_bottomindividual(global::database[i], W); // obtain behavioural features and put individuals in the map
-      this->_add_to_archive(individual);
+      entry_to_map(global::database[i], W); // obtain behavioural features and put individuals in the map
     }
+#ifdef PRINTING
+    std::cout << "stop developing the map-phenotype" << std::endl;
+#endif
   }
 
-  bottom_indiv_t entry_to_bottomindividual(const global::DataEntry &entry, const weight_t &weight)
+  void entry_to_map(const global::DataEntry &entry, const weight_t &weight)
   {
 
     // use weight and base features --> bottom-level features
 
     // create new individual
-    boost::shared_ptr<base_phen_t> individual = boost::shared_ptr<base_phen_t>(new base_phen_t());
+    boost::shared_ptr<base_phen_t> individual(new base_phen_t());
     //
     individual->fit() = FitBottom(weight);
     individual->fit().set_desc(individual->fit().get_desc(entry.base_features));
     individual->fit().set_value(entry.fitness);
 
-    return individual;
+    this->_add_to_archive(individual);
+#ifdef PRINTING
+    std::cout << "added individual to archive " << std::endl;
+#endif
   }
 };
 
