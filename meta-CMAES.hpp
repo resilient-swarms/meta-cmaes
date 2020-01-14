@@ -94,16 +94,7 @@ public:
                 std::cout << "initialise database " << std::endl;
 #endif
                 boost::shared_ptr<Phen> dummy_map(new Phen()); // create a meaningless map
-                dummy_map->develop();
-                for (size_t i = 0; i < BottomParams::pop::init_size; ++i)
-                {
-                        base_phen_t indiv = base_phen_t();
-
-                        indiv.random();
-                        indiv.develop();
-                        indiv.fit() = FitBottom(dummy_map->W);
-                        indiv.fit().eval<base_phen_t>(indiv);
-                }
+                dummy_map->random_pop();// generate individuals which are then added to the databse
 #ifdef PRINTING
 
                 for (size_t k = 0; k < global::database.size(); ++k)

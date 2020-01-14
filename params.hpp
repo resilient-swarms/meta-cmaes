@@ -14,7 +14,7 @@ using namespace sferes::gen::evo_float;
 
 /* params for the bottom-level map */
 struct BottomParams {
-
+    static const size_t MAX_DATABASE_SIZE = 500000;
     // grid properties, discretise 3 dimensions into 10 bins each
     struct ea {
         SFERES_CONST size_t behav_dim = 3;

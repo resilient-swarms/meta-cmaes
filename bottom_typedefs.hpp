@@ -13,6 +13,10 @@
 #include <boost/serialization/array.hpp>
 #include <Eigen/Dense>
 
+#include <boost/circular_buffer.hpp>
+#include <meta-cmaes/circular_buffer_serialisation.hpp>
+#include <stdexcept>
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////// BOTTOM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,8 +57,9 @@ struct DataEntry
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   float fitness;
   DataEntry() {}
-  DataEntry(const base_features_t &b, const float &f) : base_features(b), fitness(f)
+  DataEntry(const base_features_t &b, const float &f) : fitness(f)
   {
+    base_features = b;
   }
 
   template <class Archive>
@@ -65,7 +70,100 @@ struct DataEntry
   }
 };
 
-typedef std::vector<DataEntry> database_t;
+template <size_t capacity, typename DataType>
+struct CircularBuffer
+{
+  CircularBuffer() : sp(0), max_sp(0)
+  {
+    data.resize(capacity);
+  }
+  std::vector<DataType> data;
+  size_t sp;
+  size_t max_sp;
+  DataType &operator[](size_t idx)
+  {
+    return data[idx];
+  }
+  size_t size()
+  {
+    return max_sp;
+  }
+  void push_back(const DataType &d)
+  {
+    if (sp > capacity)
+    {
+      // reset sp
+      sp = 0;
+    }
+     data[sp] = d;
+    if (max_sp < capacity)
+      ++max_sp;
+    ++sp;
+  }
+
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &boost::serialization::make_nvp("data", data);
+    ar &boost::serialization::make_nvp("sp", sp);
+    ar &boost::serialization::make_nvp("max_sp", max_sp);
+  }
+};
+
+// struct DataBase   // filtering based on BD is problematic: either requires many checks or requires huge memory for fine-grained multi-array
+// {
+//   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
+//   typedef std::array<float, behav_dim> point_t;
+//   typedef boost::multi_array<DataEntry, behav_dim> array_t;
+//   behav_index_t behav_shape;
+//   size_t nb_evals;
+//   bottom_pop_t _pop;
+
+//   weight_t W; //characteristic weight matrix of this map
+//   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
+//   DataBase()
+//   {
+//     assert(behav_dim == BottomParams::ea::behav_shape_size());
+//     for (size_t i = 0; i < BottomParams::ea::behav_shape_size(); ++i)
+//       behav_shape[i] = BottomParams::ea::behav_shape(i);
+//     _array.resize(behav_shape);
+//   }
+
+//   void push_back(const base_features_t& b, const bottom_indiv_t& i1)
+//   {
+//     if (i1->fit().dead())
+//       return;
+
+//     point_t p = get_point(i1);
+//     behav_index_t behav_pos;
+//     for (size_t i = 0; i < BottomParams::ea::behav_shape_size(); ++i)
+//     {
+//       behav_pos[i] = round(p[i] * behav_shape[i]);
+//       behav_pos[i] = std::min(behav_pos[i], behav_shape[i] - 1);
+//       assert(behav_pos[i] < behav_shape[i]);
+//     }
+
+//     if (!_array(behav_pos) || (i1->fit().value() - _array(behav_pos)->fit().value()) > BottomParams::ea::epsilon || (fabs(i1->fit().value() - _array(behav_pos)->fit().value()) <= BottomParams::ea::epsilon && _dist_center(i1) < _dist_center(_array(behav_pos))))
+//     {
+//       _array(behav_pos) = i1;
+//       return true;
+//     }
+//   }
+
+//   point_t get_point()
+//   {
+//     point_t p;
+//     for (size_t i = 0; i < NUM_BASE_FEATURES; ++i)
+//       p[i] = std::min(1.0f, indiv->fit().desc()[i]);
+//     return p;
+//   }
+
+// };
+
+//typedef std::vector<DataEntry> database_t;// will become too long
+
+// will use first-in-first-out queue such that latest DATABASE_SIZE individuals are maintained
+typedef CircularBuffer<BottomParams::MAX_DATABASE_SIZE, DataEntry> database_t;
 database_t database;
 } // namespace global
 
@@ -167,20 +265,22 @@ protected:
 
     std::vector<float> desc;
     base_features_t b;
+    float dead = -1000.0f;
     // these assume a behaviour descriptor of size 6.
-    if (this->_value < -1000)
+    if (dead > this->_value)
     {
       // this means that something bad happened in the simulation
       // we kill this individual
-      this->_dead = true;
-      desc.resize(6);
-      desc[0] = 0;
-      desc[1] = 0;
-      desc[2] = 0;
-      desc[3] = 0;
-      desc[4] = 0;
-      desc[5] = 0;
-      this->_value = -1000;
+      this->_dead = true;// no need to do anything
+      // desc.resize(6);
+      // desc[0] = 0;
+      // desc[1] = 0;
+      // desc[2] = 0;
+      // desc[3] = 0;
+      // desc[4] = 0;
+      // desc[5] = 0;
+      // this->_value = -1000.0f;// note this causes troubles; 
+      // -> due to optimisation (presumably) the code is evaluated within if first, therefore the above condition seems to always be true
     }
     else
     {
@@ -189,14 +289,16 @@ protected:
       get_base_features(b, simu);
       // convert to final descriptor
       desc = get_desc(b);
+      this->_desc = desc;
+      this->_dead = false;
+      //push to the database
+#ifdef PRINTING
+      std::cout << " adding entry with fitness " << this->_value << std::endl;
+#endif
+       global::database.push_back(global::DataEntry(b, this->_value));
     }
 
-    this->_desc = desc;
-//push to the database
-#ifdef PRINTING
-    std::cout << " adding entry with fitness " << this->_value << std::endl;
-#endif
-    global::database.push_back(global::DataEntry(b, this->_value));
+   
   }
 
   /* the included descriptors determine the base-features */
@@ -302,8 +404,8 @@ public:
       if (*i)
         this->_pop.push_back(*i);
 #ifdef PRINTING
-    std::cout << "start new epoch with " << this->_pop.size() << " individuals " << std::endl;
-    std::cout << "start new epoch with " << this->_array.size() << " individuals " << std::endl;
+    std::cout << "start map-elites epoch with pop of " << this->_pop.size() << " individuals " << std::endl;
+    std::cout << "start map-elites epoch with array of " << this->_array.size() << " individuals " << std::endl;
 #endif
     bottom_pop_t ptmp;
     for (size_t i = 0; i < BottomParams::pop::size; ++i)
@@ -320,7 +422,7 @@ public:
       ptmp.push_back(i2);
     }
 
-    eval(ptmp, 0, ptmp.size());
+    eval_map(ptmp, 0, ptmp.size());
 
     for (size_t i = 0; i < ptmp.size(); ++i)
     {
@@ -363,7 +465,7 @@ public:
     return pop[x1];
   }
 
-  void eval(std::vector<boost::shared_ptr<base_phen_t>> &pop, size_t begin, size_t end)
+  void eval_map(std::vector<boost::shared_ptr<base_phen_t>> &pop, size_t begin, size_t end)
   {
     dbg::trace trace("eval", DBG_HERE);
     assert(pop.size());
@@ -371,10 +473,16 @@ public:
     assert(end <= pop.size());
     for (size_t i = begin; i < end; ++i)
     {
-      pop[i]->fit() = FitBottom(W);
-      pop[i]->develop();
-      pop[i]->fit().eval<base_phen_t>(*pop[i]);
+      eval_individual(pop[i]);
     }
+  }
+
+  void eval_individual(boost::shared_ptr<base_phen_t> &ind)
+  {
+
+    ind->fit() = FitBottom(W);
+    ind->develop();
+    ind->fit().eval<base_phen_t>(*ind);
   }
 
   void do_epochs(size_t num_epochs)
@@ -386,10 +494,12 @@ public:
     }
   }
 
-  bool _add_to_archive(bottom_indiv_t i1)
+  bool _add_to_archive(bottom_indiv_t &i1)
   {
     if (i1->fit().dead())
+    {
       return false;
+    }
 
     point_t p = _get_point(i1);
 
@@ -467,22 +577,32 @@ public:
 #endif
     for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
     {
-      float sum = 0;
-      sum = std::accumulate(weights.begin() + j * NUM_BASE_FEATURES, weights.begin() + (j + 1) * NUM_BASE_FEATURES, 0);
+      float sum = std::accumulate(weights.begin() + j * NUM_BASE_FEATURES, weights.begin() + (j + 1) * NUM_BASE_FEATURES, 0.0);
       for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
       {
         W(j, k) = weights[count] / sum; // put it available for the MapElites parent class
-        ++count;
+
 #ifdef PRINTING
-        std::cout<<weights[count]<<std::endl;
-        std::cout << W(j,k) << ","<< std::endl;
+        std::cout << "sum " << sum << std::endl;
+        std::cout << weights[count] << std::endl;
+        std::cout << W(j, k) << "," << std::endl;
 #endif
+        ++count;
       }
     }
 #ifdef PRINTING
     std::cout << "after conversion " << std::endl;
     std::cout << W << std::endl;
 #endif
+  }
+  void random_pop()
+  {
+    for (size_t i = 0; i < BottomParams::pop::init_size; ++i)
+    {
+      boost::shared_ptr<base_phen_t> indiv(new base_phen_t());
+      indiv->random();
+      eval_individual(indiv);
+    }
   }
   void develop()
   {
