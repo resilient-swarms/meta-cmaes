@@ -176,8 +176,8 @@ class FitBottom
 public:
   weight_t W;
 
-  FitBottom(){};
-  FitBottom(const weight_t &w) : W(w)
+  FitBottom() : _dead(false) {};
+  FitBottom(const weight_t &w) : W(w), _dead(false)
   {
   }
 

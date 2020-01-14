@@ -31,7 +31,7 @@ public:
       std::cout << "running the map for " + std::to_string(bottom_epochs) + " epochs" << std::endl;
       std::cout << typeid(pop[i]).name() << std::endl;
 #endif
-      pop[i]->develop();// turn the individual into a map, and 
+      //pop[i]->develop();// already developed into a map
       pop[i]->do_epochs(bottom_epochs);
       _nb_evals += pop[i]->nb_evals; //batch size times 2
 #ifdef PRINTING
