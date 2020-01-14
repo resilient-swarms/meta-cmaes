@@ -38,8 +38,8 @@ typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BOTTO
 // // bottom-level typedefs
 //typedef sferes::eval::Eval<BottomParams> bottom_eval_t;
 
-typedef sferes::gen::Sampled<24, BottomParams> bottom_gen_t; // 24 parameters for our controller
-
+typedef Sampled<24, BottomParams> bottom_gen_t; // 24 parameters for our controller
+typedef size_t bottom_gen_data_t;                            // sampled data type is based on unsigned ints
 typedef boost::fusion::vector<rhex_dart::safety_measures::BodyColliding, rhex_dart::safety_measures::MaxHeight, rhex_dart::safety_measures::TurnOver> base_safe_t;
 typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation> base_desc_t;
 typedef rhex_controller::RhexControllerBuehler base_controller_t;
@@ -49,17 +49,18 @@ typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<
 
 namespace global
 {
+template <typename DataType>
 struct DataEntry
 {
   friend class boost::serialization::access;
 
+  std::vector<DataType> genotype;
   base_features_t base_features;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   float fitness;
   DataEntry() {}
-  DataEntry(const base_features_t &b, const float &f) : fitness(f)
+  DataEntry(const std::vector<Genotype::values_t> &g, const base_features_t &b, const float &f) : genotype(g), base_features(b), fitness(f)
   {
-    base_features = b;
   }
 
   template <class Archive>
@@ -68,7 +69,26 @@ struct DataEntry
     ar &boost::serialization::make_nvp("base_features", base_features);
     ar &boost::serialization::make_nvp("fitness", fitness);
   }
+  void set_genotype(bottom_individual_t &individual);
 };
+
+template <>
+void DataEntry<size_t>::set_genotype(bottom_individual_t &individual)
+{
+  for (size_t j = 0; j < individual->size(); ++j)
+  {
+    individual->gen().set_data(j, Params::sampled::values[entry.genotype[j]]); // use the Sampled genotype API
+  }
+}
+// in case we want to use Evofloat instead
+template <>
+void DataEntry<float>::set_genotype(bottom_individual_t &individual)
+{
+  for (size_t j = 0; j < individual->gen().size(); ++j)
+  {
+    individual->gen().data(j, entry.genotype[j]); // use the EvoFloat genotype API
+  }
+}
 
 template <size_t capacity, typename DataType>
 struct CircularBuffer
@@ -95,7 +115,7 @@ struct CircularBuffer
       // reset sp
       sp = 0;
     }
-     data[sp] = d;
+    data[sp] = d;
     if (max_sp < capacity)
       ++max_sp;
     ++sp;
@@ -163,7 +183,7 @@ struct CircularBuffer
 //typedef std::vector<DataEntry> database_t;// will become too long
 
 // will use first-in-first-out queue such that latest DATABASE_SIZE individuals are maintained
-typedef CircularBuffer<BottomParams::MAX_DATABASE_SIZE, DataEntry> database_t;
+typedef CircularBuffer<BottomParams::MAX_DATABASE_SIZE, DataEntry<bottom_gen_data_t>> database_t;
 database_t database;
 } // namespace global
 
@@ -176,7 +196,7 @@ class FitBottom
 public:
   weight_t W;
 
-  FitBottom() : _dead(false) {};
+  FitBottom() : _dead(false){};
   FitBottom(const weight_t &w) : W(w), _dead(false)
   {
   }
@@ -271,7 +291,7 @@ protected:
     {
       // this means that something bad happened in the simulation
       // we kill this individual
-      this->_dead = true;// no need to do anything
+      this->_dead = true; // no need to do anything
       // desc.resize(6);
       // desc[0] = 0;
       // desc[1] = 0;
@@ -279,7 +299,7 @@ protected:
       // desc[3] = 0;
       // desc[4] = 0;
       // desc[5] = 0;
-      // this->_value = -1000.0f;// note this causes troubles; 
+      // this->_value = -1000.0f;// note this causes troubles;
       // -> due to optimisation (presumably) the code is evaluated within if first, therefore the above condition seems to always be true
     }
     else
@@ -295,10 +315,8 @@ protected:
 #ifdef PRINTING
       std::cout << " adding entry with fitness " << this->_value << std::endl;
 #endif
-       global::database.push_back(global::DataEntry(b, this->_value));
+      global::database.push_back(global::DataEntry<bottom_gen_data_t>(indiv.gen()._data, this->_value));
     }
-
-   
   }
 
   /* the included descriptors determine the base-features */
@@ -467,7 +485,7 @@ public:
 
   void eval_map(std::vector<boost::shared_ptr<base_phen_t>> &pop, size_t begin, size_t end)
   {
-    dbg::trace trace("eval", DBG_HERE);
+    //dbg::trace trace("eval", DBG_HERE);
     assert(pop.size());
     assert(begin < pop.size());
     assert(end <= pop.size());
@@ -623,7 +641,7 @@ public:
 #endif
   }
 
-  void entry_to_map(const global::DataEntry &entry, const weight_t &weight)
+  void entry_to_map(const global::DataEntry<bottom_gen_data_t> &entry, const weight_t &weight)
   {
 
     // use weight and base features --> bottom-level features
@@ -634,6 +652,7 @@ public:
     individual->fit() = FitBottom(weight);
     individual->fit().set_desc(individual->fit().get_desc(entry.base_features));
     individual->fit().set_value(entry.fitness);
+    entry.set_genotype(individual);
 
     this->_add_to_archive(individual);
 #ifdef PRINTING

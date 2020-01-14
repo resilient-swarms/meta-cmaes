@@ -6,6 +6,7 @@
 #include <sferes/fit/fitness.hpp>
 
 #include <sferes/gen/evo_float.hpp>
+#include <meta-cmaes/sampled.hpp>
 
 using namespace sferes;
 using namespace sferes::gen::evo_float;

@@ -21,7 +21,7 @@ public:
   void eval(std::vector<boost::shared_ptr<MetaIndiv>> & pop, size_t begin, size_t end,
             const typename MetaIndiv::fit_t &fit_proto)
   {
-    dbg::trace trace("eval", DBG_HERE);
+    //dbg::trace trace("eval", DBG_HERE);
     assert(pop.size());
     assert(begin < pop.size());
     assert(end <= pop.size());
