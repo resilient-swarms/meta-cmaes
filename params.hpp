@@ -1,7 +1,6 @@
 #ifndef META_CMAES_PARAMS_HPP
 #define META_CMAES_PARAMS_HPP
 
-
 #include <sferes/phen/parameters.hpp>
 #include <sferes/fit/fitness.hpp>
 
@@ -11,20 +10,22 @@
 using namespace sferes;
 using namespace sferes::gen::evo_float;
 
-
-
 /* params for the bottom-level map */
-struct BottomParams {
+struct BottomParams
+{
     static const size_t MAX_DATABASE_SIZE = 500000;
+    static const size_t bottom_epochs = 1;
     // grid properties, discretise 3 dimensions into 10 bins each
-    struct ea {
+    struct ea
+    {
         SFERES_CONST size_t behav_dim = 3;
         SFERES_ARRAY(size_t, behav_shape, 5, 5, 5); // 125 cells for each bottom-level map
         SFERES_CONST float epsilon = 0.00;
     };
 
     // our values for each gait parameter can take on any one of these    ????????????????????
-    struct sampled {
+    struct sampled
+    {
         SFERES_ARRAY(float, values, 0.00, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15, 0.175,
                      0.20, 0.225, 0.25, 0.275, 0.30, 0.325, 0.35,
                      0.375, 0.40, 0.425, 0.45, 0.475, 0.50, 0.525,
@@ -37,14 +38,16 @@ struct BottomParams {
         SFERES_CONST bool ordered = false;
     };
 
-    struct pop {
-        SFERES_CONST unsigned size = 5;
+    struct pop
+    {
+        SFERES_CONST unsigned size = 1;
         SFERES_CONST unsigned init_size = 5;
         SFERES_CONST int initial_aleat = 1;
     };
 
     // parameter limits between 0 and 1
-    struct parameters {
+    struct parameters
+    {
         SFERES_CONST float min = 0.0f;
         SFERES_CONST float max = 1.0f;
     };
@@ -56,10 +59,9 @@ struct BottomParams {
     };
 };
 
-
-
 /* params for the top-level map */
-struct CMAESParams {
+struct CMAESParams
+{
     // grid properties, discretise 3 dimensions into 10 bins each
     // struct ea {
     //     SFERES_CONST size_t behav_dim = 2;
@@ -67,7 +69,8 @@ struct CMAESParams {
     //     SFERES_CONST float epsilon = 0.00;
     // };
 
-    struct evo_float {
+    struct evo_float  // not used; 
+    {
         // we choose the polynomial mutation type
         SFERES_CONST mutation_t mutation_type = gaussian;
         // we choose the polynomial cross-over type
@@ -84,22 +87,21 @@ struct CMAESParams {
     };
 
     // save map every 50 iterations
-    struct pop {
-        SFERES_CONST unsigned nb_gen = 100001;// used 
-        SFERES_CONST int dump_period = 1;// used
-        SFERES_CONST int size        = 5;// number of 
+    struct pop
+    {
+        SFERES_CONST unsigned nb_gen = 100001; // used
+        SFERES_CONST int dump_period = 1;      // used
+        SFERES_CONST int size = 2;             // number of maps
         SFERES_CONST int initial_aleat = 1;
+        SFERES_CONST float percentage_evaluated = 0.10;
     };
 
-    // parameter limits between 0 and 1
-    struct parameters {
+    // parameter limits between 1.0 and 2.0  ( avoids negative weights ! )
+    struct parameters
+    {
         SFERES_CONST float min = 0.0f;
         SFERES_CONST float max = 1.0f;
     };
 };
-
-
-
-
 
 #endif

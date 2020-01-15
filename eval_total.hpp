@@ -12,7 +12,7 @@ namespace sferes
 {
 namespace eval
 {
-const size_t bottom_epochs = 10;
+
 SFERES_EVAL(EvalTotal, Eval)
 {
 public:
@@ -28,11 +28,11 @@ public:
     for (size_t i = begin; i < end; ++i)
     {
 #ifdef PRINTING
-      std::cout << "running the map for " + std::to_string(bottom_epochs) + " epochs" << std::endl;
+      std::cout << "running the map for " + std::to_string(BottomParams::bottom_epochs) + " epochs" << std::endl;
       std::cout << typeid(pop[i]).name() << std::endl;
 #endif
       //pop[i]->develop();// already developed into a map
-      pop[i]->do_epochs(bottom_epochs);
+      pop[i]->do_epochs(BottomParams::bottom_epochs);
       _nb_evals += pop[i]->nb_evals; //batch size times 2
 #ifdef PRINTING
       std::cout << "evaluating meta-individual  " + std::to_string(i) << std::endl;

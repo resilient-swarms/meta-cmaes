@@ -11,16 +11,18 @@ const size_t num_world_options = 10;
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
 */
-namespace sferes{
+namespace sferes
+{
 
-namespace fit{
+namespace fit
+{
 
 SFERES_FITNESS(FitTop, sferes::fit::Fitness)
 {
 public:
     size_t nb_evals = 0;
     /* current bottom-level map (new candidate to be added to _pop)*/
-    template <typename MetaIndiv> 
+    template <typename MetaIndiv>
     void eval(MetaIndiv & indiv)
     {
 
@@ -49,20 +51,23 @@ public:
 protected:
     bool _dead;
     std::vector<double> _ctrl;
-    
+
     // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
-    std::unordered_set<size_t> pickSet(size_t N, size_t k, std::mt19937& gen)
+    std::unordered_set<size_t> pickSet(size_t N, size_t k, std::mt19937 & gen)
     {
         std::uniform_int_distribution<> dis(1, N);
         std::unordered_set<size_t> elems;
+        elems.clear();
 
-        while (elems.size() < k) {
+        while (elems.size() < k)
+        {
             elems.insert(dis(gen));
         }
 
         return elems;
     }
-    std::vector<size_t> pick(size_t N, size_t k) {
+    std::vector<size_t> pick(size_t N, size_t k)
+    {
         std::random_device rd;
         std::mt19937 gen(rd());
 
@@ -76,33 +81,60 @@ protected:
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        size_t num_individuals = std::max(1, (int)std::round(0.10 * meta_indiv._pop.size()));
-        std::vector<size_t> individuals = pick(num_individuals, meta_indiv._pop.size());
-        for(size_t individual: individuals)
+        size_t num_individuals = std::max(1, (int)std::round(CMAESParams::pop::percentage_evaluated * meta_indiv._pop.size()));
+        std::vector<size_t> individuals = pick(meta_indiv._pop.size(), num_individuals);
+        for (size_t individual : individuals)
         {
             bottom_indiv_t indiv = meta_indiv._pop[individual];
-            for (size_t world_option = 0; world_option < num_world_options; ++world_option)
-            {
-                _eval_single_envir(indiv, world_option, avg_fitness);
-            }
+            _eval_all(indiv,avg_fitness);
         }
-        this->_value = avg_fitness / (float) (num_individuals*num_world_options); // no need to divide
+        this->_value = avg_fitness / (float)(num_individuals * num_world_options); // no need to divide
         this->_dead = false;
+    }
+#ifdef EVAL_ENVIR
+    void _eval_all(bottom_indiv_t indiv, float &avg_fitness)
+    {
+#ifdef PRINTING
+        std::cout << "start evaluating " << global::num_world_options << " environments" << std::endl;
+#endif
+        for (size_t world_option = 0; world_option < global::num_world_options; ++world_option)
+        {
+            _eval_single_envir(indiv, world_option, 0, avg_fitness);
+        }
         nb_evals = individuals.size() * num_world_options;
     }
-
-    void _eval_single_envir(bottom_indiv_t indiv, size_t world_option, float &avg_fitness)
+#else
+    void _eval_all(bottom_indiv_t indiv, float &avg_fitness)
     {
+#ifdef PRINTING
+        std::cout << "start evaluating " << global::damage_sets.size() << " damage sets" << std::endl;
+#endif
+        for (size_t i = 0; i < global::damage_sets.size(); ++i)
+        {
+            // initilisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
+            _eval_single_envir(indiv, 0, i, avg_fitness);
+        }
+    }
+#endif
+    void _eval_single_envir(bottom_indiv_t indiv, size_t world_option, size_t damage_option, float &avg_fitness)
+    {
+
         // copy of controller's parameters
         _ctrl.clear();
 
         for (size_t i = 0; i < 24; i++)
             _ctrl.push_back(indiv->gen().data(i));
 
+#ifdef EVAL_ENVIR
         // launching the simulation
         auto robot = global::global_robot->clone();
-
         simulator_t simu(_ctrl, robot, world_option);
+#else
+        auto robot = global::damaged_robots[damage_option]->clone();
+        simulator_t simu(_ctrl, robot, world_option, 1.0, global::damage_sets[damage_option]);
+#endif
+
+        
         simu.run(5); // run simulation for 5 seconds
 
         float fitness = simu.covered_distance();
@@ -122,6 +154,6 @@ protected:
         }
     }
 };
-}
-}
+} // namespace fit
+} // namespace sferes
 #endif

@@ -82,7 +82,7 @@ struct SampledDataEntry : public DataEntry<size_t>
   template <typename Individual>
   void set_genotype(Individual &individual) const 
   {
-    for (size_t j = 0; j < individual->gen().size(); ++j)
+    for (size_t j = 0; j < individual->size(); ++j)
     {
       individual->gen().set_data(j, genotype[j]); // use the Sampled genotype API
     }
@@ -99,7 +99,7 @@ struct EvoFloatDataEntry : public DataEntry<float>
   template <typename Individual>
   void set_genotype(Individual &individual) const
   {
-    for (size_t j = 0; j < individual->gen().size(); ++j)
+    for (size_t j = 0; j < individual->size(); ++j)
     {
       individual->gen().data(j, genotype[j]); // use the EvoFloat genotype API
     }
@@ -463,7 +463,7 @@ public:
     {
       _add_to_archive(ptmp[i]);
     }
-    nb_evals += 2 * BottomParams::pop::size;
+    nb_evals += ptmp.size();
   }
 
   long int getindex(const array_t &m, const bottom_phen_ptr_t *requestedElement, const unsigned short int direction) const
@@ -646,7 +646,7 @@ public:
 #endif
     /* do develop of the subclass phenotype*/
     Phen::develop();
-
+    
     /* fill map j with individuals */
     genotype_to_mat(this->gen().data());
     for (int i = 0; i < global::database.size(); ++i)

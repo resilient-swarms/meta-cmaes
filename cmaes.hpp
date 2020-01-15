@@ -41,7 +41,7 @@
 #include <sferes/ea/ea.hpp>
 #include <sferes/fit/fitness.hpp>
 #include <sferes/parallel.hpp>
-#include "cmaes_interface.h"
+#include <sferes/ea/cmaes_interface.h>
 
 namespace sferes {
 
@@ -50,7 +50,7 @@ namespace sferes {
     SFERES_EA(Cmaes, Ea) {
     public:
       Cmaes() {
-        _ar_funvals = cmaes_init(&_evo, dim, NULL, NULL, 0, Params::pop::size, NULL);// modified here: use of custom population size
+        _ar_funvals = cmaes_init(&_evo, dim, NULL,NULL, 0, Params::pop::size, NULL);// modified here: use of custom population size
         _lambda = cmaes_Get(&_evo, "lambda"); // default lambda (pop size)
       }
       ~Cmaes() {
@@ -69,10 +69,11 @@ namespace sferes {
         // copy pop
         for (size_t i = 0; i < this->_pop.size(); ++i)
         {
-          for (size_t j = 0; j < this->_pop[i]->size(); ++j) {
-            this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
+          for (size_t j = 0; j < this->_pop[i]->size(); ++j) {  
+            _cmaes_pop[i][j] = std::max(0.0,std::min(1.0,_cmaes_pop[i][j]));// modified: truncate to [0,1]
+            this->_pop[i]->gen().data(j,_cmaes_pop[i][j]);
           }
-          this->_pop[i]->develop();// modified braces here: no sense in developing the same phenotype multiple times
+          this->_pop[i]->develop();// modified braces here: no need to develop the genotype multiple times
         }
         // eval
         this->_eval_pop(this->_pop, 0, this->_pop.size());

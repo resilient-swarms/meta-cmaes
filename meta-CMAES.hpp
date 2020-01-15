@@ -18,8 +18,8 @@
 
 #include <meta-cmaes/global.hpp>
 
-#include <sferes/ea/cmaes.hpp>
-#include <sferes/ea/cmaes_interface.h> // to access parameter initialisation functions
+#include <meta-cmaes/cmaes.hpp>
+//#include <sferes/ea/cmaes_interface.h> // to access parameter initialisation functions
 //#include <meta-cmaes/params.hpp>
 
 namespace sferes
@@ -107,6 +107,8 @@ public:
                 BOOST_FOREACH (boost::shared_ptr<Phen> &indiv, this->_pop)
                 {
                         indiv = boost::shared_ptr<Phen>(new Phen());
+                        indiv->random();
+                        indiv->develop();
                 }
 #ifdef PRINTING
 
