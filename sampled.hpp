@@ -36,8 +36,8 @@
 
 // note we made some small modification here (see data())
 
-#ifndef GEN_SAMPLED_HPP_
-#define GEN_SAMPLED_HPP_
+#ifndef METACMAES_GEN_SAMPLED_HPP_
+#define METACMAES_GEN_SAMPLED_HPP_
 
 #include <vector>
 #include <limits>
@@ -109,8 +109,9 @@ namespace sferes {
         _check_invariant();
       }
       //@}
-      const std::vector<float>& data()   // NOTE: modified here
-      	return _data;
+      const std::vector<size_t>& data()   // NOTE: modified here
+      {	return _data;
+      }
       //@{
       values_t data(size_t i) const {
         assert(i < _data.size());
