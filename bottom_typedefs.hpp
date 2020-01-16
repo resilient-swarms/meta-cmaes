@@ -22,8 +22,8 @@
 ////////////////////////////////////// BOTTOM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const int NUM_BASE_FEATURES = 12;  // number of base features
-const int NUM_TOP_CELLS = 15;      // number of cells in the meta-map
+const int NUM_BASE_FEATURES = 15;  // number of base features
+// const int NUM_TOP_CELLS = 15;      // number of cells in the meta-map
 const int NUM_BOTTOM_FEATURES = 3; // number of features for bottom level maps
 const int NUM_GENES = NUM_BASE_FEATURES * NUM_BOTTOM_FEATURES;
 
@@ -42,7 +42,7 @@ typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BOTTO
 typedef sferes::gen::Sampled<24, BottomParams> bottom_gen_t; // 24 parameters for our controller
 typedef size_t bottom_gen_data_t;                            // sampled data type is based on unsigned ints
 typedef boost::fusion::vector<rhex_dart::safety_measures::BodyColliding, rhex_dart::safety_measures::MaxHeight, rhex_dart::safety_measures::TurnOver> base_safe_t;
-typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation> base_desc_t;
+typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation, rhex_dart::descriptors::AvgCOMVelocities> base_desc_t;
 typedef rhex_controller::RhexControllerBuehler base_controller_t;
 typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<base_desc_t>> simulator_t;
 // note to self:
@@ -365,7 +365,13 @@ protected:
     simu.get_descriptor<rhex_dart::descriptors::BodyOrientation, std::vector<double>>(results);
     for (size_t i = 0; i < results.size(); ++i)
     {
-      base_features(i + results.size(), 0) = results[i];
+      base_features(i + 6, 0) = results[i];
+    }
+    Eigen::Vector3d velocities;
+    simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
+    for (size_t i = 0; i < 3; ++i)
+    {
+      base_features(i+12, 0) = velocities[i];
     }
   }
 };

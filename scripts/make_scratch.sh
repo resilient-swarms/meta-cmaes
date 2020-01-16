@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-export BUILD_GRAPHIC="False"
-cd
+#export BUILD_GRAPHIC="False"
+cd $SFERES_DIR
 cd rhex_common/rhex_models
 ./waf distclean
 ./waf configure --prefix=$RESIBOTS_DIR
@@ -18,12 +18,11 @@ cd rhex_simu/rhex_dart
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf
 ./waf install
-cd $SFERES_DIR
+cd
+cd sferes2
 ./waf distclean
 ./waf configure
 ./waf
 
 cd $RESIBOTS_DIR/include/meta-cmaes
-
-bash scripts/make_metacmaes.sh
-bash scripts/make_metacmaes_damage.sh
+bash scripts/make_all.sh
