@@ -18,6 +18,8 @@
 #include <meta-cmaes/sampled.hpp>
 #include <stdexcept>
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////// BOTTOM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,11 +370,10 @@ protected:
       base_features(i + 6, 0) = results[i];
     }
     Eigen::Vector3d velocities;
-    simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
-    for (size_t i = 0; i < 3; ++i)
-    {
-      base_features(i+12, 0) = velocities[i];
-    }
+    simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);// cf. skeleton : .54 .39 .139
+    base_features(12, 0) = std::min(1.0,std::max(0.0, velocities[0] / (2.0*global::BODY_LENGTH)));// [0, 2] body lengths (moving backwards is unlikely; .54 is body length)
+    base_features(13, 0) = std::min(1.0,std::max(0.0,(velocities[1] + 0.80*global::BODY_WIDTH) / (1.60*global::BODY_WIDTH)));// [-0.80,0.80] body widths, body cannot suddenly rotate heavily
+    base_features(14, 0) = std::min(1.0,std::max(0.0,(velocities[2] + 1.0*global::BODY_HEIGHT) / (1.60*global::BODY_HEIGHT)));// [-1,0.60] body heights; body usually tilts backwards
   }
 };
 } // namespace fit
