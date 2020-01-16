@@ -34,6 +34,33 @@ public:
         for (size_t i = 0; i < BottomParams::ea::behav_shape_size(); ++i)
             behav_shape[i] = BottomParams::ea::behav_shape(i);
     }
+    // when you want to load an individual; we don't need show nor serialise; we will restore based on the database
+    // void show(std::ostream & os, size_t k)
+    // {
+    //     std::cerr << "loading ";
+    //     for (size_t i = 0; i < behav_dim; ++i)
+    //         std::cerr << (k / behav_strides[i] % behav_shape[i] + behav_indexbase[i]) << ",";
+    //     std::cerr << std::endl;
+
+    //     if (_archive[k])
+    //     {
+    //         _archive[k]->develop();
+    //         _archive[k]->show(os);
+    //         _archive[k]->fit().set_mode(fit::mode::view);
+    //         _archive[k]->fit().eval(*_archive[k]);
+    //     }
+    //     else
+    //         std::cerr << "Warning, no point here" << std::endl;
+    // }
+    // template <class Archive>
+    // void serialize(Archive & ar, const unsigned int version)
+    // {
+    //     ar &BOOST_SERIALIZATION_NVP(_archive);
+    //     ar &BOOST_SERIALIZATION_NVP(behav_dim);
+    //     ar &BOOST_SERIALIZATION_NVP(behav_shape);
+    //     ar &BOOST_SERIALIZATION_NVP(behav_strides);
+    //     ar &BOOST_SERIALIZATION_NVP(behav_indexbase);
+    // }
 
     template <typename E>
     void refresh(const E &ea)
@@ -42,12 +69,12 @@ public:
         if (ea.gen() % CMAESParams::pop::dump_period == 0)
         {
 #ifdef PRINTING
-    std::cout<< "starting dump of Stat_Map" <<std::endl;
+            std::cout << "starting dump of Stat_Map" << std::endl;
 #endif
 
             for (size_t map = 0; map < ea.pop().size(); ++map)
             {
-                
+
                 auto archive = ea.pop()[map]->archive();
                 // write all current archives to a file
 
@@ -58,14 +85,14 @@ public:
                     behav_indexbase[k] = archive.index_bases()[k];
                 }
 
-                _write_archive(archive, map,  std::string("archive" + std::to_string(map) + "_"), ea);
+                _write_archive(archive, map, std::string("archive" + std::to_string(map) + "_"), ea);
             }
         }
     }
 
     template <typename EA>
     void _write_archive(const array_t &array,
-                    size_t map,
+                        size_t map,
                         const std::string &prefix,
                         const EA &ea) const
     {
@@ -93,7 +120,7 @@ public:
             ++offset;
         }
     }
-}; 
+};
 } // namespace stat
 } // namespace sferes
 

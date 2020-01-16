@@ -16,6 +16,8 @@
 #include <sferes/stc.hpp>
 
 #include <meta-cmaes/meta-CMAES.hpp>
+#include <meta-cmaes/stat_maps.hpp>
+#include <meta-cmaes/stat_pop.hpp>
 
 //#define GRAPHIC
 
@@ -27,9 +29,11 @@
 
 using namespace sferes;
 
-
 int main(int argc, char **argv)
 {
+    typedef boost::fusion::vector<sferes::stat::Stat_Pop<phen_t, CMAESParams>, sferes::stat::Stat_Maps<phen_t, CMAESParams>> stat_t;
+
+    typedef modif::Dummy<> modifier_t;
     typedef ea::MetaCmaes<phen_t, eval_t, stat_t, modifier_t, CMAESParams> ea_t;
     ea_t ea;
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only

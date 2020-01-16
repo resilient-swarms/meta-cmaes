@@ -52,59 +52,45 @@ protected:
     bool _dead;
     std::vector<double> _ctrl;
 
-    // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
-    std::unordered_set<size_t> pickSet(size_t N, size_t k, std::mt19937 & gen)
-    {
-        std::uniform_int_distribution<> dis(1, N);
-        std::unordered_set<size_t> elems;
-        elems.clear();
 
-        while (elems.size() < k)
-        {
-            elems.insert(dis(gen));
-        }
 
-        return elems;
-    }
-    std::vector<size_t> pick(size_t N, size_t k)
-    {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        std::unordered_set<size_t> elems = pickSet(N, k, gen);
-        std::vector<size_t> result(elems.begin(), elems.end());
-        return result;
-    }
 
     // descriptor work done here, in this case duty cycle
     template <typename MetaIndiv>
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        size_t num_individuals = std::max(1, (int)std::round(CMAESParams::pop::percentage_evaluated * meta_indiv._pop.size()));
-        std::vector<size_t> individuals = pick(meta_indiv._pop.size(), num_individuals);
-        for (size_t individual : individuals)
+        std::vector<bottom_indiv_t> individuals = meta_indiv.sample_individuals();
+        for (bottom_indiv_t& individual : individuals)
         {
-            bottom_indiv_t indiv = meta_indiv._pop[individual];
-            _eval_all(indiv,avg_fitness);
+#ifdef PRINTING
+
+#endif
+            _eval_all(individual,avg_fitness);
         }
-        this->_value = avg_fitness / (float)(num_individuals * num_world_options); // no need to divide
+#ifdef EVAL_ENVIR
+        this->_value = avg_fitness / (float)(individuals.size() * num_world_options); // no need to divide
+        nb_evals = individuals.size() * global::world_options.size();
+#else
+        this->_value = avg_fitness / (float)(individuals.size() * global::damage_sets.size()); // no need to divide
+        nb_evals = individuals.size() * global::damage_sets.size();
+#endif
         this->_dead = false;
     }
 #ifdef EVAL_ENVIR
-    void _eval_all(bottom_indiv_t indiv, float &avg_fitness)
+    void _eval_all(const bottom_indiv_t& indiv, float &avg_fitness)
     {
 #ifdef PRINTING
-        std::cout << "start evaluating " << global::num_world_options << " environments" << std::endl;
+        std::cout << "start evaluating " << global::world_options.size() << " environments" << std::endl;
 #endif
-        for (size_t world_option = 0; world_option < global::num_world_options; ++world_option)
+        for (size_t world_option = 0; world_option < global::world_options.size(); ++world_option)
         {
             _eval_single_envir(indiv, world_option, 0, avg_fitness);
         }
-        nb_evals = individuals.size() * num_world_options;
+        
     }
 #else
-    void _eval_all(bottom_indiv_t indiv, float &avg_fitness)
+    void _eval_all(const bottom_indiv_t& indiv, float &avg_fitness)
     {
 #ifdef PRINTING
         std::cout << "start evaluating " << global::damage_sets.size() << " damage sets" << std::endl;
@@ -116,7 +102,7 @@ protected:
         }
     }
 #endif
-    void _eval_single_envir(bottom_indiv_t indiv, size_t world_option, size_t damage_option, float &avg_fitness)
+    void _eval_single_envir(const bottom_indiv_t& indiv, size_t world_option, size_t damage_option, float &avg_fitness)
     {
 
         // copy of controller's parameters

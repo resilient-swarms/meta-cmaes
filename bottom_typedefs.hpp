@@ -80,7 +80,7 @@ struct SampledDataEntry : public DataEntry<size_t>
   {
   }
   template <typename Individual>
-  void set_genotype(Individual &individual) const 
+  void set_genotype(Individual &individual) const
   {
     for (size_t j = 0; j < individual->size(); ++j)
     {
@@ -199,7 +199,7 @@ struct CircularBuffer
 //typedef std::vector<DataEntry> database_t;// will become too long
 
 // will use first-in-first-out queue such that latest DATABASE_SIZE individuals are maintained
-typedef SampledDataEntry data_entry_t ;
+typedef SampledDataEntry data_entry_t;
 typedef CircularBuffer<BottomParams::MAX_DATABASE_SIZE, data_entry_t> database_t;
 database_t database;
 } // namespace global
@@ -207,6 +207,11 @@ database_t database;
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
 */
+
+namespace sferes
+{
+namespace fit
+{
 class FitBottom
 {
 
@@ -252,7 +257,7 @@ public:
   template <class Archive>
   void serialize(Archive &ar, const unsigned int version)
   {
-    dbg::trace trace("fit", DBG_HERE);
+    //dbg::trace trace("fit", DBG_HERE);
 
     ar &boost::serialization::make_nvp("_value", this->_value);
   }
@@ -275,8 +280,17 @@ public:
 #endif
     return vec;
   }
+  mode::mode_t mode() const
+  {
+    return _mode;
+  }
+  void set_mode(mode::mode_t m)
+  {
+    _mode = m;
+  }
 
 protected:
+  mode::mode_t _mode;
   bool _dead;
   std::vector<double> _ctrl;
   float _value = 0.0f;
@@ -355,8 +369,11 @@ protected:
     }
   }
 };
+} // namespace fit
+} // namespace sferes
+
 // now that FitBottom is defined, define the rest of the bottom level
-typedef FitBottom bottom_fit_t;
+typedef sferes::fit::FitBottom bottom_fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, bottom_fit_t, BottomParams> base_phen_t;
 typedef boost::shared_ptr<base_phen_t> bottom_indiv_t;
 
@@ -375,7 +392,7 @@ public:
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
   size_t nb_evals;
-  bottom_pop_t _pop;
+  bottom_pop_t _pop; // current batch
 
   weight_t W; //characteristic weight matrix of this map
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
@@ -515,7 +532,7 @@ public:
   void eval_individual(boost::shared_ptr<base_phen_t> &ind)
   {
 
-    ind->fit() = FitBottom(W);
+    ind->fit() = bottom_fit_t(W);
     ind->develop();
     ind->fit().eval<base_phen_t>(*ind);
   }
@@ -549,15 +566,65 @@ public:
     if (!_array(behav_pos) || (i1->fit().value() - _array(behav_pos)->fit().value()) > BottomParams::ea::epsilon || (fabs(i1->fit().value() - _array(behav_pos)->fit().value()) <= BottomParams::ea::epsilon && _dist_center(i1) < _dist_center(_array(behav_pos))))
     {
       _array(behav_pos) = i1;
+      _non_empty_indices.insert(behav_pos);
       return true;
     }
     return false;
+  }
+  std::vector<bottom_indiv_t> sample_individuals()
+  {
+    size_t num_individuals = std::max(1, (int)std::round(CMAESParams::pop::percentage_evaluated * _non_empty_indices.size()));
+    return _pick(_non_empty_indices.size(), num_individuals);
   }
 
 protected:
   array_t _array;
   array_t _prev_array;
+  std::set<behav_index_t> _non_empty_indices; // all non-empty solutions' indices stored here
 
+
+  template <typename T>
+  T _get_Nth_Element(std::set<T> &searchSet, int n)
+  {
+     return *(std::next(searchSet.begin(), n));
+  }
+  std::vector<bottom_indiv_t> _pick(size_t N, size_t k)
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::unordered_set<size_t> elems = _pickSet(N, k, gen);
+
+    std::vector<bottom_indiv_t> result;
+    for (size_t el : elems)
+    {
+      behav_index_t pos = _get_Nth_Element<behav_index_t>(_non_empty_indices,el);
+#ifdef PRINTING
+      std::cout << "chosen position: ";
+      for (int i = 0; i < behav_dim; ++i)
+      {
+        std::cout << pos[i] << ",";
+      }
+      std::cout << "\n";
+#endif
+      result.push_back(_array(pos));
+    }
+    return result;
+  }
+  // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
+  std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
+  {
+    std::uniform_int_distribution<> dis(0, N-1);
+    std::unordered_set<size_t> elems;
+    elems.clear();
+
+    while (elems.size() < k)
+    {
+      elems.insert(dis(gen));
+    }
+
+    return elems;
+  }
   template <typename I>
   float _dist_center(const I &indiv)
   {
@@ -646,7 +713,7 @@ public:
 #endif
     /* do develop of the subclass phenotype*/
     Phen::develop();
-    
+
     /* fill map j with individuals */
     genotype_to_mat(this->gen().data());
     for (int i = 0; i < global::database.size(); ++i)
@@ -666,7 +733,7 @@ public:
     // create new individual
     boost::shared_ptr<base_phen_t> individual(new base_phen_t());
     //
-    individual->fit() = FitBottom(weight);
+    individual->fit() = bottom_fit_t(weight);
     individual->fit().set_desc(individual->fit().get_desc(entry.base_features));
     individual->fit().set_value(entry.fitness);
     entry.set_genotype<boost::shared_ptr<base_phen_t>>(individual);
