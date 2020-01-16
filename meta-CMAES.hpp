@@ -27,18 +27,6 @@ namespace sferes
 
 namespace ea
 {
-/* struct to store all of a bottom-level individual's information 
-        -base-features
-        -fitness
-        -phenotype
-*/
-
-// we code meta-map-elites as simply map-elites with three differences:
-// 1. the first features describe the top-level
-// 2. sampling of parents is local to the current bottom-level map (switches every 5 generations)
-// 3. genotype of top-level also evolves
-// 4. keep track of existing solutions, refill them in the current map
-const size_t MAP_REFRESH = 5;
 
 // Main class
 SFERES_EA(MetaCmaes, sferes::ea::Cmaes)
@@ -47,46 +35,9 @@ public:
         typedef boost::shared_ptr<phen_t> indiv_t;
         typedef typename std::vector<indiv_t> pop_t;
 
-        const size_t num_maps = 5;
-
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::dim;
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::cmaes_t;
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_evo;
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_ar_funvals;
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_cmaes_pop;
-        // using sferes::ea::Cmaes<phen_t,eval_t, stat_t, modifier_t,CMAESParams>::_lambda;
-
         MetaCmaes()
         {
         }
-
-        // /* main loop here */
-        // void epoch()
-        // {
-        //     // sample random individuals (new population of maps)
-        //     _cmaes_pop = cmaes_SamplePopulation(&_evo);
-        //     // copy pop
-        //     for (size_t i = 0; i < this->_pop.size(); ++i)
-        //     {
-        //         for (size_t j = 0; j < this->_pop[i]->size(); ++j)
-        //         {
-        //             this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
-        //             this->_pop[i]->develop();
-        //         }
-        //         fill_new_map(i); // after genotype is assigned, compute the resulting map accordingly
-        //     }
-
-        //     // eval
-        //     this->_eval_pop(this->_pop, 0, this->_pop.size());
-        //     this->apply_modifier();
-        //     for (size_t i = 0; i < this->_pop.size(); ++i)
-        //     {
-        //         //warning: CMAES minimizes the fitness...
-        //         _ar_funvals[i] = -this->_pop[i]->fit().value();
-        //     }
-        //     // update CMAES distribution
-        //     cmaes_UpdateDistribution(&_evo, _ar_funvals);
-        // }
 
         void random_pop()
         {
@@ -94,7 +45,8 @@ public:
                 std::cout << "initialise database " << std::endl;
 #endif
                 boost::shared_ptr<Phen> dummy_map(new Phen()); // create a meaningless map
-                dummy_map->random_pop();// generate individuals which are then added to the databse
+                dummy_map->random_pop();                       // generate individuals which are then added to the databse
+                
 #ifdef PRINTING
 
                 for (size_t k = 0; k < global::database.size(); ++k)
@@ -118,8 +70,38 @@ public:
         // for resuming; we don't need it as develop() takes care of initialising the maps again
         // furthermore: CMAES re-samples individuals and we halt based on top-level generations rather than
         // bottom-level generations
-        // void _set_pop(const std::vector<boost::shared_ptr<Phen> >& pop) {
+        // void _set_pop(const std::vector<boost::shared_ptr<Phen>> &pop)
+        // {
+        //         assert(!pop.empty());
 
+        //         //        std::cout << this->res_dir() << " " << this->gen() << std::endl;
+
+        //         //        std::string fname = ea.res_dir() + "/archive_" +
+        //         //                boost::lexical_cast<std::string>(ea.gen()) +
+        //         //                std::string(".dat");
+
+        //         for (size_t h = 0; h < pop.size(); ++h)
+        //         {
+        //                 //            std::cout << "Fitness of ind " << h << " is " << pop[h]->fit().value() << std::endl;
+        //                 //            std::cout << "Descriptor is " ; //<< pop[h]->fit().desc()[0] << std::endl;
+        //                 //            for (size_t desc_index = 0; desc_index < pop[h]->fit().desc().size(); ++desc_index)
+        //                 //                std::cout << pop[h]->fit().desc()[desc_index] << " ";
+        //                 //            std::cout << std::endl;
+
+        //                 //            pop[h]->develop();
+        //                 //            pop[h]->fit().eval(*pop[h]);  // we need to evaluate the individuals to get the descriptor values
+
+        //                 point_t p = get_point(pop[h]);
+
+        //                 behav_index_t behav_pos;
+        //                 for (size_t i = 0; i < Params::ea::behav_shape_size(); ++i)
+        //                 {
+        //                         behav_pos[i] = round(p[i] * behav_shape[i]);
+        //                         behav_pos[i] = std::min(behav_pos[i], behav_shape[i] - 1);
+        //                         assert(behav_pos[i] < behav_shape[i]);
+        //                 }
+        //                 _array(behav_pos) = pop[h];
+        //         }
         // }
 };
 } // namespace ea

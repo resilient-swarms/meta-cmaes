@@ -40,7 +40,7 @@ struct BottomParams
 
     struct pop
     {
-        SFERES_CONST unsigned size = 1;
+        SFERES_CONST unsigned size = 2;
         SFERES_CONST unsigned init_size = 5;
         SFERES_CONST int initial_aleat = 1;
     };

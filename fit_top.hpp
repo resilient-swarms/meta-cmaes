@@ -39,8 +39,6 @@ public:
     template <class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        dbg::trace trace("fit", DBG_HERE);
-
         ar &boost::serialization::make_nvp("_value", this->_value);
         ar &boost::serialization::make_nvp("_objs", this->_objs);
     }
@@ -52,33 +50,28 @@ protected:
     bool _dead;
     std::vector<double> _ctrl;
 
-
-
-
     // descriptor work done here, in this case duty cycle
     template <typename MetaIndiv>
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
         std::vector<bottom_indiv_t> individuals = meta_indiv.sample_individuals();
-        for (bottom_indiv_t& individual : individuals)
+        for (bottom_indiv_t &individual : individuals)
         {
 #ifdef PRINTING
 
 #endif
-            _eval_all(individual,avg_fitness);
+            _eval_all(individual, avg_fitness);
         }
 #ifdef EVAL_ENVIR
         this->_value = avg_fitness / (float)(individuals.size() * num_world_options); // no need to divide
-        nb_evals = individuals.size() * global::world_options.size();
 #else
         this->_value = avg_fitness / (float)(individuals.size() * global::damage_sets.size()); // no need to divide
-        nb_evals = individuals.size() * global::damage_sets.size();
 #endif
         this->_dead = false;
     }
 #ifdef EVAL_ENVIR
-    void _eval_all(const bottom_indiv_t& indiv, float &avg_fitness)
+    void _eval_all(const bottom_indiv_t &indiv, float &avg_fitness)
     {
 #ifdef PRINTING
         std::cout << "start evaluating " << global::world_options.size() << " environments" << std::endl;
@@ -87,10 +80,9 @@ protected:
         {
             _eval_single_envir(indiv, world_option, 0, avg_fitness);
         }
-        
     }
 #else
-    void _eval_all(const bottom_indiv_t& indiv, float &avg_fitness)
+    void _eval_all(const bottom_indiv_t &indiv, float &avg_fitness)
     {
 #ifdef PRINTING
         std::cout << "start evaluating " << global::damage_sets.size() << " damage sets" << std::endl;
@@ -102,9 +94,9 @@ protected:
         }
     }
 #endif
-    void _eval_single_envir(const bottom_indiv_t& indiv, size_t world_option, size_t damage_option, float &avg_fitness)
+    void _eval_single_envir(const bottom_indiv_t &indiv, size_t world_option, size_t damage_option, float &avg_fitness)
     {
-
+        ++global::nb_evals;
         // copy of controller's parameters
         _ctrl.clear();
 
@@ -120,7 +112,6 @@ protected:
         simulator_t simu(_ctrl, robot, world_option, 1.0, global::damage_sets[damage_option]);
 #endif
 
-        
         simu.run(5); // run simulation for 5 seconds
 
         float fitness = simu.covered_distance();

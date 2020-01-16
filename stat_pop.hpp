@@ -38,6 +38,7 @@ SFERES_STAT(Stat_Pop, Stat)
     typedef boost::shared_ptr<phen_t> indiv_t;
     typedef typename std::vector<indiv_t> pop_t;
     pop_t _pop;
+    size_t nb_evals;
     void _show_individual(std::ostream & os, size_t k)
     {
         bottom_indiv_t ind = this->_pop[0]->archive().data()[k];

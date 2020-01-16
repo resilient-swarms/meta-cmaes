@@ -11,6 +11,7 @@ namespace global
 const double BODY_LENGTH = .54;
 const double BODY_WIDTH  = .39;
 const double BODY_HEIGHT = .139;
+size_t nb_evals = 0;
 std::shared_ptr<rhex_dart::Rhex> global_robot;
 #ifdef EVAL_ENVIR
 std::vector<size_t> world_options;

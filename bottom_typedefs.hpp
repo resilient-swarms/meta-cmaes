@@ -487,7 +487,7 @@ public:
     {
       _add_to_archive(ptmp[i]);
     }
-    nb_evals += ptmp.size();
+    nb_evals = ptmp.size();
   }
 
   long int getindex(const array_t &m, const bottom_phen_ptr_t *requestedElement, const unsigned short int direction) const
@@ -542,11 +542,11 @@ public:
     ind->fit() = bottom_fit_t(W);
     ind->develop();
     ind->fit().eval<base_phen_t>(*ind);
+    ++global::nb_evals;
   }
 
   void do_epochs(size_t num_epochs)
   {
-    nb_evals = 0;
     for (size_t i = 0; i < num_epochs; ++i)
     {
       this->epoch();

@@ -21,6 +21,7 @@ public:
   void eval(std::vector<boost::shared_ptr<MetaIndiv>> & pop, size_t begin, size_t end,
             const typename MetaIndiv::fit_t &fit_proto)
   {
+    global::nb_evals = 0;
     //dbg::trace trace("eval", DBG_HERE);
     assert(pop.size());
     assert(begin < pop.size());
@@ -33,14 +34,16 @@ public:
 #endif
       //pop[i]->develop();// already developed into a map
       pop[i]->do_epochs(BottomParams::bottom_epochs);
-      _nb_evals += pop[i]->nb_evals; //batch size times 2
 #ifdef PRINTING
       std::cout << "evaluating meta-individual  " + std::to_string(i) << std::endl;
 #endif
 
       pop[i]->fit().eval<MetaIndiv>(*pop[i]); // evaluate its recovered performance
-      _nb_evals += pop[i]->fit().nb_evals;    // counts the number of individuals*environments in fit_top
     }
+    _nb_evals += global::nb_evals;
+#ifdef PRINTING
+      std::cout<< "number of evaluations is now "<<_nb_evals<<std::endl;
+#endif
   }
   unsigned nb_evals() const { return _nb_evals; }
 
