@@ -11,6 +11,7 @@
 #include <boost/serialization/vector.hpp> // serialising database vector
 
 #include <boost/serialization/array.hpp>
+#define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
 #include <Eigen/Dense>
 
 //#include <boost/circular_buffer.hpp>
@@ -18,13 +19,11 @@
 #include <meta-cmaes/sampled.hpp>
 #include <stdexcept>
 
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////// BOTTOM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const int NUM_BASE_FEATURES = 15;  // number of base features
+const int NUM_BASE_FEATURES = 15; // number of base features
 // const int NUM_TOP_CELLS = 15;      // number of cells in the meta-map
 const int NUM_BOTTOM_FEATURES = 3; // number of features for bottom level maps
 const int NUM_GENES = NUM_BASE_FEATURES * NUM_BOTTOM_FEATURES;
@@ -53,32 +52,14 @@ typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<
 namespace global
 {
 
-template <typename DataType>
-struct DataEntry
+struct SampledDataEntry
 {
-  friend class boost::serialization::access;
-
-  std::vector<DataType> genotype;
+  std::vector<size_t> genotype;
   base_features_t base_features;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   float fitness;
-  DataEntry() {}
-  DataEntry(const std::vector<DataType> &g, const base_features_t &b, const float &f) : genotype(g), base_features(b), fitness(f)
-  {
-  }
-
-  template <class Archive>
-  void serialize(Archive &ar, const unsigned int version)
-  {
-    ar &boost::serialization::make_nvp("base_features", base_features);
-    ar &boost::serialization::make_nvp("fitness", fitness);
-    ar &boost::serialization::make_nvp("genotype", genotype);
-  }
-};
-struct SampledDataEntry : public DataEntry<size_t>
-{
   SampledDataEntry() {}
-  SampledDataEntry(const std::vector<size_t> &g, const base_features_t &b, const float &f) : DataEntry<size_t>(g, b, f)
+  SampledDataEntry(const std::vector<size_t> &g, const base_features_t &b, const float &f) : genotype(g), base_features(b), fitness(f)
   {
   }
   template <typename Individual>
@@ -89,12 +70,23 @@ struct SampledDataEntry : public DataEntry<size_t>
       individual->gen().set_data(j, genotype[j]); // use the Sampled genotype API
     }
   }
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &BOOST_SERIALIZATION_NVP(base_features);
+    ar &BOOST_SERIALIZATION_NVP(fitness);
+    ar &BOOST_SERIALIZATION_NVP(genotype);
+  }
 };
 
-struct EvoFloatDataEntry : public DataEntry<float>
+struct EvoFloatDataEntry
 {
+  std::vector<float> genotype;
+  base_features_t base_features;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  float fitness;
   EvoFloatDataEntry() {}
-  EvoFloatDataEntry(const std::vector<float> &g, const base_features_t &b, const float &f) : DataEntry<float>(g, b, f)
+  EvoFloatDataEntry(const std::vector<float> &g, const base_features_t &b, const float &f) : genotype(g), base_features(b), fitness(f)
   {
   }
   // in case we want to use Evofloat instead
@@ -106,11 +98,22 @@ struct EvoFloatDataEntry : public DataEntry<float>
       individual->gen().data(j, genotype[j]); // use the EvoFloat genotype API
     }
   }
-};
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version)
+  {
+    ar &BOOST_SERIALIZATION_NVP(base_features);
+    ar &BOOST_SERIALIZATION_NVP(fitness);
+    ar &BOOST_SERIALIZATION_NVP(genotype);
+  }
+}; // namespace global
 
 template <size_t capacity, typename DataType>
 struct CircularBuffer
 {
+  size_t get_capacity()
+  {
+    return capacity;
+  }
   CircularBuffer() : sp(0), max_sp(0)
   {
     data.resize(capacity);
@@ -142,9 +145,10 @@ struct CircularBuffer
   template <class Archive>
   void serialize(Archive &ar, const unsigned int version)
   {
-    ar &boost::serialization::make_nvp("data", data);
-    ar &boost::serialization::make_nvp("sp", sp);
-    ar &boost::serialization::make_nvp("max_sp", max_sp);
+
+    ar &BOOST_SERIALIZATION_NVP(sp);
+    ar &BOOST_SERIALIZATION_NVP(max_sp);
+    ar &BOOST_SERIALIZATION_NVP(data);
   }
 };
 
@@ -370,10 +374,10 @@ protected:
       base_features(i + 6, 0) = results[i];
     }
     Eigen::Vector3d velocities;
-    simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);// cf. skeleton : .54 .39 .139
-    base_features(12, 0) = std::min(1.0,std::max(0.0, velocities[0] / (2.0*global::BODY_LENGTH)));// [0, 2] body lengths (moving backwards is unlikely; .54 is body length)
-    base_features(13, 0) = std::min(1.0,std::max(0.0,(velocities[1] + 0.80*global::BODY_WIDTH) / (1.60*global::BODY_WIDTH)));// [-0.80,0.80] body widths, body cannot suddenly rotate heavily
-    base_features(14, 0) = std::min(1.0,std::max(0.0,(velocities[2] + 1.0*global::BODY_HEIGHT) / (1.60*global::BODY_HEIGHT)));// [-1,0.60] body heights; body usually tilts backwards
+    simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);                                      // cf. skeleton : .54 .39 .139
+    base_features(12, 0) = std::min(1.0, std::max(0.0, velocities[0] / (2.0 * global::BODY_LENGTH)));                                // [0, 2] body lengths (moving backwards is unlikely; .54 is body length)
+    base_features(13, 0) = std::min(1.0, std::max(0.0, (velocities[1] + 0.80 * global::BODY_WIDTH) / (1.60 * global::BODY_WIDTH)));  // [-0.80,0.80] body widths, body cannot suddenly rotate heavily
+    base_features(14, 0) = std::min(1.0, std::max(0.0, (velocities[2] + 1.0 * global::BODY_HEIGHT) / (1.60 * global::BODY_HEIGHT))); // [-1,0.60] body heights; body usually tilts backwards
   }
 };
 } // namespace fit
@@ -589,11 +593,10 @@ protected:
   array_t _prev_array;
   std::set<behav_index_t> _non_empty_indices; // all non-empty solutions' indices stored here
 
-
   template <typename T>
   T _get_Nth_Element(std::set<T> &searchSet, int n)
   {
-     return *(std::next(searchSet.begin(), n));
+    return *(std::next(searchSet.begin(), n));
   }
   std::vector<bottom_indiv_t> _pick(size_t N, size_t k)
   {
@@ -605,7 +608,7 @@ protected:
     std::vector<bottom_indiv_t> result;
     for (size_t el : elems)
     {
-      behav_index_t pos = _get_Nth_Element<behav_index_t>(_non_empty_indices,el);
+      behav_index_t pos = _get_Nth_Element<behav_index_t>(_non_empty_indices, el);
 #ifdef PRINTING
       std::cout << "chosen position: ";
       for (int i = 0; i < behav_dim; ++i)
@@ -621,7 +624,7 @@ protected:
   // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
   std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
   {
-    std::uniform_int_distribution<> dis(0, N-1);
+    std::uniform_int_distribution<> dis(0, N - 1);
     std::unordered_set<size_t> elems;
     elems.clear();
 

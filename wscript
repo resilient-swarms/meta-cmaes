@@ -31,7 +31,7 @@ def build(bld):
 		                   uselib = 'DART_GRAPHIC ' + libs,
 		                   target = 'rhex_metaCMAES_graphic_envir',
 		                   cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEVAL_ENVIR"],   # -march=native
-		                   variants = ['TEXT'])
+		                   variants = ['BINARY'])
 
 			    sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
@@ -39,7 +39,7 @@ def build(bld):
 		                   uselib = 'DART_GRAPHIC ' + libs,
 		                   target = 'rhex_metaCMAES_graphic_damage',
 		                   cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC"],   # -march=native
-		                   variants = ['TEXT'])
+		                   variants = ['BINARY'])
 
 	                    sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
@@ -47,7 +47,7 @@ def build(bld):
 		                   uselib = libs,
 		                   target = 'rhex_metaCMAES_envir',
 		                   cxxflags = cxxflags + ['-g', '-march=native',"-DEVAL_ENVIR"],   # -march=native
-		                   variants = ['TEXT'])
+		                   variants = ['BINARY'])
 
 			    sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
@@ -55,7 +55,7 @@ def build(bld):
 		                   uselib = libs,
 		                   target = 'rhex_metaCMAES_damage',
 		                   cxxflags = cxxflags + ['-g', '-march=native'],   # -march=native
-		                   variants = ['TEXT'])
+		                   variants = ['BINARY'])
     else:
 	    if os.environ.get('BUILD_GRAPHIC',False) == "True":
 	    	cxxflags+=["-DGRAPHIC"]
@@ -72,7 +72,7 @@ def build(bld):
 		                   uselib = libs,
 		                   target = 'rhex_metaCMAES'+tag,
 		                   cxxflags = cxxflags + ['-g', '-march=native'],   # -march=native
-		                   variants = ['TEXT'])
+		                   variants = ['BINARY'])
 
     # if bld.get_env()['BUILD_GRAPHIC'] == True:
     #   sferes.create_variants(bld,

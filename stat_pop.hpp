@@ -35,19 +35,70 @@ namespace stat
 {
 SFERES_STAT(Stat_Pop, Stat)
 {
-    typedef boost::shared_ptr<phen_t> indiv_t;
-    typedef typename std::vector<indiv_t> pop_t;
-    pop_t _pop;
-    size_t nb_evals;
-    void _show_individual(std::ostream & os, size_t k)
+
+public:
+    std::vector<boost::shared_ptr<Phen>> _pop;
+    size_t _capacity, _sp, _max_sp;
+    global::database_t _database;
+    template <typename E>
+    void refresh(const E &ea)
     {
-        bottom_indiv_t ind = this->_pop[0]->archive().data()[k];
-        ind->fit() = bottom_fit_t(this->_pop[0]->W);
-        ind->develop();
-        ind->show(os);
-        ind->fit().set_mode(fit::mode::view);
-        ind->fit().eval(*ind);
+
+        
+        if (ea.gen() % CMAESParams::pop::dump_period == 0)
+        {
+#ifdef PRINTING
+            std::cout << "starting dump of Stat_Database" << std::endl;
+            _write_database(std::string("database_"), ea);
+#endif
+            _pop = ea.pop();
+            _write_recovered_performances(std::string("recovered_perf"), ea);
+            get_database();
+
+        }
     }
+
+    void get_database()
+    {
+        _capacity = global::database.get_capacity();
+        _database = global::database;
+        _sp       = global::database.sp;
+        _max_sp   = global::database.max_sp;
+    }
+    void set_database()
+    {
+        // reset the data-base
+        global::database = _database;
+        global::database.sp = _sp;
+        global::database.max_sp = _max_sp;
+    }
+    // show the n-th individual from zero'th map in the population
+    void show(std::ostream & os, size_t k)
+    {
+        std::cerr << "loading map 0, individual " + std::to_string(k);
+        set_database();
+        // develop map 0
+        this->_pop[0]->develop();
+        // evaluate individual k within this map
+        _show_individual(os, k);
+    }
+
+    template <class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // reset the data-base
+        ar &BOOST_SERIALIZATION_NVP(_pop);
+        ar &BOOST_SERIALIZATION_NVP(_capacity);
+
+        for (size_t i = 0; i < _capacity; ++i)
+        {
+            ar &BOOST_SERIALIZATION_NVP(_database[i]);
+        }
+        ar &BOOST_SERIALIZATION_NVP(_sp);
+        ar &BOOST_SERIALIZATION_NVP(_max_sp);
+    }
+
+protected:
     template <typename EA>
     void _write_database(const std::string &prefix,
                          const EA &ea) const
@@ -64,7 +115,7 @@ SFERES_STAT(Stat_Pop, Stat)
 
     template <typename EA>
     void _write_recovered_performances(const std::string &prefix,
-                         const EA &ea) const
+                                       const EA &ea) const
     {
         std::cout << "writing..." << prefix << ea.gen() << std::endl;
         std::string fname = ea.res_dir() + "/" + prefix + boost::lexical_cast<std::string>(ea.gen()) + std::string(".dat");
@@ -72,43 +123,46 @@ SFERES_STAT(Stat_Pop, Stat)
         std::ofstream ofs(fname.c_str());
         for (size_t k = 0; k < _pop.size(); ++k)
         {
-            ofs << _pop[k].fit().value() << std::endl;
+            ofs << _pop[k]->fit().value() << "\t";
         }
+        ofs << "\n";
     }
-
-public:
-    Stat_Pop() {}
-
-    template <typename E>
-    void refresh(const E &ea)
+    void _show_individual(std::ostream & os, size_t k)
     {
-        if (ea.gen() % CMAESParams::pop::dump_period == 0)
-        {
-#ifdef PRINTING
-            std::cout << "starting dump of Stat_Database" << std::endl;
-            _write_database(std::string("database_"), ea);
-#endif
-            _pop = ea.pop();
-            _write_recovered_performances(std::string("recovered_perf"),ea);
-        }
-    }
-
-    template <class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-        ar &BOOST_SERIALIZATION_NVP(global::database);
-        ar &BOOST_SERIALIZATION_NVP(_pop);
-    }
-    void show(std::ostream & os, size_t k)
-    {
-        std::cerr << "loading map 0, individual " + std::to_string(k);
-        // develop map 0
-        this->_pop[0]->develop();
-        // evaluate individual k within this map
-        _show_individual(os, k);
+        bottom_indiv_t ind = this->_pop[0]->archive().data()[k];
+        ind->fit() = bottom_fit_t(this->_pop[0]->W);
+        ind->develop();
+        ind->show(os);
+        ind->fit().set_mode(fit::mode::view);
+        ind->fit().eval(*ind);
     }
 };
 } // namespace stat
 } // namespace sferes
+
+// SFERES_STAT(Stat_Pop, Stat)
+// {
+//     typedef boost::shared_ptr<phen_t> indiv_t;
+//     typedef typename std::vector<indiv_t> pop_t;
+//     pop_t _pop;
+//     size_t nb_evals;
+
+// public:
+//     Stat_Pop() {}
+
+//     template <typename E>
+//     void refresh(const E &ea)
+//     {
+//     }
+
+//     template <class Archive>
+//     void serialize(Archive & ar, const unsigned int version)
+//     {
+
+//         ar &BOOST_SERIALIZATION_NVP(_pop);
+//     }
+// };
+//} // namespace stat
+//} // namespace sferes
 
 #endif

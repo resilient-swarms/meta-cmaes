@@ -3,6 +3,6 @@
 cd $SFERES_DIR
 
 
-jobtocome="build/exp/MAP-Elites-Rhex/rhex_metaCMAES_graphic_envir_text -d ${1} ${2}"
+jobtocome="build/exp/MAP-Elites-Rhex/rhex_metaCMAES_graphic_envir_binary -d ${1} ${2}"
 echo "Starting the following command: "${jobtocome}" "
 ${jobtocome}

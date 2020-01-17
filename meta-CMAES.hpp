@@ -67,9 +67,9 @@ public:
                 std::cout << "end CMAES random pop with population size " << this->_pop.size() << std::endl;
 #endif
         }
-        // for resuming; we don't need it as develop() takes care of initialising the maps again
-        // furthermore: CMAES re-samples individuals and we halt based on top-level generations rather than
-        // bottom-level generations
+        //for resuming; we don't need it as develop() takes care of initialising the maps again
+        //furthermore: CMAES re-samples individuals and we halt based on top-level generations rather than
+        //bottom-level generations
         // void _set_pop(const std::vector<boost::shared_ptr<Phen>> &pop)
         // {
         //         assert(!pop.empty());

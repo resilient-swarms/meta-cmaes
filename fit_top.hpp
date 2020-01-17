@@ -112,7 +112,7 @@ protected:
         simulator_t simu(_ctrl, robot, world_option, 1.0, global::damage_sets[damage_option]);
 #endif
 
-        simu.run(5); // run simulation for 5 seconds
+        simu.run(1); // run simulation for 1 seconds
 
         float fitness = simu.covered_distance();
 
