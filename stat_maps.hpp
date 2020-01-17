@@ -113,8 +113,10 @@ public:
                 for (size_t dim = 0; dim < behav_dim; ++dim)
                     ofs << posinarray[dim] / (float)behav_shape[dim] << " ";
                 ofs << " " << array(posinarray)->fit().value() << " ";
+#ifdef PRINTING
                 for (size_t k = 0; k < array(posinarray)->gen().size(); ++k)
                     ofs << array(posinarray)->gen().data(k) << " ";
+#endif
                 ofs << std::endl;
             }
             ++offset;
