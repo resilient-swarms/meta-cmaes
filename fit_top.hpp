@@ -112,8 +112,7 @@ protected:
         simulator_t simu(_ctrl, robot, world_option, 1.0, global::damage_sets[damage_option]);
 #endif
 
-        simu.run(1); // run simulation for 1 seconds
-
+        simu.run(BottomParams::simu::time); // run simulation for the same amount of time as the bottom level, to keep function evals comparable
         float fitness = simu.covered_distance();
 
         // these assume a behaviour descriptor of size 6.
