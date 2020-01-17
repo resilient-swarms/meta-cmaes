@@ -62,6 +62,20 @@ SFERES_STAT(Stat_Pop, Stat)
         }
     }
 
+    template <typename EA>
+    void _write_recovered_performances(const std::string &prefix,
+                         const EA &ea) const
+    {
+        std::cout << "writing..." << prefix << ea.gen() << std::endl;
+        std::string fname = ea.res_dir() + "/" + prefix + boost::lexical_cast<std::string>(ea.gen()) + std::string(".dat");
+
+        std::ofstream ofs(fname.c_str());
+        for (size_t k = 0; k < _pop.size(); ++k)
+        {
+            ofs << _pop[k].fit().value() << std::endl;
+        }
+    }
+
 public:
     Stat_Pop() {}
 
@@ -72,9 +86,10 @@ public:
         {
 #ifdef PRINTING
             std::cout << "starting dump of Stat_Database" << std::endl;
-#endif
             _write_database(std::string("database_"), ea);
+#endif
             _pop = ea.pop();
+            _write_recovered_performances(std::string("recovered_perf"),ea);
         }
     }
 

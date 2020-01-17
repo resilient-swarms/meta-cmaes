@@ -18,7 +18,10 @@ std::vector<size_t> world_options;
 #else
 std::vector<std::shared_ptr<rhex_dart::Rhex>> damaged_robots;
 std::vector<std::vector<rhex_dart::RhexDamage>> damage_sets = {
-    {rhex_dart::RhexDamage("leg_removal", "15")}};
+    {rhex_dart::RhexDamage("leg_removal", "15")}
+    // {rhex_dart::RhexDamage("leg_removal", "26")}
+    
+    };
 
 #endif
 void init_simu(std::string robot_file)

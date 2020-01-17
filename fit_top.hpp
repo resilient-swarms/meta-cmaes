@@ -58,15 +58,15 @@ protected:
         std::vector<bottom_indiv_t> individuals = meta_indiv.sample_individuals();
         for (bottom_indiv_t &individual : individuals)
         {
-#ifdef PRINTING
-
-#endif
             _eval_all(individual, avg_fitness);
         }
 #ifdef EVAL_ENVIR
         this->_value = avg_fitness / (float)(individuals.size() * num_world_options); // no need to divide
 #else
         this->_value = avg_fitness / (float)(individuals.size() * global::damage_sets.size()); // no need to divide
+#endif
+#ifdef PRINTING
+        std::cout<< "Recovered performance: "<<this->_value << std::endl;
 #endif
         this->_dead = false;
     }

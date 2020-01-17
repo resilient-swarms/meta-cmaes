@@ -24,7 +24,7 @@ def build(bld):
 
     cxxflags = bld.get_env()['CXXFLAGS']
     tag=""
-    if os.environ['BUILD_ALL'] == "True":
+    if os.environ.get('BUILD_ALL',False) == "True":
 			    sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
 		                   use = 'sferes2',
@@ -57,11 +57,11 @@ def build(bld):
 		                   cxxflags = cxxflags + ['-g', '-march=native'],   # -march=native
 		                   variants = ['TEXT'])
     else:
-	    if os.environ['BUILD_GRAPHIC'] == "True":
+	    if os.environ.get('BUILD_GRAPHIC',False) == "True":
 	    	cxxflags+=["-DGRAPHIC"]
 		tag+="_graphic"
 		libs = 'DART_GRAPHIC ' + libs
-	    if os.environ['BUILD_EVAL_ENVIR']  == "True":
+	    if os.environ.get('BUILD_EVAL_ENVIR',False)  == "True":
 	    	cxxflags+=["-DEVAL_ENVIR"]
 		tag+="_envir"
 	    else:
