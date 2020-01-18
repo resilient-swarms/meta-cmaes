@@ -13,13 +13,20 @@ using namespace sferes::gen::evo_float;
 /* params for the bottom-level map */
 struct BottomParams
 {
+#if META()
     static const size_t MAX_DATABASE_SIZE = 500000;
     static const size_t bottom_epochs = 1;
+#endif
     // grid properties, discretise 3 dimensions into 10 bins each
     struct ea
     {
+#if DUTY_C() || BO_C()
+        SFERES_CONST size_t behav_dim = 6;
+        SFERES_ARRAY(size_t, behav_shape, 3, 3, 3, 3, 3, 3); // 125 cells for each bottom-level map
+#else
         SFERES_CONST size_t behav_dim = 3;
         SFERES_ARRAY(size_t, behav_shape, 5, 5, 5); // 125 cells for each bottom-level map
+#endif
         SFERES_CONST float epsilon = 0.00;
     };
 
@@ -40,6 +47,13 @@ struct BottomParams
 
     struct pop
     {
+#if CONTROL()
+        // number of generations
+        SFERES_CONST unsigned nb_gen = 60000;// 40,000 * 40 evaluations per generation --> 1.6M evals (take a bit more just in case there is time enough)
+        // how often should the result file be written (here, each 5
+        // generation)
+        SFERES_CONST int dump_period = 100;
+#endif
         SFERES_CONST unsigned size = 1;
         SFERES_CONST unsigned init_size = 5;
         SFERES_CONST int initial_aleat = 1;
@@ -59,7 +73,6 @@ struct BottomParams
     };
 };
 
-#ifndef CONTROL
 /* params for the top-level map */
 struct CMAESParams
 {
@@ -104,5 +117,5 @@ struct CMAESParams
         SFERES_CONST float max = 1.0f;
     };
 };
-#endif
+
 #endif

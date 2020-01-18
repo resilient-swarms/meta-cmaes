@@ -77,7 +77,6 @@ public:
     void show(std::ostream & os, size_t k)
     {
         std::cerr << "loading map 0, individual " + std::to_string(k);
-        //set_database();// don't need it since now MetaCmaes invokes this at _load
         // develop map 0
         this->_pop[0]->develop();
         // evaluate individual k within this map

@@ -1,4 +1,30 @@
 
+
+#define META_CMAES 0
+#define RANDOM_WEIGHT 1
+#define CONDITION_DUTY_CYCLE 2
+#define CONDITION_BODY_ORIENTATION 3
+#define CONDITION_LINEAR_VELOCITY 4
+
+#define EXPERIMENT_TYPE CONDITION_DUTY_CYCLE
+
+#define META() EXPERIMENT_TYPE == META_CMAES
+#define CONTROL() EXPERIMENT_TYPE > META_CMAES
+#define GLOBAL_WEIGHT() EXPERIMENT_TYPE == RANDOM_WEIGHT
+#define NO_WEIGHT() EXPERIMENT_TYPE > RANDOM_WEIGHT
+#define WEIGHT() EXPERIMENT_TYPE == RANDOM_WEIGHT || EXPERIMENT_TYPE == META_CMAES
+#define DUTY_C() EXPERIMENT_TYPE == CONDITION_DUTY_CYCLE
+#define BO_C() EXPERIMENT_TYPE == CONDITION_BODY_ORIENTATION
+#define LV_C() EXPERIMENT_TYPE == CONDITION_LINEAR_VELOCITY
+
+#ifdef GRAPHIC
+#define NO_PARALLEL
+#endif
+
+#define FRICTION 1.0
+
+#define PRINTING
+
 #include <boost/random.hpp>
 #include <iostream>
 #include <mutex>
@@ -14,27 +40,22 @@
 #include <chrono>
 
 #include <sferes/stc.hpp>
+#include <meta-cmaes/global.hpp>
 
+#if META()
 #include <meta-cmaes/meta-CMAES.hpp>
 #include <meta-cmaes/stat_maps.hpp>
 #include <meta-cmaes/stat_pop.hpp>
-
-//#define GRAPHIC
-
-#ifdef GRAPHIC
-#define NO_PARALLEL
+#else
+#include <meta-cmaes/control_typedefs.hpp>
 #endif
 
-#define FRICTION 1.0
+//#define GRAPHIC
 
 using namespace sferes;
 
 int main(int argc, char **argv)
 {
-    typedef boost::fusion::vector<sferes::stat::Stat_Pop<phen_t, CMAESParams>, sferes::stat::Stat_Maps<phen_t, CMAESParams>> stat_t;
-
-    typedef modif::Dummy<> modifier_t;
-    typedef ea::MetaCmaes<phen_t, eval_t, stat_t, modifier_t, CMAESParams> ea_t;
     ea_t ea;
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
     global::init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");

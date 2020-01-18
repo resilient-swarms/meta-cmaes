@@ -24,11 +24,42 @@ std::vector<std::vector<rhex_dart::RhexDamage>> damage_sets = {
     // {rhex_dart::RhexDamage("leg_removal", "26")}
 
 };
-
 #endif
+
+#if GLOBAL_WEIGHT()
+weight_t W;
+#endif
+
 void init_simu(std::string robot_file)
 {
     global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, std::vector<rhex_dart::RhexDamage>()); // we repeat this creation process for damages
+#if GLOBAL_WEIGHT()
+    W = weight_t::Random();                //random numbers between (-1,1)
+    W = (W + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
+    size_t count = 0;
+#ifdef PRINTING
+    std::cout << "before conversion " << std::endl;
+#endif
+    for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
+    {
+        float sum = W.block<1, NUM_BASE_FEATURES>(j, 0).sum();
+        for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+        {
+            W(j, k) = W(j, k) / sum; // put it available for the MapElites parent class
+
+#ifdef PRINTING
+            std::cout << "sum " << sum << std::endl;
+            std::cout << W(j, k) << "," << std::endl;
+#endif
+            ++count;
+        }
+    }
+#ifdef PRINTING
+    std::cout << "after conversion " << std::endl;
+    std::cout << W << std::endl;
+#endif
+#endif
+
 #ifdef EVAL_ENVIR
 
 #else
@@ -39,7 +70,7 @@ void init_simu(std::string robot_file)
 #endif
 }
 
-#ifndef CONTROL
+#if META()
 struct SampledDataEntry
 {
     std::vector<size_t> genotype;

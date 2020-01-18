@@ -33,10 +33,4 @@ typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<
 // note to self:
 // adding rhex_dart::rhex_control<base_controller_t> as first argument to Simu type seems to fail
 
-namespace global
-{
-
-
-} // namespace global
-
 #endif
