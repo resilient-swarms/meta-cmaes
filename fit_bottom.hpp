@@ -73,7 +73,7 @@ public:
 #if DUTY_C()
         simu.get_descriptor<rhex_dart::descriptors::DutyCycle, std::vector<double>>(vec);
 #elif BO_C()
-        simu.get_descriptor<rhex_dart::descriptors::BodyOrientation, std::vector<double>>(results);
+        simu.get_descriptor<rhex_dart::descriptors::BodyOrientation, std::vector<double>>(vec);
 #elif LV_C()
         Eigen::Vector3d velocities;
         simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);

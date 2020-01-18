@@ -19,43 +19,45 @@ def configure(conf):
   
 
 
+			# sferes.create_variants(bld,
+		    #     source = 'rhex_metaCMAES.cpp',
+		    #     use = 'sferes2',
+		    #     uselib = 'DART_GRAPHIC ' + libs,
+		    #     target = 'rhex_metaCMAES_graphic_envir_'+c,
+		    #     cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEVAL_ENVIR","-DEXPERIMENT_TYPE="+str(i)],   # -march=native
+		    #             variants = ['BINARY'])
+			# sferes.create_variants(bld,
+		    #                source = 'rhex_metaCMAES.cpp',
+		    #                use = 'sferes2',
+		    #                uselib = 'DART_GRAPHIC ' + libs,
+		    #                target = 'rhex_metaCMAES_graphic_damage_'+c,
+		    #                cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEXPERIMENT_TYPE="+str(i)],   # -march=native
+		    #                variants = ['BINARY'])
+
 def build(bld):
     libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
 
     cxxflags = bld.get_env()['CXXFLAGS']
     tag=""
-    if os.environ.get('BUILD_ALL',False) == "True":
-			    sferes.create_variants(bld,
-		                   source = 'rhex_metaCMAES.cpp',
-		                   use = 'sferes2',
-		                   uselib = 'DART_GRAPHIC ' + libs,
-		                   target = 'rhex_metaCMAES_graphic_envir',
-		                   cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEVAL_ENVIR"],   # -march=native
-		                   variants = ['BINARY'])
-
-			    sferes.create_variants(bld,
-		                   source = 'rhex_metaCMAES.cpp',
-		                   use = 'sferes2',
-		                   uselib = 'DART_GRAPHIC ' + libs,
-		                   target = 'rhex_metaCMAES_graphic_damage',
-		                   cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC"],   # -march=native
-		                   variants = ['BINARY'])
-
-	                    sferes.create_variants(bld,
+    conditions=["meta","random","duty","bo","lv"]
+    if os.environ.get('BUILD_ENVIR',False) == "True":
+        for i,c in enumerate(conditions):
+			sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
 		                   use = 'sferes2',
 		                   uselib = libs,
-		                   target = 'rhex_metaCMAES_envir',
-		                   cxxflags = cxxflags + ['-g', '-march=native',"-DEVAL_ENVIR"],   # -march=native
+		                   target = 'rhex_metaCMAES_envir_'+c,
+		                   cxxflags = cxxflags + ['-g', '-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE="+str(i)],   # -march=native
 		                   variants = ['BINARY'])
-
-			    sferes.create_variants(bld,
-		                   source = 'rhex_metaCMAES.cpp',
-		                   use = 'sferes2',
-		                   uselib = libs,
-		                   target = 'rhex_metaCMAES_damage',
-		                   cxxflags = cxxflags + ['-g', '-march=native'],   # -march=native
-		                   variants = ['BINARY'])
+    elif os.environ.get('BUILD_DAMAGE',False) == "True":
+        for i,c in enumerate(conditions):
+			sferes.create_variants(bld,
+							source = 'rhex_metaCMAES.cpp',
+							use = 'sferes2',
+							uselib = libs,
+							target = 'rhex_metaCMAES_damage_'+c,
+							cxxflags = cxxflags + ['-g', '-march=native',"-DEXPERIMENT_TYPE="+str(i)],   # -march=native
+							variants = ['BINARY'])
     else:
 	    if os.environ.get('BUILD_GRAPHIC',False) == "True":
 	    	cxxflags+=["-DGRAPHIC"]
