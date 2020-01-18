@@ -28,6 +28,7 @@
 #include <boost/random.hpp>
 #include <iostream>
 #include <mutex>
+#include <cstdlib>
 
 #include <sferes/gen/evo_float.hpp>
 //#include <sferes/gen/sampled.hpp>
@@ -56,6 +57,7 @@ using namespace sferes;
 
 int main(int argc, char **argv)
 {
+    std::srand(atoi(argv[1])); //use experiment number as seed for random generator for init_simu
     ea_t ea;
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
     global::init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
