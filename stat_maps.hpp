@@ -5,7 +5,7 @@
 #include <boost/multi_array.hpp>
 #include <boost/serialization/array.hpp>
 #include <sferes/stat/stat.hpp>
-#include <meta-cmaes/bottom_typedefs.hpp>
+#include <meta-cmaes/mapelites_phenotype.hpp>
 // #define MAP_WRITE_PARENTS
 
 namespace sferes

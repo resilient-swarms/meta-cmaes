@@ -59,6 +59,7 @@ struct BottomParams
     };
 };
 
+#ifndef CONTROL
 /* params for the top-level map */
 struct CMAESParams
 {
@@ -69,7 +70,7 @@ struct CMAESParams
     //     SFERES_CONST float epsilon = 0.00;
     // };
 
-    struct evo_float  // not used; 
+    struct evo_float // not used;
     {
         // we choose the polynomial mutation type
         SFERES_CONST mutation_t mutation_type = gaussian;
@@ -103,5 +104,5 @@ struct CMAESParams
         SFERES_CONST float max = 1.0f;
     };
 };
-
+#endif
 #endif

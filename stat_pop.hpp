@@ -6,6 +6,7 @@
 #include <boost/serialization/array.hpp>
 #include <sferes/stat/stat.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
+#include <meta-cmaes/mapelites_phenotype.hpp>
 #include <meta-cmaes/top_typedefs.hpp>
 #include <Eigen/Dense>
 // #define MAP_WRITE_PARENTS

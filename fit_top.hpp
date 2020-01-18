@@ -4,7 +4,7 @@
 
 #include <sferes/fit/fitness.hpp>
 #include <meta-cmaes/global.hpp>
-#include <meta-cmaes/bottom_typedefs.hpp>
+#include <meta-cmaes/mapelites_phenotype.hpp>
 
 const size_t num_world_options = 10;
 
