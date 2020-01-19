@@ -9,7 +9,7 @@
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/fit_bottom.hpp>
 #include <meta-cmaes/global.hpp>
-
+#include <meta-cmaes/eval_bottom.hpp>
 
 
 
@@ -19,6 +19,8 @@
 typedef sferes::fit::FitBottom bottom_fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, bottom_fit_t, BottomParams> base_phen_t;
 typedef boost::shared_ptr<base_phen_t> bottom_indiv_t;
+typedef sferes::eval::EvalBottom<bottom_fit_t> bottom_eval_t;
+
 
 class MapElites // essentially a copy of map-elites (to avoid SFERES_EA) + some additional functionalities to support the top-level of meta-cmaes
 {
@@ -35,6 +37,7 @@ public:
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
   bottom_pop_t _pop; // current batch
+  bottom_eval_t _eval;
 
   weight_t W; //characteristic weight matrix of this map
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign

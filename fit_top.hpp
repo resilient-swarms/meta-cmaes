@@ -6,7 +6,7 @@
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/mapelites_phenotype.hpp>
 
-const size_t num_world_options = 10;
+
 
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
@@ -20,6 +20,7 @@ namespace fit
 SFERES_FITNESS(FitTop, sferes::fit::Fitness)
 {
 public:
+    bottom_eval_t _bottom_eval;
     size_t nb_evals = 0;
     /* current bottom-level map (new candidate to be added to _pop)*/
     template <typename MetaIndiv>
