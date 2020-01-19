@@ -73,6 +73,7 @@ public:
 
     bool dead() { return _dead; }
     std::vector<double> ctrl() { return _ctrl; }
+    
     std::vector<float> get_desc(simulator_t & simu, base_features_t & b)
     {
 #ifdef PRINTING
@@ -88,10 +89,10 @@ public:
 #elif LV_C()
         Eigen::Vector3d velocities;
         simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
-        vec.resize(3);
-        vec[0] = velocities[0];
-        vec[1] = velocities[1];
-        vec[2] = velocities[2];
+        vec.resize(3);                                  // cf. skeleton : .54 .39 .139
+        vec[0] = std::min(1.0, std::max(0.0, velocities[0] / (2.0 * global::BODY_LENGTH)));                                // [0, 2] body lengths (moving backwards is unlikely; .54 is body length)
+        vec[1] = std::min(1.0, std::max(0.0, (velocities[1] + 0.80 * global::BODY_WIDTH) / (1.60 * global::BODY_WIDTH)));  // [-0.80,0.80] body widths, body cannot suddenly rotate heavily
+        vec[2] = std::min(1.0, std::max(0.0, (velocities[2] + 1.0 * global::BODY_HEIGHT) / (1.60 * global::BODY_HEIGHT))); // [-1,0.60] body heights; body usually tilts backwards
 
 #else
 #error "Please give a viable condition in {0,1,2,3,4}"
