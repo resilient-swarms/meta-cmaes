@@ -38,7 +38,18 @@ public:
     {
     }
 #endif
-
+    inline void set_fitness(float fFitness)
+    {
+#if CONTROL()
+        this->_objs.resize(1);
+        this->_objs[0] = fFitness;
+#endif
+        this->_value = fFitness;
+    }
+    inline void set_dead(bool dead)
+    {
+        this->_dead = dead;
+    }
     template <typename Indiv>
     void eval(Indiv & indiv)
     {
@@ -173,7 +184,7 @@ protected:
         simulator_t simu(_ctrl, robot);
         simu.run(BottomParams::simu::time); // run simulation for 5 seconds
 
-        this->_value = simu.covered_distance();
+        set_fitness(simu.covered_distance());
 
         std::vector<float> desc;
 

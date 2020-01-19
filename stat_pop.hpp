@@ -41,6 +41,7 @@ public:
     std::vector<boost::shared_ptr<Phen>> _pop;
     size_t _capacity, _sp, _max_sp;
     global::database_t _database;
+    size_t _nb_evals;
     template <typename E>
     void refresh(const E &ea)
     {
@@ -65,13 +66,15 @@ public:
         _database = global::database;
         _sp       = global::database.sp;
         _max_sp   = global::database.max_sp;
+        _nb_evals = global::nb_evals;
     }
-    void set_database()
+    void set_globals()
     {
         // reset the data-base
         global::database = _database;
         global::database.sp = _sp;
         global::database.max_sp = _max_sp;
+        global::nb_evals = _nb_evals;
     }
     // show the n-th individual from zero'th map in the population
     void show(std::ostream & os, size_t k)
@@ -98,7 +101,7 @@ public:
         ar &BOOST_SERIALIZATION_NVP(_max_sp);
         if (Archive::is_loading::value)
         {
-            set_database();
+            set_globals();
         }
     }
 
