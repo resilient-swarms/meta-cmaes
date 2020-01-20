@@ -16,9 +16,6 @@ typedef sferes::fit::FitBottom bottom_fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, bottom_fit_t, BottomParams> base_phen_t;
 typedef boost::shared_ptr<base_phen_t> bottom_indiv_t;
 
-
-
-
 template <typename Phen>
 struct _eval_serial_individuals
 {
@@ -29,12 +26,19 @@ struct _eval_serial_individuals
     for (size_t i = 0; i < _pop.size(); ++i)
     {
       _pop[i]->fit().eval(*_pop[i]);
+#if META()
+      //push to the database
+      global::database.push_back(global::data_entry_t(_pop[i]->gen().data(), _pop[i]->fit().b(), _pop[i]->fit().value()));
+#ifdef PRINTING
+      std::cout << " adding entry with fitness " << _pop[i]->fit().value() << std::endl;
+#endif
+#endif
     }
   }
 };
 
 //typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
-typedef sferes::eval::_eval_parallel_individuals<0,base_phen_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<0, base_phen_t> bottom_eval_helper_t;
 class EvalIndividuals
 {
 public:
@@ -45,7 +49,9 @@ public:
     //dbg::trace trace("eval", DBG_HERE);
     assert(p.size());
     float value = 0.0f;
-    auto helper = bottom_eval_helper_t(p);
+    auto helper = bottom_eval_helper_t();
+    helper._pop = p;
+    helper.run();
     _nb_evals += p.size(); // increase every time for different epochs
 #ifdef PRINTING
     std::cout << "number of evaluations is now " << _nb_evals << std::endl;
@@ -375,7 +381,7 @@ public:
       indiv->develop();
       ptmp.push_back(indiv);
     }
-    eval_individuals.eval<base_phen_t>(ptmp, W); // note that W is not initialised but we do not care here, just for the database
+    eval_individuals.eval<base_phen_t>(ptmp, W); // note that W is not initialised but we do not care here, just for the database; no need for archive therefore
   }
   void develop()
   {

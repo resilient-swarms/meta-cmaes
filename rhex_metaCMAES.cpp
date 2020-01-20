@@ -24,6 +24,7 @@
 #define FRICTION 1.0
 
 #define PRINTING
+#define CHECK_PARALLEL
 
 #include <boost/random.hpp>
 #include <iostream>

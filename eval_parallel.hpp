@@ -88,10 +88,18 @@ public:
        * @param un_genome_size The size of the genome of an individual.
        * @param un_pop_size The size of the population.
        */
+#if META()
+
+  CSharedMem(size_t descriptor_size, size_t base_feature_size) : m_unDescriptorSize(descriptor_size), m_unBasefeatures(base_feature_size)
+  {
+    init_shared_mem();
+  }
+#else
   CSharedMem(size_t descriptor_size) : m_unDescriptorSize(descriptor_size)
   {
     init_shared_mem();
   }
+#endif
   void init_shared_mem()
   {
     size_t unShareMemSize = get_block_size() * sizeof(float); //m_unPopSize *
@@ -153,7 +161,11 @@ public:
 
   inline size_t get_block_size()
   {
+#if META()
+    return (m_unDescriptorSize + m_unBasefeatures + 1);
+#else
     return (m_unDescriptorSize + 1);
+#endif
   }
   /**
        * Returns the score of an individual.
@@ -172,6 +184,17 @@ public:
     float *descriptor = &m_pfSharedMem[1]; // pointer to the descriptor
     std::vector<float> bd;
     for (int i = 0; i < BottomParams::ea::behav_dim; ++i)
+    {
+      bd.push_back(descriptor[i]);
+    }
+    return bd;
+  }
+
+  inline std::vector<float> getBaseDescriptor()
+  {
+    float *descriptor = &m_pfSharedMem[m_unDescriptorSize + 1]; // pointer to the descriptor
+    std::vector<float> bd;
+    for (int i = 0; i <= get_block_size(); ++i)
     {
       bd.push_back(descriptor[i]);
     }
@@ -211,6 +234,25 @@ public:
     }
   }
 
+  /**
+       * Sets the descriptor of an individual.
+       * @param un_individual The individual.
+       * @param desc The descriptor
+       */
+  inline void setBaseFeatures(std::vector<float> b)
+  {
+
+    /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
+
+    for (int i = 0; i < m_unBasefeatures; ++i)
+    {
+
+      ::memcpy(m_pfSharedMem + (m_unDescriptorSize + i + 1),
+               &b[i],
+               sizeof(float));
+    }
+  }
+
   inline void setDeath(bool dead)
   {
     /* death is copied to the final index of each block */
@@ -223,6 +265,7 @@ private:
   /** Descriptor size */
   size_t m_unDescriptorSize;
 
+  size_t m_unBasefeatures;
   // /** Population size */
   // size_t m_unPopSize;
 
@@ -252,7 +295,6 @@ struct _eval_parallel_individuals
 
   _eval_parallel_individuals() : MasterPID(::getpid())
   {
-    
   }
 
   _eval_parallel_individuals(pop_t &pop) : _pop(pop),
@@ -277,7 +319,11 @@ struct _eval_parallel_individuals
 
     for (size_t i = 0; i < to_add; ++i)
     {
+#if META()
+      shared_memory.push_back(new CSharedMem(behav_dim, NUM_BASE_FEATURES));
+#else
       shared_memory.push_back(new CSharedMem(behav_dim));
+#endif
     }
     //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
   }
@@ -332,9 +378,19 @@ struct _eval_parallel_individuals
     for (size_t i = 0; i < _pop.size(); ++i)
     {
       _pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
-      bd = shared_memory[i]->getDescriptor();
-      _pop[i]->fit().set_desc(bd);
+#if META()
+      _pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
+#endif
+      _pop[i]->fit().set_desc(shared_memory[i]->getDescriptor());
       _pop[i]->fit().set_dead(shared_memory[i]->getDeath());
+
+#if META()
+      //push to the database
+      global::database.push_back(global::data_entry_t(_pop[i]->gen().data(), _pop[i]->fit().b(), _pop[i]->fit().value()));
+#ifdef PRINTING
+      std::cout << " parent base descriptor " << _pop[i]->fit().b() << std::endl;
+#endif
+#endif
 #ifdef CHECK_PARALLEL
       std::cout << "parent fitness " << i << " " << _pop[i]->fit().value() << std::endl;
       std::cout << "parent: descriptor for individual " << i << std::endl;
@@ -392,6 +448,7 @@ struct _eval_parallel_individuals
       wait_and_erase();
     }; // keep performing waits until an error returns, meaning no more child existing
 
+    write_data();//write data once finished
     //std::cout.Flush();
     //std::err.Flush();
     //std::cout << "finished all processes "<< std::endl;
@@ -438,10 +495,14 @@ void init_shared_mem()
   shared_memory.clear();
   for (size_t i = 0; i < num_memory; ++i)
   {
+#if META()
+    shared_memory.push_back(new sferes::eval::CSharedMem(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+#else
     shared_memory.push_back(new sferes::eval::CSharedMem(BottomParams::ea::behav_dim));
+#endif
   }
 }
-} // namespace sferes
 } // namespace eval
+} // namespace sferes
 
 #endif
