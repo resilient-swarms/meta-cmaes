@@ -9,18 +9,55 @@
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/fit_bottom.hpp>
 #include <meta-cmaes/global.hpp>
-#include <meta-cmaes/eval_bottom.hpp>
-
-
-
-
+#include <meta-cmaes/eval_parallel.hpp>
 
 // now that FitBottom is defined, define the rest of the bottom level
 typedef sferes::fit::FitBottom bottom_fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, bottom_fit_t, BottomParams> base_phen_t;
 typedef boost::shared_ptr<base_phen_t> bottom_indiv_t;
-typedef sferes::eval::EvalBottom<bottom_fit_t> bottom_eval_t;
 
+
+
+
+template <typename Phen>
+struct _eval_serial_individuals
+{
+  typedef std::vector<boost::shared_ptr<Phen>> pop_t;
+  pop_t _pop;
+  _eval_serial_individuals(pop_t &p) : _pop(p)
+  {
+    for (size_t i = 0; i < _pop.size(); ++i)
+    {
+      _pop[i]->fit().eval(*_pop[i]);
+    }
+  }
+};
+
+//typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<0,base_phen_t> bottom_eval_helper_t;
+class EvalIndividuals
+{
+public:
+  EvalIndividuals() : _nb_evals(0) {}
+  template <typename Phen>
+  void eval(std::vector<boost::shared_ptr<Phen>> &p, weight_t &W)
+  {
+    //dbg::trace trace("eval", DBG_HERE);
+    assert(p.size());
+    float value = 0.0f;
+    auto helper = bottom_eval_helper_t(p);
+    _nb_evals += p.size(); // increase every time for different epochs
+#ifdef PRINTING
+    std::cout << "number of evaluations is now " << _nb_evals << std::endl;
+#endif
+  }
+  unsigned nb_evals() const { return _nb_evals; }
+
+protected:
+  unsigned _nb_evals;
+};
+
+typedef EvalIndividuals bottom_eval_t;
 
 class MapElites // essentially a copy of map-elites (to avoid SFERES_EA) + some additional functionalities to support the top-level of meta-cmaes
 {
@@ -37,9 +74,9 @@ public:
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
   bottom_pop_t _pop; // current batch
-  bottom_eval_t _eval;
-
+  std::vector<float> values;
   weight_t W; //characteristic weight matrix of this map
+  bottom_eval_t eval_individuals;
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
   MapElites()
   {
@@ -119,7 +156,7 @@ public:
       ptmp.push_back(i2);
     }
 
-    eval_map(ptmp, 0, ptmp.size());
+    eval_individuals.eval<base_phen_t>(ptmp, W);
 
     for (size_t i = 0; i < ptmp.size(); ++i)
     {
@@ -161,26 +198,14 @@ public:
     return pop[x1];
   }
 
-  void eval_map(std::vector<boost::shared_ptr<base_phen_t>> &pop, size_t begin, size_t end)
-  {
-    //dbg::trace trace("eval", DBG_HERE);
-    assert(pop.size());
-    assert(begin < pop.size());
-    assert(end <= pop.size());
-    for (size_t i = begin; i < end; ++i)
-    {
-      eval_individual(pop[i]);
-    }
-  }
+  // void eval_individuals()
+  // {
 
-  void eval_individual(boost::shared_ptr<base_phen_t> &ind)
-  {
-
-    ind->fit() = bottom_fit_t(W);
-    ind->develop();
-    ind->fit().eval<base_phen_t>(*ind);
-    ++global::nb_evals;
-  }
+  //   ind->fit() = bottom_fit_t(W);
+  //   ind->develop();
+  //   ind->fit().eval<base_phen_t>(*ind);
+  //   ++global::nb_evals;
+  // }
 
   void do_epochs(size_t num_epochs)
   {
@@ -342,12 +367,15 @@ public:
   }
   void random_pop()
   {
+    bottom_pop_t ptmp;
     for (size_t i = 0; i < BottomParams::pop::init_size; ++i)
     {
       boost::shared_ptr<base_phen_t> indiv(new base_phen_t());
       indiv->random();
-      eval_individual(indiv);
+      indiv->develop();
+      ptmp.push_back(indiv);
     }
+    eval_individuals.eval<base_phen_t>(ptmp, W); // note that W is not initialised but we do not care here, just for the database
   }
   void develop()
   {
@@ -387,6 +415,5 @@ public:
 #endif
   }
 };
-
 
 #endif

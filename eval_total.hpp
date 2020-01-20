@@ -16,7 +16,7 @@ namespace eval
 SFERES_EVAL(EvalTotal, Eval)
 {
 public:
-  EvalTotal() : _nb_evals(0) {}
+  EvalTotal() {}
   template <typename MetaIndiv>
   void eval(std::vector<boost::shared_ptr<MetaIndiv>> & pop, size_t begin, size_t end,
             const typename MetaIndiv::fit_t &fit_proto)
@@ -37,10 +37,11 @@ public:
 #ifdef PRINTING
       std::cout << "evaluating meta-individual  " + std::to_string(i) << std::endl;
 #endif
-
+      global::nb_evals +=  pop[i]->eval_individuals.nb_evals();
       pop[i]->fit().eval<MetaIndiv>(*pop[i]); // evaluate its recovered performance
+      global::nb_evals += pop[i]->fit().nb_evals();
     }
-    _nb_evals += global::nb_evals;
+    
 #ifdef PRINTING
       std::cout<< "number of evaluations is now "<<_nb_evals<<std::endl;
 #endif

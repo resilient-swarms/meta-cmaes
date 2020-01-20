@@ -24,7 +24,7 @@
 typedef sferes::fit::FitBottom<BottomParams> fit_t;
 typedef sferes::phen::Parameters<bottom_gen_t, fit_t, BottomParams> phen_t;
 typedef boost::shared_ptr<phen_t> bottom_indiv_t;
-typedef sferes::eval::EvalParallel<BottomParams> eval_t;
+typedef sferes::eval::EvalParallelIndividuals<BottomParams> eval_t;
 
 
 typedef boost::fusion::vector<sferes::stat::Map<phen_t, BottomParams>> stat_t;

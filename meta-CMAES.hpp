@@ -16,7 +16,6 @@
 
 #include <sferes/ea/ea.hpp>
 
-#include <meta-cmaes/fit_top.hpp>
 
 #include <meta-cmaes/top_typedefs.hpp>
 

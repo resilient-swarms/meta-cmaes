@@ -236,13 +236,11 @@ private:
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 
-template <typename Phen>
-struct _eval_parallel
+template <int behav_dim, typename Phen>
+struct _eval_parallel_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
-  typedef typename Phen::fit_t fit_t;
   pop_t _pop;
-  fit_t _fit;
   std::vector<float> bd;
   /** PID of the master process */
   pid_t MasterPID;
@@ -250,31 +248,36 @@ struct _eval_parallel
   /** PIDs of the slave processes */
   std::vector<pid_t> SlavePIDs;
 
-  ~_eval_parallel(){};
-  _eval_parallel(pop_t &pop, const fit_t &fit) : _pop(pop),
-                                                 _fit(fit),
-                                                 MasterPID(::getpid())
+  ~_eval_parallel_individuals(){};
+
+  _eval_parallel_individuals() : MasterPID(::getpid())
   {
-    allocate_additional_memory();
-    create_processes();
-    destroy_additional_memory();
-  }
-  _eval_parallel(const _eval_parallel &ev) : _pop(ev.pop),
-                                             _fit(ev.fit),
-                                             MasterPID(::getpid())
-  {
-    allocate_additional_memory();
-    create_processes();
-    destroy_additional_memory();
+    
   }
 
+  _eval_parallel_individuals(pop_t &pop) : _pop(pop),
+                                           MasterPID(::getpid())
+  {
+    run();
+  }
+  _eval_parallel_individuals(const _eval_parallel_individuals &ev) : _pop(ev._pop),
+                                                                     MasterPID(::getpid())
+  {
+    run();
+  }
+  void run()
+  {
+    allocate_additional_memory();
+    create_processes();
+    destroy_additional_memory();
+  }
   void allocate_additional_memory()
   {
     size_t to_add = _pop.size() - num_memory;
 
     for (size_t i = 0; i < to_add; ++i)
     {
-      shared_memory.push_back(new CSharedMem(BottomParams::ea::behav_dim));
+      shared_memory.push_back(new CSharedMem(behav_dim));
     }
     //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
   }
@@ -291,7 +294,8 @@ struct _eval_parallel
     //std::err.Flush();
     exit(EXIT_SUCCESS);
   }
-  void LaunchSlave(size_t slave_id)
+
+  virtual void LaunchSlave(size_t slave_id)
   {
 
     //pid_t slave_pid = SlavePIDs[slave_id];
@@ -304,12 +308,13 @@ struct _eval_parallel
     // evaluate the individual
     _pop[slave_id]->fit().eval(*_pop[slave_id]);
 
-    assert(!std::isnan(_pop[slave_id]->fit().objs()[0])); // ASSUMES SINGLE OBJECTIVE
+    assert(!std::isnan(_pop[slave_id]->fit().value())); // ASSUMES SINGLE OBJECTIVE
     // write fitness and descriptors to shared memory
-    shared_memory[slave_id]->setFitness(_pop[slave_id]->fit().objs()[0]); // ASSUME SINGLE OBJECTIVE
+    shared_memory[slave_id]->setFitness(_pop[slave_id]->fit().value()); // ASSUME SINGLE OBJECTIVE
     shared_memory[slave_id]->setDescriptor(_pop[slave_id]->fit().desc());
     shared_memory[slave_id]->setDeath(_pop[slave_id]->fit().dead());
-    std::cout << "child fitness " << slave_id << " " << _pop[slave_id]->fit().obj(0) << std::endl;
+#ifdef CHECK_PARALLEL
+    std::cout << "child fitness " << slave_id << " " << _pop[slave_id]->fit().value() << std::endl;
     std::cout << "child: descriptor for individual " << slave_id << std::endl;
 
     for (size_t j = 0; j < _pop[slave_id]->fit().desc().size(); ++j)
@@ -317,8 +322,29 @@ struct _eval_parallel
       std::cout << "   " << _pop[slave_id]->fit().desc()[j] << std::endl;
     }
     std::cout << "child: death " << _pop[slave_id]->fit().dead() << std::endl;
-
+#endif
     quit();
+  }
+
+  virtual void write_data()
+  {
+    /* Back in the parent, copy the scores into the population data */
+    for (size_t i = 0; i < _pop.size(); ++i)
+    {
+      _pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
+      bd = shared_memory[i]->getDescriptor();
+      _pop[i]->fit().set_desc(bd);
+      _pop[i]->fit().set_dead(shared_memory[i]->getDeath());
+#ifdef CHECK_PARALLEL
+      std::cout << "parent fitness " << i << " " << _pop[i]->fit().value() << std::endl;
+      std::cout << "parent: descriptor for individual " << i << std::endl;
+      for (size_t j = 0; j < _pop[i]->fit().desc().size(); ++j)
+      {
+        std::cout << "   " << _pop[i]->fit().desc()[j] << std::endl;
+      }
+      std::cout << "parent: death " << _pop[i]->fit().dead() << std::endl;
+#endif
+    }
   }
 
   void wait_and_erase()
@@ -340,8 +366,6 @@ struct _eval_parallel
     while (i < _pop.size())
     {
       //std::cout<<"count "<< i << std::endl;
-      /* initialise the fitmap */
-      _pop[i]->fit() = _fit;
 
       if (SlavePIDs.size() < NUM_CORES) // still need more
       {
@@ -368,29 +392,15 @@ struct _eval_parallel
       wait_and_erase();
     }; // keep performing waits until an error returns, meaning no more child existing
 
-    /* Back in the parent, copy the scores into the population data */
-    for (size_t i = 0; i < _pop.size(); ++i)
-    {
-      _pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
-      bd = shared_memory[i]->getDescriptor();
-      _pop[i]->fit().set_desc(bd);
-      _pop[i]->fit().set_dead(shared_memory[i]->getDeath());
-      std::cout << "parent fitness " << i << " " << _pop[i]->fit().obj(0) << std::endl;
-      std::cout << "parent: descriptor for individual " << i << std::endl;
-      for (size_t j = 0; j < _pop[i]->fit().desc().size(); ++j)
-      {
-        std::cout << "   " << _pop[i]->fit().desc()[j] << std::endl;
-      }
-      std::cout << "parent: death " << _pop[i]->fit().dead() << std::endl;
-    }
     //std::cout.Flush();
     //std::err.Flush();
     //std::cout << "finished all processes "<< std::endl;
   }
 };
 
-SFERES_EVAL(EvalParallel, Eval){
+#if CONTROL()
 
+SFERES_EVAL(EvalParallelIndividuals, Eval){
   public :
       template <typename Phen>
       void eval(std::vector<boost::shared_ptr<Phen>> & pop, size_t begin, size_t end,
@@ -404,19 +414,22 @@ throw std::runtime_error("cannot use parallel while doing analysis");
 #endif
 /* if you want timer */
 //auto t1 = std::chrono::system_clock::now();
+/* initialise the fitmap */
+for (size_t i = begin; i < end; ++i)
+{
+  pop[i]->fit() = fit_proto;
+}
+_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>(pop);
+this->_nb_evals += (end - begin);
+}
+};
 
-_eval_parallel<Phen>(pop, fit_proto);
-
-/* stop timer */
+#endif
 // Some computation here
 //auto t2 = std::chrono::system_clock::now();
 //std::chrono::duration<double> duration =t2 - t1;
 //std::cout <<"evaluation time: "<< duration.count() <<'\n';
-//std::cout.Flush();
-
-this->_nb_evals += (end - begin);
-} // namespace eval
-}; // namespace sferes
+//std::cout.Flush()
 
 void init_shared_mem()
 {
@@ -428,7 +441,7 @@ void init_shared_mem()
     shared_memory.push_back(new sferes::eval::CSharedMem(BottomParams::ea::behav_dim));
   }
 }
-}
-}
+} // namespace sferes
+} // namespace eval
 
 #endif

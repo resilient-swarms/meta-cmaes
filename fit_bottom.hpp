@@ -6,9 +6,8 @@
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
 
-#if META()
-#include <meta-cmaes/mapelites_phenotype.hpp>
-#else
+#if CONTROL()
+
 #include <modules/map_elites/fit_map.hpp>
 #endif
 
@@ -50,6 +49,7 @@ public:
     {
         this->_dead = dead;
     }
+
     template <typename Indiv>
     void eval(Indiv & indiv)
     {
@@ -90,9 +90,9 @@ public:
         Eigen::Vector3d velocities;
         simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
         vec.resize(3);                                  // cf. skeleton : .54 .39 .139
-        vec[0] = std::min(1.0, std::max(0.0, velocities[0] / (2.0 * global::BODY_LENGTH)));                                // [0, 2] body lengths (moving backwards is unlikely; .54 is body length)
+        vec[0] = std::min(1.0, std::max(0.0, velocities[0] / (1.6 * global::BODY_LENGTH)));                                // [0, 1.6] body lengths (moving backwards is unlikely; .54 is body length)
         vec[1] = std::min(1.0, std::max(0.0, (velocities[1] + 0.80 * global::BODY_WIDTH) / (1.60 * global::BODY_WIDTH)));  // [-0.80,0.80] body widths, body cannot suddenly rotate heavily
-        vec[2] = std::min(1.0, std::max(0.0, (velocities[2] + 1.0 * global::BODY_HEIGHT) / (1.60 * global::BODY_HEIGHT))); // [-1,0.60] body heights; body usually tilts backwards
+        vec[2] = std::min(1.0, std::max(0.0, (velocities[2] + 0.30 * global::BODY_HEIGHT) / (0.60 * global::BODY_HEIGHT))); // [-0.30,0.30] body heights; body usually tilts backwards
 
 #else
 #error "Please give a viable condition in {0,1,2,3,4}"
@@ -211,13 +211,7 @@ protected:
             // convert to final descriptor
             base_features_t b;
             this->_desc = get_desc(simu, b);
-#if META()
-            //push to the database
-            global::database.push_back(global::data_entry_t(indiv.gen().data(), b, this->_value));
 #ifdef PRINTING
-            std::cout << " adding entry with fitness " << this->_value << std::endl;
-#endif
-#else
             std::cout << " fitness is " << this->_value << std::endl;
 #endif
             this->_dead = false;

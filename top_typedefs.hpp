@@ -6,6 +6,7 @@
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/mapelites_phenotype.hpp>
 #include <meta-cmaes/eval_total.hpp>
+#include <meta-cmaes/fit_top.hpp>
 
 
 

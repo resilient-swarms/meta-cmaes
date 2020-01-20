@@ -5,7 +5,11 @@
 #include <sferes/fit/fitness.hpp>
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/mapelites_phenotype.hpp>
+#include <meta-cmaes/eval_meta.hpp>
 
+
+// typedef
+    
 
 
 /* bottom-level fitmap 
@@ -16,22 +20,18 @@ namespace sferes
 
 namespace fit
 {
-
 SFERES_FITNESS(FitTop, sferes::fit::Fitness)
 {
 public:
-    bottom_eval_t _bottom_eval;
-    size_t nb_evals = 0;
+    
     /* current bottom-level map (new candidate to be added to _pop)*/
     template <typename MetaIndiv>
     void eval(MetaIndiv & indiv)
     {
 
         //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
         this->_objs.resize(1);
         std::fill(this->_objs.begin(), this->_objs.end(), 0);
-        this->_dead = false;
         _eval<MetaIndiv>(indiv);
         //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         // std::cout << "Time difference = " <<     std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
@@ -44,65 +44,82 @@ public:
         ar &boost::serialization::make_nvp("_objs", this->_objs);
     }
 
-    bool dead() { return _dead; }
-    std::vector<double> weight() { return _ctrl; }
+    bool dead() { return false; }
+#ifdef EVAL_ENVIR
+    static std::tuple<int, float> _eval_all(const base_phen_t &indiv)
+    {
+#ifdef PRINTING
+        std::cout << "start evaluating " << global::world_options.size() << " environments" << std::endl;
+#endif
+        float val = 0.0f;
+        for (size_t world_option = 0; world_option < global::world_options.size(); ++world_option)
+        {
+            val += _eval_single_envir(indiv, world_option, 0);
+        }
+        return val;
+    }
+#else
+    static float _eval_all(const base_phen_t &indiv)
+    {
+#ifdef PRINTING
+        std::cout << "start evaluating " << global::damage_sets.size() << " damage sets" << std::endl;
+#endif
+        float val = 0.0f;
+        for (size_t i = 0; i < global::damage_sets.size(); ++i)
+        {
+            // initilisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
+            _eval_single_envir(indiv, 0, i);
+        }
+        return val;
+    }
+#endif
+    void avg_value(float val, size_t num_individuals)
+    {
+
+#ifdef EVAL_ENVIR
+        _nb_evals = num_individuals * num_world_options; // no need to divide
+#else
+        _nb_evals = num_individuals * global::damage_sets.size(); // no need to divide
+#endif
+        val = val / (float)(_nb_evals);
+        set_fitness(val);
+#ifdef PRINTING
+        std::cout << "recovered performance " << this->_value << std::endl;
+#endif
+    }
+
+    inline void set_fitness(float fFitness)
+    {
+#if CONTROL()
+        this->_objs.resize(1);
+        this->_objs[0] = fFitness;
+#endif
+        this->_value = fFitness;
+    }
+
+    size_t nb_evals()
+    {
+        return _nb_evals;
+    }
 
 protected:
-    bool _dead;
-    std::vector<double> _ctrl;
-
+    size_t _nb_evals = 0;
     // descriptor work done here, in this case duty cycle
     template <typename MetaIndiv>
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-        std::vector<bottom_indiv_t> individuals = meta_indiv.sample_individuals();
-        for (bottom_indiv_t &individual : individuals)
-        {
-            _eval_all(individual, avg_fitness);
-        }
-#ifdef EVAL_ENVIR
-        this->_value = avg_fitness / (float)(individuals.size() * num_world_options); // no need to divide
-#else
-        this->_value = avg_fitness / (float)(individuals.size() * global::damage_sets.size()); // no need to divide
-#endif
-#ifdef PRINTING
-        std::cout<< "Recovered performance: "<<this->_value << std::endl;
-#endif
-        this->_dead = false;
+        typedef sferes::eval::_eval_parallel_meta<0, MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
+        auto helper = top_eval_helper_t(meta_indiv); //allow parallelisation over individuals (_parallel_eval_meta)
     }
-#ifdef EVAL_ENVIR
-    void _eval_all(const bottom_indiv_t &indiv, float &avg_fitness)
+    static float _eval_single_envir(const base_phen_t &indiv, size_t world_option, size_t damage_option)
     {
-#ifdef PRINTING
-        std::cout << "start evaluating " << global::world_options.size() << " environments" << std::endl;
-#endif
-        for (size_t world_option = 0; world_option < global::world_options.size(); ++world_option)
-        {
-            _eval_single_envir(indiv, world_option, 0, avg_fitness);
-        }
-    }
-#else
-    void _eval_all(const bottom_indiv_t &indiv, float &avg_fitness)
-    {
-#ifdef PRINTING
-        std::cout << "start evaluating " << global::damage_sets.size() << " damage sets" << std::endl;
-#endif
-        for (size_t i = 0; i < global::damage_sets.size(); ++i)
-        {
-            // initilisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
-            _eval_single_envir(indiv, 0, i, avg_fitness);
-        }
-    }
-#endif
-    void _eval_single_envir(const bottom_indiv_t &indiv, size_t world_option, size_t damage_option, float &avg_fitness)
-    {
-        ++global::nb_evals;
         // copy of controller's parameters
+        std::vector<double> _ctrl;
         _ctrl.clear();
 
         for (size_t i = 0; i < 24; i++)
-            _ctrl.push_back(indiv->gen().data(i));
+            _ctrl.push_back(indiv.gen().data(i));
 
 #ifdef EVAL_ENVIR
         // launching the simulation
@@ -121,13 +138,13 @@ protected:
         {
             // this means that something bad happened in the simulation
             // we do not kill the individual in the meta-map, but set fitness to zero and bd does not contribute
-            avg_fitness += 0;
+            return 0.0; // will not count towards the sum
             // do not update the descriptor !
         }
         else
         {
             // update the meta-fitness
-            avg_fitness += fitness;
+            return fitness;
         }
     }
 };

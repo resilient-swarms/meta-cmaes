@@ -52,10 +52,10 @@ struct BottomParams
         SFERES_CONST unsigned nb_gen = 60000;// 40,000 * 40 evaluations per generation --> 1.6M evals (take a bit more just in case there is time enough)
         // how often should the result file be written (here, each 5
         // generation)
-        SFERES_CONST int dump_period = 100;
+        SFERES_CONST int dump_period = 5;
 #endif
         SFERES_CONST unsigned size = 20;
-        SFERES_CONST unsigned init_size = 5;
+        SFERES_CONST unsigned init_size = 10;
         SFERES_CONST int initial_aleat = 1;
     };
 
