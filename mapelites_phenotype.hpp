@@ -37,8 +37,11 @@ struct _eval_serial_individuals
   }
 };
 
-//typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
-typedef sferes::eval::_eval_parallel_individuals<0, base_phen_t> bottom_eval_helper_t;
+#ifdef PARALLEL
+  typedef sferes::eval::_eval_parallel_individuals<0, base_phen_t> bottom_eval_helper_t;
+#else
+  typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
+#endif
 class EvalIndividuals
 {
 public:
@@ -49,9 +52,8 @@ public:
     //dbg::trace trace("eval", DBG_HERE);
     assert(p.size());
     float value = 0.0f;
-    auto helper = bottom_eval_helper_t();
-    helper._pop = p;
-    helper.run();
+    auto helper = bottom_eval_helper_t(p);
+
     _nb_evals += p.size(); // increase every time for different epochs
 #ifdef PRINTING
     std::cout << "number of evaluations is now " << _nb_evals << std::endl;
