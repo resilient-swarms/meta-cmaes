@@ -57,16 +57,13 @@
 
 using namespace sferes;
 
-
-
-
-
-
-
 int main(int argc, char **argv)
 {
     std::srand(atoi(argv[1])); //use experiment number as seed for random generator for init_simu
     ea_t ea;
+#ifdef PARALLEL_RUN
+    sferes::eval::init_shared_mem();
+#endif
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
     global::init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
 

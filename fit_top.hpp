@@ -110,9 +110,9 @@ protected:
     {
         float avg_fitness = 0;
 #ifdef PARALLEL_RUN
-        typedef sferes::eval::_eval_parallel_meta<0, MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
+        typedef sferes::eval::_eval_parallel_meta<MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
 #else
-        typedef sferes::eval::_eval_serial_meta<0, MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
+        typedef sferes::eval::_eval_serial_meta<MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
 #endif
         auto helper = top_eval_helper_t(meta_indiv); //allow parallelisation over individuals (_parallel_eval_meta)
     }

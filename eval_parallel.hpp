@@ -55,6 +55,7 @@
 #include <ctime>
 
 #include <meta-cmaes/params.hpp>
+#include <meta-cmaes/feature_vector_typedefs.hpp>
 
 #define NUM_CORES 10
 
@@ -77,7 +78,7 @@ namespace sferes
 {
 namespace eval
 {
-size_t num_memory;
+int num_memory;
 /** Shared memory manager for data exchange between master and slaves */
 class CSharedMem
 {
@@ -182,23 +183,23 @@ public:
   inline std::vector<float> getDescriptor()
   {
     float *descriptor = &m_pfSharedMem[1]; // pointer to the descriptor
-    std::vector<float> bd;
-    for (int i = 0; i < BottomParams::ea::behav_dim; ++i)
+    std::vector<float> bd; bd.resize(m_unDescriptorSize);
+    for (int i = 0; i < m_unDescriptorSize; ++i)
     {
-      bd.push_back(descriptor[i]);
+      bd[i] = descriptor[i];
     }
     return bd;
   }
 
-  inline std::vector<float> getBaseDescriptor()
+  inline base_features_t getBaseDescriptor()
   {
     float *descriptor = &m_pfSharedMem[m_unDescriptorSize + 1]; // pointer to the descriptor
-    std::vector<float> bd;
-    for (int i = 0; i <= get_block_size(); ++i)
+    base_features_t b;
+    for (int i = 0; i < m_unBasefeatures; ++i)
     {
-      bd.push_back(descriptor[i]);
+      b(i, 0) = descriptor[i];
     }
-    return bd;
+    return b;
   }
 
   inline bool getDeath()
@@ -239,7 +240,7 @@ public:
        * @param un_individual The individual.
        * @param desc The descriptor
        */
-  inline void setBaseFeatures(std::vector<float> b)
+  inline void setBaseFeatures(base_features_t b)
   {
 
     /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
@@ -248,7 +249,7 @@ public:
     {
 
       ::memcpy(m_pfSharedMem + (m_unDescriptorSize + i + 1),
-               &b[i],
+               &b(i, 0),
                sizeof(float));
     }
   }
@@ -279,7 +280,7 @@ private:
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 
-template <int behav_dim, typename Phen>
+template <typename Phen>
 struct _eval_parallel_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
@@ -309,20 +310,27 @@ struct _eval_parallel_individuals
   }
   void run()
   {
-    allocate_additional_memory();
+    allocate_additional_memory(this->_pop.size());
     create_processes();
     destroy_additional_memory();
   }
-  void allocate_additional_memory()
+  void run(pop_t &pop)
   {
-    size_t to_add = _pop.size() - num_memory;
+    this->_pop = pop;
+    allocate_additional_memory(this->_pop.size());
+    create_processes();
+    destroy_additional_memory();
+  }
+  void allocate_additional_memory(int num_pop) 
+  {
+    int to_add = num_pop - num_memory;   //need to use integer not size_t, can be negative
 
-    for (size_t i = 0; i < to_add; ++i)
+    for (int i = 0; i < to_add; ++i)
     {
 #if META()
-      shared_memory.push_back(new CSharedMem(behav_dim, NUM_BASE_FEATURES));
+      shared_memory.push_back(new CSharedMem(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
 #else
-      shared_memory.push_back(new CSharedMem(behav_dim));
+      shared_memory.push_back(new CSharedMem(BottomParams::ea::behav_dim));
 #endif
     }
     //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
@@ -349,25 +357,40 @@ struct _eval_parallel_individuals
     //::signal(SIGTERM, SlaveHandleSIGTERM);
 
     // initialise the fitness function and the genotype
-    _pop[slave_id]->develop();
-    assert(slave_id < _pop.size());
+    this->_pop[slave_id]->develop();
+    assert(slave_id < this->_pop.size());
     // evaluate the individual
-    _pop[slave_id]->fit().eval(*_pop[slave_id]);
+    this->_pop[slave_id]->fit().eval(*this->_pop[slave_id]);
 
-    assert(!std::isnan(_pop[slave_id]->fit().value())); // ASSUMES SINGLE OBJECTIVE
+    assert(!std::isnan(this->_pop[slave_id]->fit().value())); // ASSUMES SINGLE OBJECTIVE
     // write fitness and descriptors to shared memory
-    shared_memory[slave_id]->setFitness(_pop[slave_id]->fit().value()); // ASSUME SINGLE OBJECTIVE
-    shared_memory[slave_id]->setDescriptor(_pop[slave_id]->fit().desc());
-    shared_memory[slave_id]->setDeath(_pop[slave_id]->fit().dead());
+    shared_memory[slave_id]->setFitness(this->_pop[slave_id]->fit().value()); // ASSUME SINGLE OBJECTIVE
+    bd = this->_pop[slave_id]->fit().desc();
+    shared_memory[slave_id]->setDescriptor(bd);
+    shared_memory[slave_id]->setDeath(this->_pop[slave_id]->fit().dead());
+#if META()
+    shared_memory[slave_id]->setBaseFeatures(this->_pop[slave_id]->fit().b());
 #ifdef CHECK_PARALLEL
-    std::cout << "child fitness " << slave_id << " " << _pop[slave_id]->fit().value() << std::endl;
+    std::cout << " child base descriptor " << this->_pop[slave_id]->fit().b() << std::endl;
+    std::cout << " child base descriptor (shared mem)" << shared_memory[slave_id]->getBaseDescriptor() << std::endl;
+#endif
+#endif
+#ifdef CHECK_PARALLEL
+    std::cout << "child fitness " << slave_id << " " << this->_pop[slave_id]->fit().value() << std::endl;
     std::cout << "child: descriptor for individual " << slave_id << std::endl;
 
-    for (size_t j = 0; j < _pop[slave_id]->fit().desc().size(); ++j)
+    for (size_t j = 0; j < this->_pop[slave_id]->fit().desc().size(); ++j)
     {
-      std::cout << "   " << _pop[slave_id]->fit().desc()[j] << std::endl;
+      std::cout << "   " << this->_pop[slave_id]->fit().desc()[j] << std::endl;
     }
-    std::cout << "child: death " << _pop[slave_id]->fit().dead() << std::endl;
+
+    std::cout << "child: descriptor (sharedmem) for individual " << slave_id << std::endl;
+    std::vector<float> temp = shared_memory[slave_id]->getDescriptor();
+    for (size_t j = 0; j < temp.size(); ++j)
+    {
+      std::cout << "   " << temp[j] << std::endl;
+    }
+    std::cout << "child: death " << this->_pop[slave_id]->fit().dead() << std::endl;
 #endif
     quit();
   }
@@ -375,31 +398,31 @@ struct _eval_parallel_individuals
   virtual void write_data()
   {
     /* Back in the parent, copy the scores into the population data */
-    for (size_t i = 0; i < _pop.size(); ++i)
+    for (size_t i = 0; i < this->_pop.size(); ++i)
     {
-      _pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
+      this->_pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
 #if META()
-      _pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
+      this->_pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
 #endif
       bd = shared_memory[i]->getDescriptor();
-      _pop[i]->fit().set_desc(bd);
-      _pop[i]->fit().set_dead(shared_memory[i]->getDeath());
+      this->_pop[i]->fit().set_desc(bd);
+      this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
 
 #if META()
       //push to the database
-      global::database.push_back(global::data_entry_t(_pop[i]->gen().data(), _pop[i]->fit().b(), _pop[i]->fit().value()));
-#ifdef PRINTING
-      std::cout << " parent base descriptor " << _pop[i]->fit().b() << std::endl;
+      global::database.push_back(global::data_entry_t(this->_pop[i]->gen().data(), this->_pop[i]->fit().b(), this->_pop[i]->fit().value()));
+#ifdef CHECK_PARALLEL
+      std::cout << " parent base descriptor " << this->_pop[i]->fit().b() << std::endl;
 #endif
 #endif
 #ifdef CHECK_PARALLEL
-      std::cout << "parent fitness " << i << " " << _pop[i]->fit().value() << std::endl;
+      std::cout << "parent fitness " << i << " " << this->_pop[i]->fit().value() << std::endl;
       std::cout << "parent: descriptor for individual " << i << std::endl;
-      for (size_t j = 0; j < _pop[i]->fit().desc().size(); ++j)
+      for (size_t j = 0; j < this->_pop[i]->fit().desc().size(); ++j)
       {
-        std::cout << "   " << _pop[i]->fit().desc()[j] << std::endl;
+        std::cout << "   " << this->_pop[i]->fit().desc()[j] << std::endl;
       }
-      std::cout << "parent: death " << _pop[i]->fit().dead() << std::endl;
+      std::cout << "parent: death " << this->_pop[i]->fit().dead() << std::endl;
 #endif
     }
   }
@@ -420,7 +443,7 @@ struct _eval_parallel_individuals
 
     /* Create and run slave processes until all individuals done; but never start more then NUM_CORES processes */
     size_t i = 0;
-    while (i < _pop.size())
+    while (i < this->_pop.size())
     {
       //std::cout<<"count "<< i << std::endl;
 
@@ -449,7 +472,7 @@ struct _eval_parallel_individuals
       wait_and_erase();
     }; // keep performing waits until an error returns, meaning no more child existing
 
-    write_data();//write data once finished
+    write_data(); //write data once finished
     //std::cout.Flush();
     //std::err.Flush();
     //std::cout << "finished all processes "<< std::endl;
@@ -477,7 +500,7 @@ for (size_t i = begin; i < end; ++i)
 {
   pop[i]->fit() = fit_proto;
 }
-auto helper =_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>();
+auto helper = _eval_parallel_individuals<Phen>();
 helper._pop = pop;
 helper.run();
 this->_nb_evals += (end - begin);
