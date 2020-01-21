@@ -381,7 +381,8 @@ struct _eval_parallel_individuals
 #if META()
       _pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
 #endif
-      _pop[i]->fit().set_desc(shared_memory[i]->getDescriptor());
+      bd = shared_memory[i]->getDescriptor();
+      _pop[i]->fit().set_desc(bd);
       _pop[i]->fit().set_dead(shared_memory[i]->getDeath());
 
 #if META()
@@ -476,7 +477,7 @@ for (size_t i = begin; i < end; ++i)
 {
   pop[i]->fit() = fit_proto;
 }
-_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>(pop);
+_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>();
 this->_nb_evals += (end - begin);
 }
 };

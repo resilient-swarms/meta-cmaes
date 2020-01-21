@@ -21,7 +21,11 @@ struct _eval_serial_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
   pop_t _pop;
-  _eval_serial_individuals(pop_t &p) : _pop(p)
+  _eval_serial_individuals()
+  {
+  }
+
+  void run()
   {
     for (size_t i = 0; i < _pop.size(); ++i)
     {
@@ -37,10 +41,10 @@ struct _eval_serial_individuals
   }
 };
 
-#ifdef PARALLEL
-  typedef sferes::eval::_eval_parallel_individuals<0, base_phen_t> bottom_eval_helper_t;
+#ifdef PARALLEL_RUN
+typedef sferes::eval::_eval_parallel_individuals<0, base_phen_t> bottom_eval_helper_t;
 #else
-  typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
+typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 #endif
 class EvalIndividuals
 {
@@ -52,8 +56,9 @@ public:
     //dbg::trace trace("eval", DBG_HERE);
     assert(p.size());
     float value = 0.0f;
-    auto helper = bottom_eval_helper_t(p);
-
+    auto helper = bottom_eval_helper_t();
+    helper._pop = p;
+    helper.run();
     _nb_evals += p.size(); // increase every time for different epochs
 #ifdef PRINTING
     std::cout << "number of evaluations is now " << _nb_evals << std::endl;

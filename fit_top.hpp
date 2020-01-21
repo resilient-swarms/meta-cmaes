@@ -109,7 +109,7 @@ protected:
     void _eval(MetaIndiv & meta_indiv)
     {
         float avg_fitness = 0;
-#ifdef PARALLEL
+#ifdef PARALLEL_RUN
         typedef sferes::eval::_eval_parallel_meta<0, MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
 #else
         typedef sferes::eval::_eval_serial_meta<0, MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;

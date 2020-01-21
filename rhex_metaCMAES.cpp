@@ -25,6 +25,7 @@
 
 #define PRINTING
 #define CHECK_PARALLEL
+#define PARALLEL_RUN
 
 #include <boost/random.hpp>
 #include <iostream>
