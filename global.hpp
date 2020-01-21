@@ -10,30 +10,85 @@
 
 namespace global
 {
+// sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
+std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
+{
+    std::uniform_int_distribution<> dis(0, N - 1);
+    std::unordered_set<size_t> elems;
+    elems.clear();
+
+    while (elems.size() < k)
+    {
+        elems.insert(dis(gen));
+    }
+
+    return elems;
+}
+
 const double BODY_LENGTH = .54;
 const double BODY_WIDTH = .39;
 const double BODY_HEIGHT = .139;
 size_t nb_evals = 0;
 std::shared_ptr<rhex_dart::Rhex> global_robot;
+#if META()
 #ifdef EVAL_ENVIR
 std::vector<size_t> world_options;
-#else
-std::vector<std::shared_ptr<rhex_dart::Rhex>> damaged_robots;
-std::vector<std::vector<rhex_dart::RhexDamage>> damage_sets = {
-    {rhex_dart::RhexDamage("leg_removal", "15")}
-    // {rhex_dart::RhexDamage("leg_removal", "26")}
 
-};
-#endif
-
-#if GLOBAL_WEIGHT()
-weight_t W;
-#endif
-
-void init_simu(std::string robot_file)
+void init_evolution(std::string seed, std::string robot_file)
 {
-    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, std::vector<rhex_dart::RhexDamage>()); // we repeat this creation process for damages
-#if GLOBAL_WEIGHT()
+    std::ofstream ofs("world_options_" + seed + ".txt");
+    std::seed_seq seed2(seed.begin(), seed.end());
+    std::mt19937 gen(seed2);
+    std::unordered_set<size_t> types = global::_pickSet(9, 5, gen);
+    std::cout << "world options :" << std::endl;
+
+    ofs << "{" ;
+    for (size_t el : types)
+    {
+        world_options.push_back(el + 1); // world 0 has been removed that is why +1
+        std::cout << world_options.back() << ", ";
+        ofs << world_options.back()  << ", " ;
+    }
+    ofs << "}" ;
+    std::cout << std::endl;
+}
+
+#else
+
+std::vector<std::shared_ptr<rhex_dart::Rhex>> damaged_robots;
+std::vector<std::vector<rhex_dart::RhexDamage>> damage_sets;
+// {rhex_dart::RhexDamage("leg_removal", "26")}
+void init_evolution(std::string seed, std::string robot_file)
+{
+    std::vector<std::string> damage_types = {"leg_removal", "blocked_joint", "leg_shortening", "passive_joint"};
+    std::seed_seq seed2(seed.begin(), seed.end());
+    std::mt19937 gen(seed2);
+    std::unordered_set<size_t> types = global::_pickSet(4, 2, gen); // two out of four types are selected randomly
+    std::cout << "damage sets :" << std::endl;
+    std::ofstream ofs("damage_sets_" + seed + ".txt");
+
+    for (size_t el : types)
+    {
+        std::string damage_type = damage_types[el];
+        for (size_t leg = 0; leg < 6; ++leg)
+        {
+            ofs << damage_type << "," << leg << "\n";
+            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); // world 0 has been remove that is why +1
+        }
+    }
+    std::cout << std::endl;
+
+    for (size_t i = 0; i < global::damage_sets.size(); ++i)
+    {
+        global::damaged_robots.push_back(std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damage_sets[i])); // we repeat this creation process for damages
+    }
+}
+#endif
+#elif GLOBAL_WEIGHT()
+weight_t W;
+void init_evolution(std::string seed, std::string robot_file)
+{
+    std::ofstream ofs("global_weight_" + seed + ".txt");
     W = weight_t::Random();                //random numbers between (-1,1)
     W = (W + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
     size_t count = 0;
@@ -46,7 +101,7 @@ void init_simu(std::string robot_file)
         for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
         {
             W(j, k) = W(j, k) / sum; // put it available for the MapElites parent class
-
+            
 #ifdef PRINTING
             std::cout << "sum " << sum << std::endl;
             std::cout << W(j, k) << "," << std::endl;
@@ -54,20 +109,22 @@ void init_simu(std::string robot_file)
             ++count;
         }
     }
+    ofs << W ;
 #ifdef PRINTING
     std::cout << "after conversion " << std::endl;
     std::cout << W << std::endl;
 #endif
-#endif
-
-#ifdef EVAL_ENVIR
-
+}
 #else
-    for (size_t i = 0; i < global::damage_sets.size(); ++i)
-    {
-        global::damaged_robots.push_back(std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damage_sets[i])); // we repeat this creation process for damages
-    }
+void init_evolution(std::string seed, std::string robot_file)
+{
+}
 #endif
+
+void init_simu(std::string seed, std::string robot_file)
+{
+    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, std::vector<rhex_dart::RhexDamage>()); // we repeat this creation process for damages
+    global::init_evolution(seed, robot_file);
 }
 
 #if META()

@@ -281,7 +281,7 @@ private:
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 
-template <typename Phen>
+template <typename Phen,typename Fit>
 struct _eval_parallel_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
@@ -410,11 +410,7 @@ struct _eval_parallel_individuals
       this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
 
 #if META()
-      if (!this->_pop[i]->fit().dead())
-      {
-        //push to the database
-        global::database.push_back(global::data_entry_t(this->_pop[i]->gen().data(), this->_pop[i]->fit().b(), this->_pop[i]->fit().value()));
-      }
+      Fit::add_to_database(*this->_pop[i]);
 #ifdef CHECK_PARALLEL
       std::cout << " parent base descriptor " << this->_pop[i]->fit().b() << std::endl;
 #endif
@@ -504,7 +500,7 @@ for (size_t i = begin; i < end; ++i)
 {
   pop[i]->fit() = fit_proto;
 }
-auto helper = _eval_parallel_individuals<Phen>();
+auto helper = _eval_parallel_individuals<Phen,typename Phen::fit_t>();
 helper._pop = pop;
 helper.run();
 this->_nb_evals += (end - begin);

@@ -132,6 +132,18 @@ public:
     }
 #endif
 #if META()
+    template <typename Individual>
+    static void add_to_database(Individual & ind)
+    {
+        if (!ind.fit().dead())
+        {
+            //push to the database
+            global::database.push_back(global::data_entry_t(ind.gen().data(), ind.fit().b(), ind.fit().value()));
+#ifdef PRINTING
+            std::cout << " adding entry with fitness " << ind.fit().value() << std::endl;
+#endif
+        }
+    }
     base_features_t b()
     {
         return _b;
@@ -229,20 +241,13 @@ protected:
             // convert to final descriptor
             base_features_t b;
             this->_desc = get_desc(simu, b);
+            this->_dead = false;
 #if META()
             set_b(b);
-#ifndef PARALLEL_RUN
-            if (!this->_dead)
-            {
-                //push to the database
-                global::database.push_back(global::data_entry_t(indiv.gen().data(), this->_b, this->_value));
-            }
-#endif
 #endif
 #ifdef PRINTING
             std::cout << " fitness is " << this->_value << std::endl;
 #endif
-            this->_dead = false;
         }
     }
 

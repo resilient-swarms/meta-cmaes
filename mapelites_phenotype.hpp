@@ -25,24 +25,21 @@ struct _eval_serial_individuals
   {
   }
 
-  void run()
+  void run(std::vector<boost::shared_ptr<Phen>> &p)
   {
+    this->_pop = p;
     for (size_t i = 0; i < _pop.size(); ++i)
     {
       _pop[i]->fit().eval(*_pop[i]);
 #if META()
-      //push to the database
-      global::database.push_back(global::data_entry_t(_pop[i]->gen().data(), _pop[i]->fit().b(), _pop[i]->fit().value()));
-#ifdef PRINTING
-      std::cout << " adding entry with fitness " << _pop[i]->fit().value() << std::endl;
-#endif
+      bottom_fit_t::add_to_database<Phen>(*_pop[i]);
 #endif
     }
   }
 };
 
 #ifdef PARALLEL_RUN
-typedef sferes::eval::_eval_parallel_individuals<base_phen_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<base_phen_t,bottom_fit_t> bottom_eval_helper_t;
 #else
 typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 #endif
@@ -64,6 +61,7 @@ public:
 #endif
   }
   unsigned nb_evals() const { return _nb_evals; }
+  
 
 protected:
   unsigned _nb_evals;
@@ -300,7 +298,7 @@ protected:
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::unordered_set<size_t> elems = _pickSet(N, k, gen);
+    std::unordered_set<size_t> elems = global::_pickSet(N, k, gen);
 
     std::vector<bottom_indiv_t> result;
     for (size_t el : elems)
@@ -318,20 +316,7 @@ protected:
     }
     return result;
   }
-  // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
-  std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
-  {
-    std::uniform_int_distribution<> dis(0, N - 1);
-    std::unordered_set<size_t> elems;
-    elems.clear();
 
-    while (elems.size() < k)
-    {
-      elems.insert(dis(gen));
-    }
-
-    return elems;
-  }
   template <typename I>
   float _dist_center(const I &indiv)
   {

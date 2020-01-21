@@ -54,7 +54,7 @@ struct BottomParams
         // generation)
         SFERES_CONST int dump_period = 5;
 #endif
-        SFERES_CONST unsigned size = 20;
+        SFERES_CONST unsigned size = 2;
         SFERES_CONST unsigned init_size = 10;
         SFERES_CONST int initial_aleat = 1;
     };

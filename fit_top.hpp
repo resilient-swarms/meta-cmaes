@@ -46,13 +46,13 @@ public:
 
     bool dead() { return false; }
 #ifdef EVAL_ENVIR
-    static std::tuple<int, float> _eval_all(const base_phen_t &indiv)
+    static float _eval_all(const base_phen_t &indiv)
     {
 #ifdef PRINTING
         std::cout << "start evaluating " << global::world_options.size() << " environments" << std::endl;
 #endif
         float val = 0.0f;
-        for (size_t world_option = 0; world_option < global::world_options.size(); ++world_option)
+        for (size_t world_option : global::world_options)
         {
             val += _eval_single_envir(indiv, world_option, 0);
         }
@@ -68,7 +68,7 @@ public:
         for (size_t i = 0; i < global::damage_sets.size(); ++i)
         {
             // initilisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
-            _eval_single_envir(indiv, 0, i);
+            val += _eval_single_envir(indiv, 0, i);
         }
         return val;
     }
@@ -77,7 +77,7 @@ public:
     {
 
 #ifdef EVAL_ENVIR
-        _nb_evals = num_individuals * num_world_options; // no need to divide
+        _nb_evals = num_individuals * global::world_options.size(); // no need to divide
 #else
         _nb_evals = num_individuals * global::damage_sets.size(); // no need to divide
 #endif

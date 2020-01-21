@@ -25,7 +25,7 @@
 
 #define PRINTING
 #define CHECK_PARALLEL
-#define PARALLEL_RUN
+//#define PARALLEL_RUN
 
 #include <boost/random.hpp>
 #include <iostream>
@@ -57,15 +57,20 @@
 
 using namespace sferes;
 
+
+
+
+
+
 int main(int argc, char **argv)
 {
-    std::srand(atoi(argv[1])); //use experiment number as seed for random generator for init_simu
+    std::srand(atoi(argv[1])); //use experiment number as seed for random generator. mostly for Eigen
     ea_t ea;
 #ifdef PARALLEL_RUN
     sferes::eval::init_shared_mem();
 #endif
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
-    global::init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
+    global::init_simu(std::string(argv[1]), std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
 
     run_ea(argc, argv, ea);
 
