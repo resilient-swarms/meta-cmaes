@@ -477,7 +477,9 @@ for (size_t i = begin; i < end; ++i)
 {
   pop[i]->fit() = fit_proto;
 }
-_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>();
+auto helper =_eval_parallel_individuals<BottomParams::ea::behav_dim, Phen>();
+helper._pop = pop;
+helper.run();
 this->_nb_evals += (end - begin);
 }
 };
