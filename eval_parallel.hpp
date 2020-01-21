@@ -183,7 +183,8 @@ public:
   inline std::vector<float> getDescriptor()
   {
     float *descriptor = &m_pfSharedMem[1]; // pointer to the descriptor
-    std::vector<float> bd; bd.resize(m_unDescriptorSize);
+    std::vector<float> bd;
+    bd.resize(m_unDescriptorSize);
     for (int i = 0; i < m_unDescriptorSize; ++i)
     {
       bd[i] = descriptor[i];
@@ -321,9 +322,9 @@ struct _eval_parallel_individuals
     create_processes();
     destroy_additional_memory();
   }
-  void allocate_additional_memory(int num_pop) 
+  void allocate_additional_memory(int num_pop)
   {
-    int to_add = num_pop - num_memory;   //need to use integer not size_t, can be negative
+    int to_add = num_pop - num_memory; //need to use integer not size_t, can be negative
 
     for (int i = 0; i < to_add; ++i)
     {
@@ -409,8 +410,11 @@ struct _eval_parallel_individuals
       this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
 
 #if META()
-      //push to the database
-      global::database.push_back(global::data_entry_t(this->_pop[i]->gen().data(), this->_pop[i]->fit().b(), this->_pop[i]->fit().value()));
+      if (!this->_pop[i]->fit().dead())
+      {
+        //push to the database
+        global::database.push_back(global::data_entry_t(this->_pop[i]->gen().data(), this->_pop[i]->fit().b(), this->_pop[i]->fit().value()));
+      }
 #ifdef CHECK_PARALLEL
       std::cout << " parent base descriptor " << this->_pop[i]->fit().b() << std::endl;
 #endif

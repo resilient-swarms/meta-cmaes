@@ -144,9 +144,8 @@ public:
     {
         for (size_t i = 0; i < NUM_BASE_FEATURES; ++i)
         {
-            _b(i,0) = vec[i];
+            _b(i, 0) = vec[i];
         }
-        
     }
     mode::mode_t mode() const
     {
@@ -232,6 +231,13 @@ protected:
             this->_desc = get_desc(simu, b);
 #if META()
             set_b(b);
+#ifndef PARALLEL_RUN
+            if (!this->_dead)
+            {
+                //push to the database
+                global::database.push_back(global::data_entry_t(indiv.gen().data(), this->_b, this->_value));
+            }
+#endif
 #endif
 #ifdef PRINTING
             std::cout << " fitness is " << this->_value << std::endl;

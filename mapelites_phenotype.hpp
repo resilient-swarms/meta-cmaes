@@ -51,7 +51,7 @@ class EvalIndividuals
 public:
   EvalIndividuals() : _nb_evals(0) {}
   template <typename Phen>
-  void eval(std::vector<boost::shared_ptr<Phen>> &p, weight_t &W)
+  void eval(std::vector<boost::shared_ptr<Phen>> &p)
   {
     //dbg::trace trace("eval", DBG_HERE);
     assert(p.size());
@@ -162,13 +162,24 @@ public:
       p1->cross(p2, i1, i2);
       i1->mutate();
       i2->mutate();
+#ifdef PRINTING
+
+      std::cout << "will develop individual " << 2 * i << std::endl;
+#endif
       i1->develop();
+      i1->fit() = bottom_fit_t(this->W);
+#ifdef PRINTING
+
+      std::cout << "will develop individual " << 2 * i + 1 << std::endl;
+#endif
       i2->develop();
+      i2->fit() = bottom_fit_t(this->W);
+
       ptmp.push_back(i1);
       ptmp.push_back(i2);
     }
 
-    eval_individuals.eval<base_phen_t>(ptmp, W);
+    eval_individuals.eval<base_phen_t>(ptmp);
 
     for (size_t i = 0; i < ptmp.size(); ++i)
     {
@@ -231,6 +242,10 @@ public:
   {
     if (i1->fit().dead())
     {
+#ifdef PRINTING
+      std::cout << "dead" << std::endl;
+
+#endif
       return false;
     }
 
@@ -242,12 +257,24 @@ public:
       behav_pos[i] = round(p[i] * behav_shape[i]);
       behav_pos[i] = std::min(behav_pos[i], behav_shape[i] - 1);
       assert(behav_pos[i] < behav_shape[i]);
+      std::cout << "b" << i << " " << behav_pos[i] << std::endl;
     }
+#ifdef PRINTING
+    std::cout << "checkingg" << std::endl;
 
+#endif
     if (!_array(behav_pos) || (i1->fit().value() - _array(behav_pos)->fit().value()) > BottomParams::ea::epsilon || (fabs(i1->fit().value() - _array(behav_pos)->fit().value()) <= BottomParams::ea::epsilon && _dist_center(i1) < _dist_center(_array(behav_pos))))
     {
+#ifdef PRINTING
+      std::cout << "inserting" << std::endl;
+
+#endif
       _array(behav_pos) = i1;
       _non_empty_indices.insert(behav_pos);
+#ifdef PRINTING
+      std::cout << "inserted" << std::endl;
+
+#endif
       return true;
     }
     return false;
@@ -387,7 +414,7 @@ public:
       indiv->develop();
       ptmp.push_back(indiv);
     }
-    eval_individuals.eval<base_phen_t>(ptmp, W); // note that W is not initialised but we do not care here, just for the database; no need for archive therefore
+    eval_individuals.eval<base_phen_t>(ptmp); // note that W is not initialised but we do not care here, just for the database; no need for archive therefore
   }
   void develop()
   {
