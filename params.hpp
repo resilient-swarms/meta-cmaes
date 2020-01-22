@@ -49,14 +49,19 @@ struct BottomParams
     {
 #if CONTROL()
         // number of generations
-        SFERES_CONST unsigned nb_gen = 25000;// 20,000 * 400 evaluations per generation --> 10M evals (take a bit more just in case there is time enough)
+        SFERES_CONST unsigned nb_gen = 25000; // at most 20,000 evaluations for each of 500 meta-generations for meta-learning --> 10M evals (take a bit more just in case there is time enough)
         // how often should the result file be written (here, each 5
         // generation)
-        SFERES_CONST int dump_period = 5;
+        SFERES_CONST int dump_period = 500; //20
 #endif
-        // NOTE: multiply by 2 size and init_size ! !
-        SFERES_CONST unsigned size = 5;//200;// note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
-        SFERES_CONST unsigned init_size = 10;//1000;//initial population for all maps
+        // NOTE: multiply size by 2 to obtain the actual batch ! !
+        SFERES_CONST unsigned size = 200; //---> 400 individuals; note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
+        //  --> leads to a total of at most 20,000 evaluations per meta-generation (400*25 + 0.10*4,096*25) for the environments case, and at most 1/1 ratio
+        // filling up all or even half of the cells is quite unlikely though , so not too many worries for the damage case !
+
+        // NOTE: do NOT multiply by 2 to get initial size
+        SFERES_CONST unsigned init_size = 2000;
+        ; //initial population for all maps
         SFERES_CONST int initial_aleat = 1;
     };
 
@@ -105,8 +110,8 @@ struct CMAESParams
     struct pop
     {
         SFERES_CONST unsigned nb_gen = 1001; // at most 1000 meta-generations
-        SFERES_CONST int dump_period = 1;      // every meta-generation
-        SFERES_CONST int size = 5;             // number of maps
+        SFERES_CONST int dump_period = 10;   // every 10 meta-generations
+        SFERES_CONST int size = 5;           // number of maps
         SFERES_CONST int initial_aleat = 1;
         SFERES_CONST float percentage_evaluated = 0.10;
     };
