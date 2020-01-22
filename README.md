@@ -39,27 +39,27 @@ cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
    Please use the following template for the different conditions:
 
     i) DAMAGE_META:
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_meta_binary ${replicate_number} --d ${RESULTS_DIR}/damage_meta/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_meta_binary ${replicate_number} --d ${RESULTS_DIR}/damage_meta/exp${replicate_number} >> ${logfile}
 
     ii) ENVIR_META:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_envir_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_envir_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number} >> ${logfile}
     
 
     iii) RANDOM:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_random_binary ${replicate_number} --d ${RESULTS_DIR}/random/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_random_binary ${replicate_number} --d ${RESULTS_DIR}/random/exp${replicate_number} >> ${logfile}
 
     iv) DUTY_CYCLE:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_duty_binary ${replicate_number} --d ${RESULTS_DIR}/duty/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_duty_binary ${replicate_number} --d ${RESULTS_DIR}/duty/exp${replicate_number} >> ${logfile}
 
     
     v) BODY_ORIENTATION:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_bo_binary ${replicate_number} --d ${RESULTS_DIR}/bo/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_bo_binary ${replicate_number} --d ${RESULTS_DIR}/bo/exp${replicate_number} >> ${logfile}
 
         
     vi) LINEAR_VELOCITY:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/lv/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/lv/exp${replicate_number} >> ${logfile}
