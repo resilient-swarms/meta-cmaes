@@ -46,7 +46,8 @@ typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 class EvalIndividuals
 {
 public:
-  EvalIndividuals() : _nb_evals(0) {}
+  EvalIndividuals() : nb_evals(0) {}
+  unsigned nb_evals;
   template <typename Phen>
   void eval(std::vector<boost::shared_ptr<Phen>> &p)
   {
@@ -55,16 +56,16 @@ public:
     float value = 0.0f;
     auto helper = bottom_eval_helper_t();
     helper.run(p);
-    _nb_evals += p.size(); // increase every time for different epochs
+    nb_evals += p.size(); //
 #ifdef PRINTING
     std::cout << "number of evaluations is now " << _nb_evals << std::endl;
 #endif
   }
-  unsigned nb_evals() const { return _nb_evals; }
+
   
 
 protected:
-  unsigned _nb_evals;
+  
 };
 
 typedef EvalIndividuals bottom_eval_t;
@@ -86,7 +87,7 @@ public:
   bottom_pop_t _pop; // current batch
   std::vector<float> values;
   weight_t W; //characteristic weight matrix of this map
-  bottom_eval_t eval_individuals;
+  bottom_eval_t eval_individuals;//
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
   MapElites()
   {
@@ -230,6 +231,7 @@ public:
 
   void do_epochs(size_t num_epochs)
   {
+    eval_individuals.nb_evals = 0;
     for (size_t i = 0; i < num_epochs; ++i)
     {
       this->epoch();

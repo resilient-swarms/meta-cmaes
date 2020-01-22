@@ -36,7 +36,7 @@ public:
 #ifdef PRINTING
       std::cout << "evaluating meta-individual  " + std::to_string(i) << std::endl;
 #endif
-      global::nb_evals +=  pop[i]->eval_individuals.nb_evals();
+      global::nb_evals +=  pop[i]->eval_individuals.nb_evals;
       pop[i]->fit().eval<MetaIndiv>(*pop[i]); // evaluate its recovered performance
       global::nb_evals += pop[i]->fit().nb_evals();
     }

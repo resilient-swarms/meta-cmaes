@@ -105,7 +105,7 @@ protected:
     template <typename MetaIndiv>
     void _eval(MetaIndiv & meta_indiv)
     {
-        float avg_fitness = 0;
+        float avg_fitness = 0.0f;
 #ifdef PARALLEL_RUN
         typedef sferes::eval::_eval_parallel_meta<MetaIndiv, sferes::fit::FitTop<CMAESParams>> top_eval_helper_t;
 #else

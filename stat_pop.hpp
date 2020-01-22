@@ -56,6 +56,7 @@ public:
             _pop = ea.pop();
             _write_recovered_performances(std::string("recovered_perf"), ea);
             get_database();
+            std::cout << "number of evaluations so far "<< _nb_evals<< std::endl;
         }
         
     }
@@ -111,8 +112,8 @@ protected:
     void _write_database(const std::string &prefix,
                          const EA &ea) const
     {
-        std::cout << "writing..." << prefix << ea.gen() << std::endl;
-        std::string fname = ea.res_dir() + "/" + prefix + boost::lexical_cast<std::string>(ea.gen()) + std::string(".dat");
+        std::cout << "writing..."  << ea.gen() << prefix << std::endl;
+        std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix  + std::string(".dat");
 
         std::ofstream ofs(fname.c_str());
         for (size_t k = 0; k < global::database.size(); ++k)
