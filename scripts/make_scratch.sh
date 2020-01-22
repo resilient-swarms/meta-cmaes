@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export BUILD_GRAPHIC="False"
+
 cd $SFERES_DIR
 cd rhex_common/rhex_models
 ./waf distclean
