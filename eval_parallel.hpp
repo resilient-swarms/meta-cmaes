@@ -57,8 +57,6 @@
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 
-#define NUM_CORES 10
-
 // /* redirect the output streams */
 // void redirect(char* jobname, pid_t pid)
 // {

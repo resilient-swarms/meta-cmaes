@@ -27,14 +27,17 @@ struct _eval_serial_meta
                   // evaluate the individual
                   value += Fit::_eval_all(*pop[i]);
             }
-            value = meta_i.fit().avg_value(value, pop.size());
+            std::tuple<float, int> results = meta_i.fit().avg_value(value, pop.size());
+            value = std::get<0>(results);
+            nb_evals = std::get<1>(results);
       }
 };
 
 template <typename Phen, typename Fit>
-struct _eval_parallel_meta : public _eval_parallel_individuals<base_phen_t,bottom_fit_t>
+struct _eval_parallel_meta : public _eval_parallel_individuals<base_phen_t, bottom_fit_t>
 {
       float value;
+      size_t nb_evals;
       Phen meta_indiv;
       _eval_parallel_meta(Phen &meta_i)
       { //now join the bottom-level fitnesses
@@ -68,7 +71,9 @@ struct _eval_parallel_meta : public _eval_parallel_individuals<base_phen_t,botto
                   std::cout << "parent fitness " << i << " " << temp << std::endl;
 #endif
             }
-            value = meta_indiv.fit().avg_value(value, this->_pop.size());
+            std::tuple<float, size_t> results = meta_indiv.fit().avg_value(value, this->_pop.size());
+            value = std::get<0>(results);
+            nb_evals = std::get<1>(results);
       }
 };
 

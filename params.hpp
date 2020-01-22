@@ -15,17 +15,17 @@ struct BottomParams
 {
 #if META()
     static const size_t MAX_DATABASE_SIZE = 500000;
-    static const size_t bottom_epochs = 1;
+    static const size_t bottom_epochs = 5;
 #endif
     // grid properties, discretise 3 dimensions into 10 bins each
     struct ea
     {
 #if DUTY_C() || BO_C()
         SFERES_CONST size_t behav_dim = 6;
-        SFERES_ARRAY(size_t, behav_shape, 3, 3, 3, 3, 3, 3); // 125 cells for each bottom-level map
+        SFERES_ARRAY(size_t, behav_shape, 4, 4, 4, 4, 4, 4); // 4096 cells for each bottom-level map
 #else
         SFERES_CONST size_t behav_dim = 3;
-        SFERES_ARRAY(size_t, behav_shape, 5, 5, 5); // 125 cells for each bottom-level map
+        SFERES_ARRAY(size_t, behav_shape, 16, 16, 16); // 4096 cells for each bottom-level map
 #endif
         SFERES_CONST float epsilon = 0.00;
     };
@@ -49,13 +49,14 @@ struct BottomParams
     {
 #if CONTROL()
         // number of generations
-        SFERES_CONST unsigned nb_gen = 60000;// 40,000 * 40 evaluations per generation --> 1.6M evals (take a bit more just in case there is time enough)
+        SFERES_CONST unsigned nb_gen = 25000;// 20,000 * 400 evaluations per generation --> 10M evals (take a bit more just in case there is time enough)
         // how often should the result file be written (here, each 5
         // generation)
         SFERES_CONST int dump_period = 5;
 #endif
-        SFERES_CONST unsigned size = 2;
-        SFERES_CONST unsigned init_size = 10;
+        // NOTE: multiply by 2 size and init_size ! !
+        SFERES_CONST unsigned size = 5;//200;// note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
+        SFERES_CONST unsigned init_size = 10;//1000;//initial population for all maps
         SFERES_CONST int initial_aleat = 1;
     };
 
@@ -69,7 +70,7 @@ struct BottomParams
     // simulation time
     struct simu
     {
-        SFERES_CONST size_t time = 1;
+        SFERES_CONST size_t time = 5;
     };
 };
 
@@ -103,9 +104,9 @@ struct CMAESParams
     // save map every 50 iterations
     struct pop
     {
-        SFERES_CONST unsigned nb_gen = 100001; // used
-        SFERES_CONST int dump_period = 1;      // used
-        SFERES_CONST int size = 2;             // number of maps
+        SFERES_CONST unsigned nb_gen = 1001; // at most 1000 meta-generations
+        SFERES_CONST int dump_period = 1;      // every meta-generation
+        SFERES_CONST int size = 5;             // number of maps
         SFERES_CONST int initial_aleat = 1;
         SFERES_CONST float percentage_evaluated = 0.10;
     };

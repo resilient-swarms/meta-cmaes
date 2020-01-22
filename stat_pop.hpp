@@ -74,14 +74,14 @@ public:
         global::database = _database;
         global::database.sp = _sp;
         global::database.max_sp = _max_sp;
-        global::nb_evals = _nb_evals;
+        global::nb_evals  = _nb_evals;
     }
     // show the n-th individual from zero'th map in the population
     void show(std::ostream & os, size_t k)
     {
         std::cerr << "loading map 0, individual " + std::to_string(k);
         // develop map 0
-        this->_pop[0]->develop();
+        this->_pop[0]->develop();// take into account any additions to the database
         // evaluate individual k within this map
         _show_individual(os, k);
     }
@@ -99,6 +99,7 @@ public:
         }
         ar &BOOST_SERIALIZATION_NVP(_sp);
         ar &BOOST_SERIALIZATION_NVP(_max_sp);
+        ar &BOOST_SERIALIZATION_NVP(_nb_evals);
         if (Archive::is_loading::value)
         {
             set_globals();

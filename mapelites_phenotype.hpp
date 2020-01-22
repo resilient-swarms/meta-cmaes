@@ -255,7 +255,9 @@ public:
       behav_pos[i] = round(p[i] * behav_shape[i]);
       behav_pos[i] = std::min(behav_pos[i], behav_shape[i] - 1);
       assert(behav_pos[i] < behav_shape[i]);
+#ifdef PRINTING
       std::cout << "b" << i << " " << behav_pos[i] << std::endl;
+#endif
     }
 #ifdef PRINTING
     std::cout << "checkingg" << std::endl;

@@ -73,7 +73,7 @@ public:
         return val;
     }
 #endif
-    float avg_value(float val, size_t num_individuals)
+    std::tuple<float,size_t> avg_value(float val, size_t num_individuals)
     {
 
 #ifdef EVAL_ENVIR
@@ -82,7 +82,7 @@ public:
         _nb_evals = num_individuals * global::damage_sets.size(); // no need to divide
 #endif
         val = val / (float)(_nb_evals);
-        return val;
+        return std::tuple<float,size_t>{val,_nb_evals};
     }
 
     inline void set_fitness(float fFitness)
@@ -113,6 +113,7 @@ protected:
 #endif
         auto helper = top_eval_helper_t(meta_indiv); //allow parallelisation over individuals (_parallel_eval_meta)
         set_fitness(helper.value);
+        _nb_evals = helper.nb_evals;
 #ifdef PRINTING
         std::cout << "recovered performance " << this->_value << std::endl;
 #endif

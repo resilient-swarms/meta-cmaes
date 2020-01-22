@@ -85,7 +85,7 @@ public:
                     behav_indexbase[k] = archive.index_bases()[k];
                 }
 
-                _write_archive(archive, map, std::string("archive" + std::to_string(map) + "_"), ea);
+                _write_archive(archive, map, std::string("_archive" + std::to_string(map)), ea);
             }
         }
     }
@@ -97,7 +97,7 @@ public:
                         const EA &ea) const
     {
         std::cout << "writing..." << prefix << ea.gen() << std::endl;
-        std::string fname = ea.res_dir() + "/" + prefix + boost::lexical_cast<std::string>(ea.gen()) + std::string(".dat");
+        std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix + std::string(".dat");
 
         std::ofstream ofs(fname.c_str());
 
