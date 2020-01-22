@@ -72,6 +72,7 @@ void init_evolution(std::string seed, std::string robot_file)
         std::string damage_type = damage_types[el];
         for (size_t leg = 0; leg < 6; ++leg)
         {
+            std::cout << damage_type << "," << leg << "\n";
             ofs << damage_type << "," << leg << "\n";
             damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); // world 0 has been remove that is why +1
         }

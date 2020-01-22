@@ -85,10 +85,13 @@ public:
 #if NO_WEIGHT()
         std::vector<double> vec;
 #if DUTY_C()
+        //std::cout << "duty "<<std::endl;
         simu.get_descriptor<rhex_dart::descriptors::DutyCycle, std::vector<double>>(vec);
 #elif BO_C()
+        //std::cout << "BO "<<std::endl;
         simu.get_descriptor<rhex_dart::descriptors::BodyOrientation, std::vector<double>>(vec);
 #elif LV_C()
+        //std::cout << "LV "<<std::endl;
         Eigen::Vector3d velocities;
         simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
         vec.resize(3);                                                                                                      // cf. skeleton : .54 .39 .139
@@ -113,8 +116,10 @@ public:
     {
 
 #if META()
+        //std::cout << "META "<<std::endl;
         bottom_features_t D = W * b;
 #elif GLOBAL_WEIGHT()
+        //std::cout << "random "<<std::endl;
         bottom_features_t D = global::W * b;
 #endif
         std::vector<float> vec(D.data(), D.data() + D.rows() * D.cols());

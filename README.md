@@ -52,14 +52,14 @@ cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
 
     iv) DUTY_CYCLE:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_duty_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_duty_binary ${replicate_number} --d ${RESULTS_DIR}/duty/exp${replicate_number}
 
     
     v) BODY_ORIENTATION:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_bo_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_bo_binary ${replicate_number} --d ${RESULTS_DIR}/bo/exp${replicate_number}
 
         
     vi) LINEAR_VELOCITY:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/lv/exp${replicate_number}
