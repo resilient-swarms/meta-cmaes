@@ -76,6 +76,21 @@ public:
     bool dead() { return _dead; }
     std::vector<double> ctrl() { return _ctrl; }
 
+    // cf. skeleton : .54 .39 .139
+    inline float correct_lv_x(float v_x)
+    {
+        return std::min(1.0, std::max(0.0, (v_x - 0.20 * global::BODY_LENGTH) / (2.2 * global::BODY_LENGTH))); // [0.1, 2.1] body lengths (moving backwards is unlikely; .54 is body length)
+    }
+
+    inline float correct_lv_y(float v_y)
+    {
+        return std::min(1.0, std::max(0.0, (v_y + 1.0 * global::BODY_WIDTH) / (2.00 * global::BODY_WIDTH))); // [-1.0,1.0] body widths, body cannot suddenly rotate heavily
+    }
+    inline float correct_lv_z(float v_z)
+    {
+        return std::min(1.0, std::max(0.0, (v_z + 0.25 * global::BODY_HEIGHT) / (0.50 * global::BODY_HEIGHT))); // [-0.25,0.25] body heights; body usually tilts backwards
+    }
+
     std::vector<float> get_desc(simulator_t & simu, base_features_t & b)
     {
 #ifdef PRINTING
@@ -94,10 +109,10 @@ public:
         //std::cout << "LV "<<std::endl;
         Eigen::Vector3d velocities;
         simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);
-        vec.resize(3);                                                                                                      // cf. skeleton : .54 .39 .139
-        vec[0] = std::min(1.0, std::max(0.0, (velocities[0] - 0.10 * global::BODY_LENGTH) / (2.0 * global::BODY_LENGTH)));  // [0.1, 2.1] body lengths (moving backwards is unlikely; .54 is body length)
-        vec[1] = std::min(1.0, std::max(0.0, (velocities[1] + 0.80 * global::BODY_WIDTH) / (1.60 * global::BODY_WIDTH)));   // [-0.80,0.80] body widths, body cannot suddenly rotate heavily
-        vec[2] = std::min(1.0, std::max(0.0, (velocities[2] + 0.30 * global::BODY_HEIGHT) / (0.60 * global::BODY_HEIGHT))); // [-0.30,0.30] body heights; body usually tilts backwards
+        vec.resize(3);
+        vec[0] = correct_lv_x(velocities[0]);
+        vec[1] = correct_lv_y(velocities[1]);
+        vec[2] = correct_lv_z(velocities[2]);
 
 #else
 #error "Please give a viable condition in {0,1,2,3,4}"
@@ -274,10 +289,12 @@ protected:
             base_features(i + 6, 0) = results[i];
         }
         Eigen::Vector3d velocities;
-        simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);                                      // cf. skeleton : .54 .39 .139
-        base_features(12, 0) = std::min(1.0, std::max(0.0, (velocities[0] - 0.10 * global::BODY_LENGTH) / (2.0 * global::BODY_LENGTH)));  // [0.1, 2.1] body lengths (moving backwards is unlikely; .54 is body length)
-        base_features(13, 0) = std::min(1.0, std::max(0.0, (velocities[1] + 0.80 * global::BODY_WIDTH) / (1.60 * global::BODY_WIDTH)));  // [-0.80,0.80] body widths, body cannot suddenly rotate heavily
-        base_features(14, 0) = std::min(1.0, std::max(0.0, (velocities[2] + 1.0 * global::BODY_HEIGHT) / (1.60 * global::BODY_HEIGHT))); // [-1,0.60] body heights; body usually tilts backwards
+        simu.get_descriptor<rhex_dart::descriptors::AvgCOMVelocities, Eigen::Vector3d>(velocities);          
+        base_features(12, 0) = correct_lv_x(velocities[0]);
+        base_features(13, 0) = correct_lv_y(velocities[1]);
+        base_features(14, 0) = correct_lv_z(velocities[2]);
+        //std::cout << "W" << std::endl;
+        //std::cout << base_features<< std::endl;
     }
 };
 } // namespace fit
