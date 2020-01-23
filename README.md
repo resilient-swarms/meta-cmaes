@@ -96,5 +96,6 @@ and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the
 
         
     vi) LINEAR_VELOCITY:
-
+        mkdir ${RESULTS_DIR}/lv
+        mkdir ${RESULTS_DIR}/lv/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/lv/exp${replicate_number} >> ${logfile}
