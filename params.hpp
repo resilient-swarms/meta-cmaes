@@ -50,9 +50,8 @@ struct BottomParams
 #if CONTROL()
         // number of generations
         SFERES_CONST unsigned nb_gen = 25000; // at most 20,000 evaluations for each of 500 meta-generations for meta-learning --> 10M evals (take a bit more just in case there is time enough)
-        // how often should the result file be written (here, each 5
-        // generation)
-        SFERES_CONST int dump_period = 500; //20
+        // how often should the result file be written (here, each 250 generations == 100,000 ; on 16-cores is every 1-2 hours)
+        SFERES_CONST int dump_period = 250; //20
 #endif
         // NOTE: multiply size by 2 to obtain the actual batch ! !
         SFERES_CONST unsigned size = 200; //---> 400 individuals; note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
@@ -89,7 +88,7 @@ struct CMAESParams
     //     SFERES_CONST float epsilon = 0.00;
     // };
 
-    struct evo_float // not used;
+    struct evo_float // not used, but needed for compilation;
     {
         // we choose the polynomial mutation type
         SFERES_CONST mutation_t mutation_type = gaussian;
@@ -110,7 +109,7 @@ struct CMAESParams
     struct pop
     {
         SFERES_CONST unsigned nb_gen = 1001; // at most 1000 meta-generations
-        SFERES_CONST int dump_period = 10;   // every 10 meta-generations
+        SFERES_CONST int dump_period = 10;   // every 10 meta-generations (at most 4 hours, based on 20,000 per meta-generation, and 1 eval/s)
         SFERES_CONST int size = 5;           // number of maps
         SFERES_CONST int initial_aleat = 1;
         SFERES_CONST float percentage_evaluated = 0.10;
