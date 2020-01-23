@@ -85,7 +85,6 @@ public:
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
   bottom_pop_t _pop; // current batch
-  std::vector<float> values;
   weight_t W; //characteristic weight matrix of this map
   bottom_eval_t eval_individuals;//
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
@@ -289,7 +288,7 @@ public:
 
 protected:
   array_t _array;
-  array_t _prev_array;
+  //array_t _prev_array;
   std::set<behav_index_t> _non_empty_indices; // all non-empty solutions' indices stored here
 
   template <typename T>
@@ -413,6 +412,7 @@ public:
     /* do develop of the subclass phenotype*/
     Phen::develop();
 
+    undevelop();
     /* fill map j with individuals */
     genotype_to_mat(this->gen().data());
     for (int i = 0; i < global::database.size(); ++i)
@@ -422,6 +422,13 @@ public:
 #ifdef PRINTING
     std::cout << "stop developing the map-phenotype" << std::endl;
 #endif
+  }
+  /* get rid of the previous map at this meta-population index */
+  void undevelop()
+  {
+    this->_array = array_t(behav_shape);//
+    //std::cout << "map empty : "<<  this->_non_empty_indices.empty() << std::endl;
+    this->_non_empty_indices.clear();
   }
 
   void entry_to_map(const global::data_entry_t &entry, const weight_t &weight)
