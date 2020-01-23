@@ -208,7 +208,7 @@ struct CircularBuffer
     }
     void push_back(const DataType &d)
     {
-        if (sp > capacity)
+        if (sp >= capacity)
         {
             // reset sp
             sp = 0;

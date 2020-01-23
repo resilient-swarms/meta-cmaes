@@ -7,23 +7,39 @@ installation instructions:
 1. Go to https://github.com/AranBSmith/MAP-Elites-Rhex and follow the instructions. Before installing make sure that:
 
 
-A. you have your py2.7 environment on because there will be some "print X" statements (print(X) must be used in py3.x) in the ./waf scripts. If you don't have an environment yet, do:
+A. Make sure you have python2.7 as the default because there will be some "print X" statements (print(X) must be used in py3.x) in the ./waf scripts. Check the current version of python, if it is python 3, then you can either install an environment or alias python2.7 in your bashrc.
+
+If you don't have an environment yet, do:
+
     conda create --name py2.7 python=2.7
+
 Then activate the py2.7 environment before doing the install:   
+
     conda active py2.7
 
 
-    alternatively you can add to your ~/.bashrc:
+alternatively you can add to your ~/.bashrc:
         alias python=/usr/local/bin/python2.7
 
-B. replace the rhex_common/rhex_controller/rhex_controller_buehler.hpp file with the 'rhex_controller_buehler.hpp'  included in this project
+B. When installing the rhex_common files, replace the rhex_common/rhex_controller/rhex_controller_buehler.hpp file with the 'rhex_controller_buehler.hpp'  included in this project:
+
+    cd ${RESIBOTS_DIR}/include/meta-cmaes
+
+    cp -f rhex_controller_buehler.hpp ~/rhex_common/rhex_controller/include/rhex_controller/
 
 2. Set the correct values for the environment variables ${RESIBOTS_DIR} and ${SFERES_DIR} in your .bashrc file
 
-3. Go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the your sferes experiment folder:
+3. Clone the meta-cmaes folder
+    git clone https://github.com/bossdm/meta-cmaes.git
 
-cd ${RESIBOTS_DIR}/include/meta-cmaes
-cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
+and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the your sferes experiment folder:
+
+    cd ${RESIBOTS_DIR}/include/meta-cmaes
+
+    cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
+
+
+
 
 4. A. Compiling the META-learning conditions:
 
@@ -37,6 +53,7 @@ cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
 5. Set the number of cores you are using, e.g.:
 
     export NUM_CORES=16
+
 
 6. To compile, do:
 
@@ -55,7 +72,7 @@ cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
 
     ii) ENVIR_META:
 
-        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_envir_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number} >> ${logfile}
+        ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_envir_meta_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number} >> ${logfile}
     
 
     iii) RANDOM:
