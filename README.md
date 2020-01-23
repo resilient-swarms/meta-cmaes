@@ -7,7 +7,10 @@ installation instructions:
 1. Go to https://github.com/AranBSmith/MAP-Elites-Rhex and follow the instructions. Before installing make sure that:
 
 
-A. you have your py2.7 environment on because there will be some "print X" statements (print(X) must be used in py3.x) in the ./waf scripts.
+A. you have your py2.7 environment on because there will be some "print X" statements (print(X) must be used in py3.x) in the ./waf scripts. If you don't have an environment yet, do:
+    conda create --name py2.7 python=2.7
+Then activate the py2.7 environment before doing the install:   
+    conda active py2.7
 
 B. replace the rhex_common/rhex_controller/rhex_controller_buehler.hpp file with the 'rhex_controller_buehler.hpp'  included in this project
 
