@@ -111,10 +111,8 @@ void init_evolution(std::string seed, std::string robot_file)
         }
     }
     ofs << W ;
-#ifdef PRINTING
-    std::cout << "after conversion " << std::endl;
+    std::cout << "global weight: " << std::endl;
     std::cout << W << std::endl;
-#endif
 }
 #else
 void init_evolution(std::string seed, std::string robot_file)

@@ -46,14 +46,14 @@ def build(bld):
 		                   use = 'sferes2',
 		                   uselib = libs,
 		                   target = 'rhex_metaCMAES_envir_meta',
-		                   cxxflags = cxxflags + ['-g', '-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES="+str(num_cores)],   # -march=native
+		                   cxxflags = cxxflags + ['-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES="+str(num_cores)],   # -march=native
 		                   variants = ['BINARY'])
 		sferes.create_variants(bld,
 		                   source = 'rhex_metaCMAES.cpp',
 		                   use = 'sferes2',
 		                   uselib = libs,
 		                   target = 'rhex_metaCMAES_damage_meta',
-		                   cxxflags = cxxflags + ['-g', '-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES="+str(num_cores)],   # -march=native
+		                   cxxflags = cxxflags + ['-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES="+str(num_cores)],   # -march=native
 		                   variants = ['BINARY'])
     else:  # build control conditions
         control_conditions=["random","duty","bo","lv"]
@@ -63,7 +63,7 @@ def build(bld):
 							use = 'sferes2',
 							uselib = libs,
 							target = 'rhex_metaCMAES_'+c,
-							cxxflags = cxxflags + ['-g', '-march=native',"-DEXPERIMENT_TYPE="+str(1+i),"-DNUM_CORES="+str(num_cores)],   # -march=native
+							cxxflags = cxxflags + ['-march=native',"-DEXPERIMENT_TYPE="+str(1+i),"-DNUM_CORES="+str(num_cores)],   # -march=native
 							variants = ['BINARY'])
 
     # if bld.get_env()['BUILD_GRAPHIC'] == True:
