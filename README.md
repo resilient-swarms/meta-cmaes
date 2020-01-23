@@ -12,6 +12,10 @@ A. you have your py2.7 environment on because there will be some "print X" state
 Then activate the py2.7 environment before doing the install:   
     conda active py2.7
 
+
+    alternatively you can add to your ~/.bashrc:
+        alias python=/usr/local/bin/python2.7
+
 B. replace the rhex_common/rhex_controller/rhex_controller_buehler.hpp file with the 'rhex_controller_buehler.hpp'  included in this project
 
 2. Set the correct values for the environment variables ${RESIBOTS_DIR} and ${SFERES_DIR} in your .bashrc file
@@ -30,7 +34,7 @@ cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
     export BUILD_META=False 
 
 
-5. Set the number of cores you are using, e.h.:
+5. Set the number of cores you are using, e.g.:
 
     export NUM_CORES=16
 
