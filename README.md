@@ -4,7 +4,12 @@ learning behaviour-performance map with meta-cmaes
 
 installation instructions:
 
-1. Go to https://github.com/AranBSmith/MAP-Elites-Rhex and follow the instructions.
+1. Go to https://github.com/AranBSmith/MAP-Elites-Rhex and follow the instructions. Before installing make sure that:
+
+
+A. you have your py2.7 environment on because there will be some "print X" statements (print(X) must be used in py3.x) in the ./waf scripts.
+
+B. replace the rhex_common/rhex_controller/rhex_controller_buehler.hpp file with the 'rhex_controller_buehler.hpp'  included in this project
 
 2. Set the correct values for the environment variables ${RESIBOTS_DIR} and ${SFERES_DIR} in your .bashrc file
 
