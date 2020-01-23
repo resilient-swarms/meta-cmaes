@@ -30,6 +30,7 @@ B. When installing the rhex_common files, replace the rhex_common/rhex_controlle
 2. Set the correct values for the environment variables ${RESIBOTS_DIR} and ${SFERES_DIR} in your .bashrc file
 
 3. Clone the meta-cmaes folder
+    
     git clone https://github.com/bossdm/meta-cmaes.git
 
 and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the your sferes experiment folder:
@@ -68,22 +69,26 @@ and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the
    Please use the following template for the different conditions:
 
     i) DAMAGE_META:
+
         mkdir ${RESULTS_DIR}/damage_meta
         mkdir ${RESULTS_DIR}/damage_meta/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_damage_meta_binary ${replicate_number} --d ${RESULTS_DIR}/damage_meta/exp${replicate_number} >> ${logfile}
 
     ii) ENVIR_META:
+
         mkdir ${RESULTS_DIR}/envir_meta
         mkdir ${RESULTS_DIR}/envir_meta/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_envir_meta_binary ${replicate_number} --d ${RESULTS_DIR}/envir_meta/exp${replicate_number} >> ${logfile}
     
 
     iii) RANDOM:
+
         mkdir ${RESULTS_DIR}/random
         mkdir ${RESULTS_DIR}/random/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_random_binary ${replicate_number} --d ${RESULTS_DIR}/random/exp${replicate_number} >> ${logfile}
 
     iv) DUTY_CYCLE:
+
         mkdir ${RESULTS_DIR}/duty
         mkdir ${RESULTS_DIR}/duty/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_duty_binary ${replicate_number} --d ${RESULTS_DIR}/duty/exp${replicate_number} >> ${logfile}
