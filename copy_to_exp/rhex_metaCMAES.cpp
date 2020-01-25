@@ -25,7 +25,9 @@
 
 //#define PRINTING
 //#define CHECK_PARALLEL
+#ifndef TEST
 #define PARALLEL_RUN
+#endif
 
 #include <boost/random.hpp>
 #include <iostream>
@@ -36,7 +38,7 @@
 //#include <sferes/gen/sampled.hpp>
 #include <sferes/modif/dummy.hpp>
 #include <sferes/phen/parameters.hpp>
-#include <sferes/run.hpp>
+
 #include <sferes/stat/pareto_front.hpp>
 
 #include <rhex_dart/rhex_dart_simu.hpp>
@@ -52,6 +54,10 @@
 #else
 #include <meta-cmaes/control_typedefs.hpp>
 #endif
+
+
+
+#include <sferes/run.hpp>
 
 //#define GRAPHIC
 

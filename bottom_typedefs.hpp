@@ -12,6 +12,8 @@
 
 #include <boost/serialization/array.hpp>
 
+#include <boost/fusion/container/vector.hpp>
+
 //#include <boost/circular_buffer.hpp>
 //#include <meta-cmaes/circular_buffer_serialisation.hpp>
 #include <meta-cmaes/sampled.hpp>

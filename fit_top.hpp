@@ -7,10 +7,7 @@
 #include <meta-cmaes/mapelites_phenotype.hpp>
 #include <meta-cmaes/eval_meta.hpp>
 
-
 // typedef
-    
-
 
 /* bottom-level fitmap 
 used to evaluate behavioural descriptor and fitness of controllers in the normal operating environment
@@ -20,13 +17,17 @@ namespace sferes
 
 namespace fit
 {
+#if CONTROL()
+template <typename Params>
+class FitTop : public sferes::fit::Fitness
+#else
 SFERES_FITNESS(FitTop, sferes::fit::Fitness)
+#endif
 {
 public:
-    
     /* current bottom-level map (new candidate to be added to _pop)*/
     template <typename MetaIndiv>
-    void eval(MetaIndiv & indiv)
+    void eval(MetaIndiv &indiv)
     {
 
         //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -38,7 +39,7 @@ public:
     }
 
     template <class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void serialize(Archive &ar, const unsigned int version)
     {
         ar &boost::serialization::make_nvp("_value", this->_value);
         ar &boost::serialization::make_nvp("_objs", this->_objs);
@@ -73,7 +74,7 @@ public:
         return val;
     }
 #endif
-    std::tuple<float,size_t> avg_value(float val, size_t num_individuals)
+    std::tuple<float, size_t> avg_value(float val, size_t num_individuals)
     {
 
 #ifdef EVAL_ENVIR
@@ -82,7 +83,7 @@ public:
         _nb_evals = num_individuals * global::damage_sets.size(); // no need to divide
 #endif
         val = val / (float)(_nb_evals);
-        return std::tuple<float,size_t>{val,_nb_evals};
+        return std::tuple<float, size_t>{val, _nb_evals};
     }
 
     inline void set_fitness(float fFitness)
@@ -100,10 +101,12 @@ public:
     }
 
 protected:
+
+    float _value;
     size_t _nb_evals = 0;
     // descriptor work done here, in this case duty cycle
     template <typename MetaIndiv>
-    void _eval(MetaIndiv & meta_indiv)
+    void _eval(MetaIndiv &meta_indiv)
     {
         float avg_fitness = 0.0f;
 #ifdef PARALLEL_RUN

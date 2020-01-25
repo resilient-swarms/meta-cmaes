@@ -8,7 +8,9 @@
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/mapelites_phenotype.hpp>
 #include <meta-cmaes/top_typedefs.hpp>
+#include <meta-cmaes/stat_map.hpp>
 #include <Eigen/Dense>
+
 // #define MAP_WRITE_PARENTS
 
 namespace boost
@@ -46,7 +48,6 @@ public:
     void refresh(const E &ea)
     {
 
-        
         if (ea.gen() % CMAESParams::pop::dump_period == 0)
         {
 #ifdef PRINTING
@@ -56,17 +57,16 @@ public:
             _pop = ea.pop();
             _write_recovered_performances(std::string("recovered_perf"), ea);
             get_database();
-            std::cout << "number of evaluations so far "<< _nb_evals<< std::endl;
+            std::cout << "number of evaluations so far " << _nb_evals << std::endl;
         }
-        
     }
 
     void get_database()
     {
         _capacity = global::database.get_capacity();
         _database = global::database;
-        _sp       = global::database.sp;
-        _max_sp   = global::database.max_sp;
+        _sp = global::database.sp;
+        _max_sp = global::database.max_sp;
         _nb_evals = global::nb_evals;
     }
     void set_globals()
@@ -75,16 +75,18 @@ public:
         global::database = _database;
         global::database.sp = _sp;
         global::database.max_sp = _max_sp;
-        global::nb_evals  = _nb_evals;
+        global::nb_evals = _nb_evals;
     }
     // show the n-th individual from zero'th map in the population
     void show(std::ostream & os, size_t k)
     {
-        std::cerr << "loading map 0, individual " + std::to_string(k);
-        // develop map 0
-        this->_pop[0]->develop();// take into account any additions to the database
-        // evaluate individual k within this map
-        _show_individual(os, k);
+        // std::cerr << "loading map 0, individual " + std::to_string(k);
+        // // develop map 0
+        this->_pop[0]->develop(); // take into account any additions to the database
+        //                           // evaluate individual k within this map
+        // //identical copy of show in statmap noq  
+        sferes::stat::Map<base_phen_t,BottomParams>::_show(os,this->_pop[0]->archive());                   
+        
     }
 
     template <class Archive>
@@ -112,8 +114,8 @@ protected:
     void _write_database(const std::string &prefix,
                          const EA &ea) const
     {
-        std::cout << "writing..."  << ea.gen() << prefix << std::endl;
-        std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix  + std::string(".dat");
+        std::cout << "writing..." << ea.gen() << prefix << std::endl;
+        std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix + std::string(".dat");
 
         std::ofstream ofs(fname.c_str());
         for (size_t k = 0; k < global::database.size(); ++k)
@@ -136,18 +138,10 @@ protected:
         }
         ofs << "\n";
     }
-    void _show_individual(std::ostream & os, size_t k)
-    {
-        bottom_indiv_t ind = this->_pop[0]->archive().data()[k];
-        ind->fit() = bottom_fit_t(this->_pop[0]->W);
-        ind->develop();
-        ind->show(os);
-        ind->fit().set_mode(fit::mode::view);
-        ind->fit().eval(*ind);
-    }
 };
+
 } // namespace stat
-} // namespace sferes
+} // namespace stat
 
 // SFERES_STAT(Stat_Pop, Stat)
 // {
