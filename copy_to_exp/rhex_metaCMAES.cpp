@@ -17,6 +17,9 @@
 #define BO_C() EXPERIMENT_TYPE == CONDITION_BODY_ORIENTATION
 #define LV_C() EXPERIMENT_TYPE == CONDITION_LINEAR_VELOCITY
 
+#define ENVIR_TESTS()  EVAL_ENVIR==1 && (TEST || META())
+#define DAMAGE_TESTS()  EVAL_ENVIR==0 && (TEST || META())
+
 #ifdef GRAPHIC
 #define NO_PARALLEL
 #endif
@@ -53,6 +56,13 @@
 #include <meta-cmaes/stat_pop.hpp>
 #else
 #include <meta-cmaes/control_typedefs.hpp>
+#include <meta-cmaes/stat_map.hpp>
+#include <sferes/ea/ea.hpp>
+#include <modules/map_elites/map_elites.hpp>
+typedef boost::fusion::vector<sferes::stat::Map<phen_t, BottomParams>> stat_t;
+
+typedef modif::Dummy<> modifier_t;
+typedef sferes::ea::MapElites<phen_t, eval_t, stat_t, modifier_t, BottomParams> ea_t;
 #endif
 
 

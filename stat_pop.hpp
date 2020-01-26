@@ -84,9 +84,28 @@ public:
         // // develop map 0
         this->_pop[0]->develop(); // take into account any additions to the database
         //                           // evaluate individual k within this map
-        // //identical copy of show in statmap noq  
-        sferes::stat::Map<base_phen_t,BottomParams>::_show(os,this->_pop[0]->archive());                   
-        
+        // //identical copy of show in statmap noq
+        _show_(os, this->_pop[0]->archive());
+    }
+
+    void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
+    {
+        std::cout << "show stat" << std::endl;
+        float val = 0.0f;
+        std::cout << "read the archive" << std::endl;
+        for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
+        {
+            if (*k)
+            {
+                val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**k);
+#ifdef EVAL_ENVIR
+                val /= (float) global::world_options.size();
+#else
+                val /= (float) global::damage_sets.size();
+#endif
+                os << val << std::endl;
+            }
+        }
     }
 
     template <class Archive>
@@ -141,7 +160,7 @@ protected:
 };
 
 } // namespace stat
-} // namespace stat
+} // namespace sferes
 
 // SFERES_STAT(Stat_Pop, Stat)
 // {

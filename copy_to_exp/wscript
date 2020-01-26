@@ -16,56 +16,38 @@ def configure(conf):
 
     conf.load('rhex_dart')
     conf.check_rhex_dart()
-  
 
-
-			# sferes.create_variants(bld,
-		    #     source = 'rhex_metaCMAES.cpp',
-		    #     use = 'sferes2',
-		    #     uselib = 'DART_GRAPHIC ' + libs,
-		    #     target = 'rhex_metaCMAES_graphic_envir_'+c,
-		    #     cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEVAL_ENVIR","-DEXPERIMENT_TYPE="+str(i)],   # -march=native
-		    #             variants = ['BINARY'])
-			# sferes.create_variants(bld,
-		    #                source = 'rhex_metaCMAES.cpp',
-		    #                use = 'sferes2',
-		    #                uselib = 'DART_GRAPHIC ' + libs,
-		    #                target = 'rhex_metaCMAES_graphic_damage_'+c,
-		    #                cxxflags = cxxflags + ['-g', '-march=native',"-DGRAPHIC","-DEXPERIMENT_TYPE="+str(i)],   # -march=native
-		    #                variants = ['BINARY'])
 def _build_test(bld):
-    libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
-
-    cxxflags = bld.get_env()['CXXFLAGS']
-    if os.environ.get('BUILD_META',"False") == "True":
-			sferes.create_variants(bld,
+	libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
+	cxxflags = bld.get_env()['CXXFLAGS']
+	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
 							uselib = libs,
 							target = 'test_envir_meta',
 							cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # environment
 							variants = ['BINARY'])
-			sferes.create_variants(bld,
+	sferes.create_variants(bld,
+								source = 'rhex_metaCMAES.cpp',
+								use = 'sferes2',
+								uselib = libs,
+								target = 'test_damage_meta',
+								cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # damage
+								variants = ['BINARY'])
+	# build control conditions; no descriptors needed anymore -> 1 binary for all control conditions is enough
+	sferes.create_variants(bld,
+								source = 'rhex_metaCMAES.cpp',
+								use = 'sferes2',
+								uselib = libs,
+								target = 'test_envir_control',
+								cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # environment
+								variants = ['BINARY'])
+	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
 							uselib = libs,
-							target = 'test_damage_meta',
-							cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # damage
-							variants = ['BINARY'])
-    else:  # build control conditions; no descriptors needed anymore -> 1 binary for all control conditions is enough
-			sferes.create_variants(bld,
-							source = 'rhex_metaCMAES.cpp',
-							use = 'sferes2',
-							uselib = libs,
-							target = 'test_envir_meta',
-							cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=1","-DNUM_CORES=1"],   # environment
-							variants = ['BINARY'])
-			sferes.create_variants(bld,
-							source = 'rhex_metaCMAES.cpp',
-							use = 'sferes2',
-							uselib = libs,
-							target = 'test_damage_meta',
-							cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEXPERIMENT_TYPE=1","-DNUM_CORES=1"],   # damage
+							target = 'test_damage_control',
+							cxxflags = cxxflags + ['-g','-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # damage
 							variants = ['BINARY'])
 def _build_evolution(bld):
     libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '

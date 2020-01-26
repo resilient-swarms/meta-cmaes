@@ -8,7 +8,7 @@
 
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/global.hpp>
-#include <meta-cmaes/fit_top.hpp>
+#include <meta-cmaes/recovered_performance.hpp>
 //modifies the stat-map to calculate averaged performance over all individuals
 
 // #define MAP_WRITE_PARENTS
@@ -70,30 +70,22 @@ public:
 
     void show(std::ostream & os, size_t k)
     {
-        _show(os, _archive);
-    }
-    static void _show(std::ostream & os, const boost::multi_array<phen_t, Params::ea::behav_dim> &archive)
-    {
         std::cout << "show stat" << std::endl;
-        size_t _nb_evals = 0;
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
-        for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
+        for (const bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
         {
-            std::cout << _nb_evals << std::endl;
             if (*k)
             {
-                val += sferes::fit::FitTop<CMAESParams>::_eval_all(**k);
+                val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
 #ifdef EVAL_ENVIR
-                _nb_evals += global::world_options.size();
+                val /= (float)global::world_options.size();
 #else
-                _nb_evals += global::damage_sets.size();
+                val /= (float)global::damage_sets.size();
 #endif
+                os << val << std::endl;
             }
         }
-
-        val = val / (float)(_nb_evals);
-        os << val << std::endl;
     }
 
     template <class Archive>

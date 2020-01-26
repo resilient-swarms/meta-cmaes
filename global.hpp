@@ -30,11 +30,11 @@ const double BODY_WIDTH = .39;
 const double BODY_HEIGHT = .139;
 size_t nb_evals = 0;
 std::shared_ptr<rhex_dart::Rhex> global_robot;
-#if META()
-#ifdef EVAL_ENVIR
+
+#if ENVIR_TESTS()
 std::vector<size_t> world_options;
 
-void init_evolution(std::string seed, std::string robot_file)
+void init_world(std::string seed, std::string robot_file)
 {
     std::ofstream ofs("world_options_" + seed + ".txt");
     std::seed_seq seed2(seed.begin(), seed.end());
@@ -42,23 +42,23 @@ void init_evolution(std::string seed, std::string robot_file)
     std::unordered_set<size_t> types = global::_pickSet(9, 5, gen);
     std::cout << "world options :" << std::endl;
 
-    ofs << "{" ;
+    ofs << "{";
     for (size_t el : types)
     {
         world_options.push_back(el + 1); // world 0 has been removed that is why +1
         std::cout << world_options.back() << ", ";
-        ofs << world_options.back()  << ", " ;
+        ofs << world_options.back() << ", ";
     }
-    ofs << "}" ;
+    ofs << "}";
     std::cout << std::endl;
 }
+#endif
 
-#else
-
+#if DAMAGE_TESTS()
 std::vector<std::shared_ptr<rhex_dart::Rhex>> damaged_robots;
 std::vector<std::vector<rhex_dart::RhexDamage>> damage_sets;
 // {rhex_dart::RhexDamage("leg_removal", "26")}
-void init_evolution(std::string seed, std::string robot_file)
+void init_damage(std::string seed, std::string robot_file)
 {
     std::vector<std::string> damage_types = {"leg_removal", "blocked_joint", "leg_shortening", "passive_joint"};
     std::seed_seq seed2(seed.begin(), seed.end());
@@ -85,9 +85,9 @@ void init_evolution(std::string seed, std::string robot_file)
     }
 }
 #endif
-#elif GLOBAL_WEIGHT()
+#if GLOBAL_WEIGHT()
 weight_t W;
-void init_evolution(std::string seed, std::string robot_file)
+void init_weight(std::string seed, std::string robot_file)
 {
     std::ofstream ofs("global_weight_" + seed + ".txt");
     W = weight_t::Random();                //random numbers between (-1,1)
@@ -102,7 +102,7 @@ void init_evolution(std::string seed, std::string robot_file)
         for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
         {
             W(j, k) = W(j, k) / sum; // put it available for the MapElites parent class
-            
+
 #ifdef PRINTING
             std::cout << "sum " << sum << std::endl;
             std::cout << W(j, k) << "," << std::endl;
@@ -110,20 +110,24 @@ void init_evolution(std::string seed, std::string robot_file)
             ++count;
         }
     }
-    ofs << W ;
+    ofs << W;
     std::cout << "global weight: " << std::endl;
     std::cout << W << std::endl;
-}
-#else
-void init_evolution(std::string seed, std::string robot_file)
-{
 }
 #endif
 
 void init_simu(std::string seed, std::string robot_file)
 {
     global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, std::vector<rhex_dart::RhexDamage>()); // we repeat this creation process for damages
-    global::init_evolution(seed, robot_file);
+#if DAMAGE_TESTS()                                                                                                             // damage tests (meta-learning with damages or test for damage recovery)
+    init_damage(seed, robot_file);
+#elif ENVIR_TESTS() // recovery tests (meta-learning with environments or test for environment adaptation)
+    init_world(seed, robot_file);
+#endif
+
+#if GLOBAL_WEIGHT() // if using a global weight
+    init_weight(seed, robot_file);
+#endif
 }
 
 #if META()
