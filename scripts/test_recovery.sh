@@ -8,15 +8,15 @@ for method in meta bo duty lv random; do
     
     
     if [[ "${method}" == "meta" ]]; then
-      last_gen=50
+      last_gen=130
       method_tag="${test_type}_${method}"
       binary_tag="${test_type}_${method}"
     else
       method_tag="${method}"
       binary_tag="${test_type}_control"
-      last_gen=1500
+      last_gen=3500
     fi
-    for replicate in 1 2; do
+    for replicate in 1b 2b 3b; do
       echo "start doing ${method}, ${test_type}, run ${replicate}"
       Outfolder="${DEST}/${method_tag}/exp${replicate}"
       echo "will write to ${Outfolder}"
