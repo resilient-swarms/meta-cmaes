@@ -82,10 +82,15 @@ public:
     {
         // std::cerr << "loading map 0, individual " + std::to_string(k);
         // // develop map 0
-        this->_pop[0]->develop(); // take into account any additions to the database
+        
         //                           // evaluate individual k within this map
         // //identical copy of show in statmap noq
-        _show_(os, this->_pop[0]->archive());
+        for (size_t i = 0; i < this->_pop.size(); ++i)
+        {
+            this->_pop[i]->develop(); // take into account any additions to the database
+            _show_(os, this->_pop[i]->archive());
+        }
+        
     }
 
     void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
@@ -106,6 +111,8 @@ public:
                 os << val << std::endl;
             }
         }
+
+        os << "END META-INDIVIDUAL" << std::endl;
     }
 
     template <class Archive>

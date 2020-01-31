@@ -64,7 +64,6 @@ namespace sferes {
         }
       }
       void epoch() {
-        //
         _cmaes_pop = cmaes_SamplePopulation(&_evo);
         // copy pop
         for (size_t i = 0; i < this->_pop.size(); ++i)

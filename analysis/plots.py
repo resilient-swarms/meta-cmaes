@@ -1,8 +1,13 @@
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
+
 import matplotlib.pyplot as PLT
+
+mpl.use('Agg')
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+
 
 from scipy.stats import *
 

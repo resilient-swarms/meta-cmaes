@@ -301,7 +301,7 @@ protected:
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::unordered_set<size_t> elems = global::_pickSet(N, k, gen);
+    std::set<size_t> elems = global::_pickSet(N, k, gen);
 
     std::vector<bottom_indiv_t> result;
     for (size_t el : elems)

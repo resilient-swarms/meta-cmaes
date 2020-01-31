@@ -28,7 +28,7 @@ if __name__ == "__main__":
     conditions=["meta", "bo", "duty" ,"lv" ,"random"]
     test_types=["envir","damage"]
     for t in test_types:
-        for r in ["1","2"]:
+        for r in ["1","2","3"]:
             for c in conditions:
                 if c!="meta" and r=="2": continue
                 p=get_performances(c,t,r)

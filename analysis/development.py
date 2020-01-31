@@ -458,7 +458,7 @@ def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file,
 
 def get_time(t,label):
     if label.endswith("meta"):
-        time=int(t//30)
+        time=int(t//20)
     else:
         time=t
     return time
@@ -610,7 +610,7 @@ def create_coverage_development_plots():
     bd_type = ["damage_meta", "envir_meta", "bo", "duty","lv","random"]  # file system label for bd
     legend_labels=["damage-meta","envir-meta","body-orientation","duty-factor","linear-velocity","random"]  # labels for the legend
     bybin_list=["bd", "individual", "individual", "bd", "bd", ""]
-    times=range(0,6000, 1500)
+    times=range(0,7000, 1000)
     fig, axs = PLT.subplots(1,1, figsize=(15, 10))  # coverage, avg perf., global perf., global reliability
     coverage_development_plots(title="",runs=runs, times=times,
                           BD_directory=args.DEST,
@@ -623,7 +623,7 @@ def create_coverage_development_plots():
 
 def damage_performance():
     filenames=[get_output_folder_test(folder=args.DEST,condition="meta",test_type="damage",replicate=r) for r in runs]
-    max_gen=130
+    max_gen=270
     pop=5
     plotlines=[[] for i in range(pop)]
     plotstds = [[] for i in range(pop)]
@@ -651,7 +651,7 @@ def damage_performance():
 
 def envir_performance():
     filenames=[get_output_folder_test(folder=args.DEST,condition="meta",test_type="envir",replicate=r) for r in runs]
-    max_gen=120
+    max_gen=270
     pop=5
     plotlines=[[] for i in range(pop)]
     plotstds = [[] for i in range(pop)]
@@ -688,12 +688,12 @@ if __name__ == "__main__":
     #     make_translation_table(fitfun, [get_bd_dir(fitfun)], runs)
 
         # global
-    runs=["1b","2b","3b"]
+    runs=["1","2","3"]
     fitfuns = [""]  # ,"DecayBorderCoverage","Flocking"]
     bd_type = ["envir_meta","damage_meta", "bo", "duty","lv","random"
              ]  # file system label for bd
     bd_shapes =[(16,16,16), (16,16,16), (4,4,4,4,4,4),(4,4,4,4,4,4), (16,16,16),(16,16,16)]  # shape of the characterisation
-    times=range(0,6000,1500)
+    times=range(0,7500,1000)
 
     #make_translation_table("DEBUG", [get_bd_dir(f) for f in fitfuns], runs,times=[generation],source="best")
          # print_best_individuals(

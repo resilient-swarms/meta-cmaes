@@ -11,10 +11,10 @@
 namespace global
 {
 // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)
-std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
+std::set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
 {
     std::uniform_int_distribution<> dis(0, N - 1);
-    std::unordered_set<size_t> elems;
+    std::set<size_t> elems;
     elems.clear();
 
     while (elems.size() < k)
@@ -23,6 +23,28 @@ std::unordered_set<size_t> _pickSet(size_t N, size_t k, std::mt19937 &gen)
     }
 
     return elems;
+}
+
+std::set<size_t> _fullSet(size_t N)
+{
+    std::set<size_t> elems;
+    size_t k = 0;
+    while (elems.size() < N)
+    {
+        elems.insert(k);
+        ++k;
+    }
+
+    return elems;
+}
+
+std::set<size_t> _take_complement(std::set<size_t> full_set, std::set<size_t> sub_set)
+{
+    std::set<size_t> diff;
+
+    std::set_difference(full_set.begin(), full_set.end(), sub_set.begin(), sub_set.end(),
+                        std::inserter(diff, diff.begin()));
+    return diff;
 }
 
 const double BODY_LENGTH = .54;
@@ -39,9 +61,24 @@ void init_world(std::string seed, std::string robot_file)
     std::ofstream ofs("world_options_" + seed + ".txt");
     std::seed_seq seed2(seed.begin(), seed.end());
     std::mt19937 gen(seed2);
-    std::unordered_set<size_t> types = global::_pickSet(9, 5, gen);
+    std::set<size_t> types = global::_pickSet(9, 5, gen);
     std::cout << "world options :" << std::endl;
 
+    ofs << "{";
+    for (size_t el : types)
+    {
+        size_t option = el + 1;// world 0 has been removed that is why +1
+#ifndef TAKE_COMPLEMENT
+        world_options.push_back(option); 
+#endif
+        std::cout << option << ", ";
+        ofs << option << ", ";
+    }
+    ofs << "}";
+    std::cout << std::endl;
+#ifdef TAKE_COMPLEMENT
+    types = global::_take_complement(global::_fullSet(9), types);
+    ofs << "test:" << std::endl;
     ofs << "{";
     for (size_t el : types)
     {
@@ -51,6 +88,7 @@ void init_world(std::string seed, std::string robot_file)
     }
     ofs << "}";
     std::cout << std::endl;
+#endif
 }
 #endif
 
@@ -63,10 +101,26 @@ void init_damage(std::string seed, std::string robot_file)
     std::vector<std::string> damage_types = {"leg_removal", "blocked_joint", "leg_shortening", "passive_joint"};
     std::seed_seq seed2(seed.begin(), seed.end());
     std::mt19937 gen(seed2);
-    std::unordered_set<size_t> types = global::_pickSet(4, 2, gen); // two out of four types are selected randomly
+    std::set<size_t> types = global::_pickSet(4, 2, gen); // two out of four types are selected randomly
     std::cout << "damage sets :" << std::endl;
     std::ofstream ofs("damage_sets_" + seed + ".txt");
 
+    for (size_t el : types)
+    {
+        std::string damage_type = damage_types[el];
+        for (size_t leg = 0; leg < 6; ++leg)
+        {
+            std::cout << damage_type << "," << leg << "\n";
+            ofs << damage_type << "," << leg << "\n";
+#ifndef TAKE_COMPLEMENT
+            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); // world 0 has been remove that is why +1
+#endif
+        }
+    }
+    std::cout << std::endl;
+#ifdef TAKE_COMPLEMENT
+    types = global::_take_complement(global::_fullSet(4), types);
+    ofs << "test:" << std::endl;
     for (size_t el : types)
     {
         std::string damage_type = damage_types[el];
@@ -78,7 +132,7 @@ void init_damage(std::string seed, std::string robot_file)
         }
     }
     std::cout << std::endl;
-
+#endif
     for (size_t i = 0; i < global::damage_sets.size(); ++i)
     {
         global::damaged_robots.push_back(std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damage_sets[i])); // we repeat this creation process for damages
