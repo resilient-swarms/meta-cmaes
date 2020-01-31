@@ -41,7 +41,7 @@ def get_performances(mins,means,maxs, condition,test_type,replicates):
     maxs.append(Ms)
     means.append(mes)
 
-def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicates):
+def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicates,selection_criterion, generation):
     mes = []
     ms = []
     Ms = []
@@ -51,6 +51,12 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
         x = [[] for i in range(n_pop)]
         p=0
         temp=[]
+        if selection_criterion=="evolution_performance":
+            f_name = get_file_name_metafitness(args.DEST, condition, test_type, replicate, generation)
+            with open(f_name,"r") as f_fit:
+                for line in f_fit:
+                    result = [x.strip() for x in line.split('\t')]
+                max_index = np.argmax(result[:-1]) # ignore the empty character due to newline
         with open(filename, 'r') as f:
             for line in f:
                 if line:  # avoid blank lines
@@ -75,23 +81,34 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
                 print("min=" + str(ms[-1]))
             # else:
             #     raise Exception("empty performance list")
-    mins.append(ms)
-    maxs.append(Ms)
-    means.append(mes)
+    if selection_criterion == "evolution_performance":
+        print("will select based on evolution performance")
+        print("mean=" + str(mes[max_index]))
+        print("max=" + str(Ms[max_index]))  #
+        print("min=" + str(ms[max_index]))
+        mins.append([ms[max_index]])
+        maxs.append([Ms[max_index]])
+        means.append([mes[max_index]])
+    else:
+        mins.append(ms)
+        maxs.append(Ms)
+        means.append(mes)
 
 if __name__ == "__main__":
     conditions=["meta", "bo", "duty" ,"lv" ,"random"]
     labels=["Meta","Body orientation","Duty factor", "Linear velocity", "Random weight"]
     test_types=["damage","envir",]
     n_pop=5
+    selection_criterion="evolution_performance"
     mins=[[] for i in test_types]
     maxs=[[] for i in test_types]
     means=[[] for i in test_types]
     replicates=["1","2","3"]
+    chosen_generation={"damage_meta":270,"envir_meta":270}
     for j, t in enumerate(test_types):
             for c in conditions:
                 if c=="meta":
-                    p = get_performances_pop(mins[j],means[j],maxs[j],n_pop,c, t, replicates)
+                    p = get_performances_pop(mins[j],means[j],maxs[j],n_pop,c, t, replicates,selection_criterion, 270 )
                 else:
                     p=get_performances(mins[j],means[j],maxs[j],c,t,replicates)
     with open("adaptation_table", "w") as f:

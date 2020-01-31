@@ -58,7 +58,11 @@
 #include <meta-cmaes/stat_pop.hpp>
 #else
 #include <meta-cmaes/control_typedefs.hpp>
-#include <meta-cmaes/stat_map.hpp>
+#ifdef TEST
+    #include <meta-cmaes/stat_map.hpp>
+#else 
+    #include <modules/map_elites/stat_map.hpp>
+#endif
 #include <sferes/ea/ea.hpp>
 #include <modules/map_elites/map_elites.hpp>
 typedef boost::fusion::vector<sferes::stat::Map<phen_t, BottomParams>> stat_t;

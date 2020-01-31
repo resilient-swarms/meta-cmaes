@@ -80,14 +80,18 @@ public:
     // show the n-th individual from zero'th map in the population
     void show(std::ostream & os, size_t k)
     {
-        // std::cerr << "loading map 0, individual " + std::to_string(k);
-        // // develop map 0
-        
-        //                           // evaluate individual k within this map
-        // //identical copy of show in statmap noq
+        for (size_t i= 0; i < this->_pop.size(); ++i)
+        {
+            this->_pop[i]->develop(); // don't take into account any additions to the database; so you know which one is the best according to evolution
+            os << this->_pop[i]->W << std::endl;
+            os << "END WEIGHTS" << std::endl;  
+        }
+
+        // don't take into account any additions to the database; so you know which one is the best according to evolution
         for (size_t i = 0; i < this->_pop.size(); ++i)
         {
-            this->_pop[i]->develop(); // take into account any additions to the database
+            
+ 
             _show_(os, this->_pop[i]->archive());
         }
         
@@ -98,6 +102,7 @@ public:
         std::cout << "show stat" << std::endl;
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
+
         for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
         {
             if (*k)
@@ -112,7 +117,7 @@ public:
             }
         }
 
-        os << "END META-INDIVIDUAL" << std::endl;
+        os << "END TEST META-INDIVIDUAL" << std::endl;
     }
 
     template <class Archive>

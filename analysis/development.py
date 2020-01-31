@@ -14,6 +14,7 @@ import copy
 
 PRINT=False
 
+LAMBDA=5
 
 
 parser = argparse.ArgumentParser(description='Process destination folder.')
@@ -33,10 +34,13 @@ def get_all_performances(bd_dims, path,conversion_func=None,from_fitfile=False):
         all_performances = [fitness for fitness in get_bin_performances_uniquearchive(path,bd_dims,from_fitfile).values()]
     return all_performances
 
-def global_performances(bd_dims, BD_directory,  runs, archive_file_path, max_performance,conversion_func,from_fitfile=False):
+def global_performances(bd_dims, BD_directory,  runs, archive_file_paths, max_performance,conversion_func,from_fitfile=False):
     stats = []
-    for run in runs:
-        stats.append(_global_performance(bd_dims,  BD_directory, run, archive_file_path, max_performance,conversion_func,from_fitfile))
+    if not isinstance(archive_file_paths,list):
+        archive_file_paths=[archive_file_paths]
+    for path in archive_file_paths:
+        for run in runs:
+            stats.append(_global_performance(bd_dims,  BD_directory, run, path, max_performance,conversion_func,from_fitfile))
 
     print_conditional("global performances: " + str(stats))
     return stats
@@ -64,10 +68,13 @@ def _global_performance( bd_dims, BD_directory, run,archive_file_path,max_perfor
     return max(all_performances)/max_performance
 
 
-def avg_performances(bd_dims, BD_directory,  runs, archive_file_path, max_performance,conversion_func,from_fitfile):
+def avg_performances(bd_dims, BD_directory,  runs, archive_file_paths, max_performance,conversion_func,from_fitfile):
     stats = []
-    for run in runs:
-        stats.append(_avg_performance(bd_dims, BD_directory,  run, archive_file_path, max_performance,conversion_func,from_fitfile))
+    if not isinstance(archive_file_paths,list):
+        archive_file_paths=[archive_file_paths]
+    for path in archive_file_paths:
+        for run in runs:
+            stats.append(_avg_performance(bd_dims, BD_directory,  run, path, max_performance,conversion_func,from_fitfile))
     print_conditional("avg performances: " + str(stats))
     return stats
 
@@ -93,115 +100,14 @@ def _avg_performance(bd_dims, BD_directory,  run,archive_file_path,max_performan
     all_performances=get_all_performances(bd_dims, path, conversion_func,from_fitfile)
     return np.mean(all_performances)/max_performance
 
-def global_reliabilities(bd_dims,BD_directory, runs,archive_file_path,by_bin):
-    """
-    averages the global reliability across the different maps in the combined archive
-    :param BD_directory:
-    :param runs:
-    :param archive_file_path:
-    :return:
-    """
 
-    combined_archive=get_combined_archive(BD_directory, bd_dims,  runs, archive_file_path,by_bin=by_bin)
+def coverages(bd_shape,BD_directory, runs, archive_file_paths):
     stats = []
-    for run in runs:
-        stats.append(_global_reliability(bd_dims, combined_archive, BD_directory, run, archive_file_path,by_bin))
-    print_conditional("global reliabilities: "+str(stats))
-    return stats
-
-def _global_reliability(bd_dims, combined_archive,BD_directory, run, archive_file_path,by_bin):
-
-    """
-    For each run, the average across all cells of the highest-performing solution the algorithm found for each cell
-    (0 if it did not produce a solution in that cell)
-    divided by the best known performance for that cell as found by any run of any algorithm.
-    Cells for which no solution was found by any run of any algorithm are not included in the calculation
-    (to avoid dividing by zero, and because it may not be possible to fill such cells and algorithms
-     thus should not be penalized for not doing so).
-
-     NOTE: because here we are comparing descriptors with the same algorithm,
-     and different descriptors have different meaning for the cells,
-     the best performance and filled cells are computed by the different runs of a single setting
-
-     i.e., ignore cells that have not been filled in any of the runs,
-     but for cells that are filled compute a map's performance/max(performance) and average it
-
-    :param BD_directory: directory in which all the runs of a BD are located,
-            e.g. ~/Desktop/history_obstacles
-    :params runs, the number of runs
-    :param archive_file_path, the relative path from the BD_directory to the archive file
-    :return:
-    """
-    path = get_archive_filepath(BD_directory, run, archive_file_path)
-    if by_bin == "individual":
-        all_non_empty_performances = get_ind_performances_uniquearchive(path, bd_dims)
-
-    else:
-        all_non_empty_performances = get_bin_performances_uniquearchive(path, bd_dims, as_string=True)
-
-    cell_performances = []
-
-    for bin , archive_perfs in combined_archive.items():  # take the mean across the cells that are not empty across runs
-        performance = all_non_empty_performances.get(bin, None)
-        if performance is not None:
-            max_performance = max(archive_perfs)
-            assert performance <= max_performance
-            if max_performance > 0:
-                cell_performances.append(performance / max_performance)
-            else:
-                cell_performances.append(0.0)
-        else:
-            cell_performances.append(0.0)
-
-    mean = np.mean(cell_performances)
-    return mean
-
-def precisions(bd_dims, BD_directory,runs,archive_file_path,by_bin):
-    """
-    averages the precision of the different maps in the combined archive
-    :param BD_directory:
-    :param runs:
-    :param archive_file_path:
-    :return:
-    """
-    combined_archive=get_combined_archive(BD_directory, runs, archive_file_path,by_bin=by_bin)
-    stats = []
-    for run in runs:
-        stats.append(_precision(bd_dims,combined_archive,BD_directory, run, archive_file_path))
-    print_conditional("precisions"+str(stats))
-    return stats
-def _precision(bd_dims,  combined_archive, BD_directory, run, archive_file_path):
-
-    """
-    Same as global reliability, but for each run, the normalized performance
-    is averaged only for the cells that were filled by that algo- rithm **in that run**
-
-    i.e., ignore cells not filled in the current run,
-    but for cells that are filled compute a map's performance/max(performance) and average it
-
-    :param BD_directory: directory in which all the runs of a BD are located,
-            e.g. ~/Desktop/history_obstacles
-    :params runs, the number of runs
-    :param archive_file_path, the relative path from the BD_directory to the archive file
-    :return:
-    """
-    path = get_archive_filepath(BD_directory, run, archive_file_path)
-    all_non_empty_performances = get_bin_performances_uniquearchive(path,bd_dims)
-
-    cell_performances = []
-
-    for bin , archive_perf in all_non_empty_performances.items():  # take the mean across the cells that are not empty *in this run*
-        performance = archive_perf
-        cp=combined_archive[bin]
-        max_performance = max(cp)
-        assert performance <= max_performance
-        cell_performances.append(performance/max_performance)
-    mean = np.mean(cell_performances)
-    return mean
-def coverages(bd_shape,BD_directory, runs, archive_file_path):
-    stats = []
-    for run in runs:
-        stats.append(_coverage(bd_shape,BD_directory, run, archive_file_path))
+    if not isinstance(archive_file_paths,list):
+        archive_file_paths=[archive_file_paths]
+    for path in archive_file_paths:
+        for run in runs:
+            stats.append(_coverage(bd_shape,BD_directory, run, path))
     print_conditional("global coverages"+str(stats))
     return stats
 
@@ -218,10 +124,13 @@ def _coverage(bd_shape,BD_directory, run, archive_file_path):
     max_num_filled=get_bins(bd_shape)
     return float(num_filled)/float(max_num_filled)
 
-def absolutecoverages(bd_shape,BD_directory, runs, archive_file_path):
+def absolutecoverages(bd_shape,BD_directory, runs, archive_file_paths):
     stats = []
-    for run in runs:
-        stats.append(_absolutecoverage(bd_shape,BD_directory, run, archive_file_path))
+    if not isinstance(archive_file_paths,list):
+        archive_file_paths=[archive_file_paths]
+    for path in archive_file_paths:
+        for run in runs:
+            stats.append(_absolutecoverage(bd_shape,BD_directory, run, path))
     print_conditional("global coverages"+str(stats))
     return stats
 
@@ -299,17 +208,7 @@ def _absolutecoverage(bd_shape,BD_directory, run, archive_file_path):
 #     return ub_dict,comb_ub_dict
 
 
-def globalcoverage(bd_dims, BD_directory, runs,archive_file_path,by_bin):
-    """
-    averages the precision of the different maps in the combined archive
-    :param BD_directory:
-    :param runs:
-    :param archive_file_path:
-    :return:
-    """
-    combined_archive=get_combined_archive(BD_directory, bd_dims,  runs, archive_file_path,by_bin=by_bin)
-    num_filled = len(combined_archive)
-    return float(num_filled)
+
 
 
 
@@ -428,16 +327,16 @@ def add_boxplotlike_data(stats, y_bottom,y_mid,y_top, y_label,method_index,stati
 #             i += 1
 
 
-def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file, y_bottom,y_mid,y_top,from_fitfile=False):
+def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files, y_bottom,y_mid,y_top,from_fitfile=False):
 
     bd_dims=len(bd_shapes[i])
 
     try:
-        avg_perform = avg_performances(bd_dims,  directory, runs, archive_file, 1.0,
+        avg_perform = avg_performances(bd_dims,  directory, runs, archive_files, 1.0,
                                        conversion_func=None,from_fitfile=from_fitfile)
         add_boxplotlike_data(avg_perform, y_bottom, y_mid, y_top, y_label="average_performance", method_index=i)
 
-        global_perform = global_performances(bd_dims, directory, runs, archive_file, 1.0,
+        global_perform = global_performances(bd_dims, directory, runs, archive_files, 1.0,
                                              conversion_func=None,from_fitfile=from_fitfile)
         add_boxplotlike_data(global_perform, y_bottom, y_mid, y_top, y_label="global_performance", method_index=i)
 
@@ -445,14 +344,9 @@ def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file,
             # coverage = coverages(bd_shapes[i], directory, runs, archive_file)
             # add_boxplotlike_data(coverage, y_bottom, y_mid, y_top, y_label="coverage", method_index=i)
 
-            absolutecoverage = absolutecoverages(bd_shapes[i], directory,  runs, archive_file)
+            absolutecoverage = absolutecoverages(bd_shapes[i], directory,  runs, archive_files)
             add_boxplotlike_data(absolutecoverage, y_bottom, y_mid, y_top, y_label="absolute_coverage", method_index=i)
 
-            globalcov = globalcoverage(bd_dims, directory, runs, archive_file,by_bin=bybin_list[i])
-            add_boxplotlike_data([globalcov], y_bottom, y_mid, y_top, y_label="global_coverage", method_index=i)
-
-            global_reliability = global_reliabilities(bd_dims, directory, runs, archive_file,by_bin=bybin_list[i])
-            add_boxplotlike_data(global_reliability, y_bottom, y_mid, y_top, y_label="global_reliability", method_index=i)
     except IOError as e:
             print(e)
 
@@ -485,9 +379,17 @@ def coverage_development_plots(title,runs,times,BD_directory,title_tag, bd_type,
             abs_coverages=[]
             try:
                 time=get_time(t,legend_labels[i])
-                archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
-                abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_file)
-                abs_coverages.append(abs_coverage)
+                if bd_type[i].endswith("meta"):
+                    archive_files=[]
+                    for index in range(LAMBDA):
+                        archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time,index)
+                        archive_files.append(archive_file)
+                    abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_files)
+                    abs_coverages.append(abs_coverage)
+                else:
+                    archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
+                    abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_file)
+                    abs_coverages.append(abs_coverage)
 
             except Exception as e:
                 print(e)
@@ -550,8 +452,15 @@ def development_plots(title,runs,times,BD_directory,bd_type, legend_labels,bybin
             time=get_time(t,legend_labels[i])
   
             print(legend_labels[i])
-            archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
-            try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file, y_bottom,y_mid,y_top,from_fitfile=False)
+            if bd_type[i].endswith("meta"):
+                archive_files = []
+                for index in range(LAMBDA):
+                    archive_file, directory = get_archive_plus_dir(BD_directory, bd_type[i], time, index)
+                    archive_files.append(archive_file)
+                try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files, y_bottom,y_mid,y_top,from_fitfile=False)
+            else:
+                archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
+                try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file, y_bottom,y_mid,y_top,from_fitfile=False)
 
 
 
