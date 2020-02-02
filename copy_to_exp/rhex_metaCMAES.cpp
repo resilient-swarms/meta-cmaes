@@ -26,7 +26,7 @@
 
 #define FRICTION 1.0
 
-#define TAKE_COMPLEMENT // whether or not to test for generalisation to unseen world/damage conditions
+//#define TAKE_COMPLEMENT // whether or not to test for generalisation to unseen world/damage conditions
 
 //#define PRINTING
 //#define CHECK_PARALLEL

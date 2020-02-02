@@ -24,7 +24,7 @@ for method in meta; do
       Outfolder="${DEST}/${method_tag}/exp${replicate}"
       echo "will write to ${Outfolder}"
 
-      ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/test_${binary_tag}_binary --load ${Outfolder}/gen_${last_gen} --d ${Outfolder} -o ${Outfolder}/${test_type}_performance &
+      ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/train_${binary_tag}_binary --load ${Outfolder}/gen_${last_gen} --d ${Outfolder} -o ${Outfolder}/${test_type}_trainperformance &
     done
 
   done

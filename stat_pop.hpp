@@ -102,7 +102,6 @@ public:
         std::cout << "show stat" << std::endl;
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
-
         for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
         {
             if (*k)

@@ -18,6 +18,10 @@ def get_file_name_test(folder,condition,test_type,replicate):
     return Outfolder+"/"+test_type+"_performance"
 
 
+def get_file_name_train(folder, condition, test_type, replicate):
+    Outfolder = get_output_folder_test(folder, condition, test_type, replicate)
+    return Outfolder + "/" + test_type + "_trainperformance"
+
 def get_file_name_metafitness(folder, condition, test_type, replicate,generation):
     Outfolder = get_output_folder_test(folder, condition, test_type, replicate)
     return Outfolder + "/recovered_perf"+str(generation)+".dat"

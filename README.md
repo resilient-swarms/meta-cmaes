@@ -116,3 +116,40 @@ vi) LINEAR_VELOCITY:
         mkdir ${RESULTS_DIR}/lv
         mkdir ${RESULTS_DIR}/lv/exp${replicate_number}
         ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/rhex_metaCMAES_lv_binary ${replicate_number} --d ${RESULTS_DIR}/lv/exp${replicate_number} >> ${logfile}
+
+
+
+8. To assess the final archives, do as follows:
+
+8A. Assessing train performance
+
+8A.1 Make sure #define TAKE_COMPLEMENT is commented (see l.19 rhex_metaCMAES.cpp)
+8A.2 build the test:
+
+        export BUILD_TRAIN=True
+        bash scripts/make.sh
+        
+
+8A.3 run the test:
+
+        bash scripts/train_recovery.sh
+
+NOTE: there are some loops in train_recovery.sh, you can remove the conditions which you don't need
+
+8B. Assessing test performance
+
+8B.1 Make sure #define TAKE_COMPLEMENT is UNcommented (see l.19 rhex_metaCMAES.cpp)
+8B.2 Build the test :
+
+        export BUILD_TEST=True
+        bash scripts/make.sh
+8B.3 Run the test:
+
+        bash scripts/test_recovery.sh
+
+
+8C. Assessing cross-domain transfer
+8C.1 Install the test performance script (see 8B.1-2)
+8C.2 Run the test:
+
+         bash scripts/transfer_recovery.sh

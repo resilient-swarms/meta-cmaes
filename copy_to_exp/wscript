@@ -17,37 +17,42 @@ def configure(conf):
     conf.load('rhex_dart')
     conf.check_rhex_dart()
 
-def _build_test(bld):
+
+def _build_test(bld, take_compl=[]):
 	libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
 	cxxflags = bld.get_env()['CXXFLAGS']
+	if take_compl:
+		tag="test"
+	else:
+		tag="train"
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
 							uselib = libs,
-							target = 'test_envir_meta',
-							cxxflags = cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # environment
+							target = tag+'_envir_meta',
+							cxxflags = take_compl + cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # environment
 							variants = ['BINARY'])
 	sferes.create_variants(bld,
 								source = 'rhex_metaCMAES.cpp',
 								use = 'sferes2',
 								uselib = libs,
-								target = 'test_damage_meta',
-								cxxflags = cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # damage
+								target = tag+'_damage_meta',
+								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # damage
 								variants = ['BINARY'])
 	# build control conditions; no descriptors needed anymore -> 1 binary for all control conditions is enough
 	sferes.create_variants(bld,
 								source = 'rhex_metaCMAES.cpp',
 								use = 'sferes2',
 								uselib = libs,
-								target = 'test_envir_control',
-								cxxflags = cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # environment
+								target = tag+'_envir_control',
+								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # environment
 								variants = ['BINARY'])
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
 							uselib = libs,
-							target = 'test_damage_control',
-							cxxflags = cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # damage
+							target = tag+'_damage_control',
+							cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # damage
 							variants = ['BINARY'])
 def _build_evolution(bld):
 	libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
@@ -81,6 +86,8 @@ def _build_evolution(bld):
 def build(bld):
 
 	if os.environ.get('BUILD_TEST',"False") == "True":
+		_build_test(bld,take_compl=["-DTAKE_COMPLEMENT"])
+	elif os.environ.get('BUILD_TRAIN',"False") == "True":
 		_build_test(bld)
 	else:
 		_build_evolution(bld)
