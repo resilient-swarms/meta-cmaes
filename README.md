@@ -123,14 +123,13 @@ vi) LINEAR_VELOCITY:
 
 8A. Assessing train performance
 
-8A.1 Make sure #define TAKE_COMPLEMENT is commented (see l.19 rhex_metaCMAES.cpp)
-8A.2 build the test:
+8A.1 build the test:
 
         export BUILD_TRAIN=True
         bash scripts/make.sh
         
 
-8A.3 run the test:
+8A.2 run the test:
 
         bash scripts/train_recovery.sh
 
@@ -138,12 +137,13 @@ NOTE: there are some loops in train_recovery.sh, you can remove the conditions w
 
 8B. Assessing test performance
 
-8B.1 Make sure #define TAKE_COMPLEMENT is UNcommented (see l.19 rhex_metaCMAES.cpp)
-8B.2 Build the test :
+8B.1 Build the test :
 
         export BUILD_TEST=True
         bash scripts/make.sh
-8B.3 Run the test:
+
+
+8B.2 Run the test:
 
         bash scripts/test_recovery.sh
 
