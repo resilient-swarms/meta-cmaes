@@ -75,10 +75,15 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
     ms = []
     Ms = []
 
-    if type!="test": assert(selection_criterion is None)
+    #if type!="test": assert(selection_criterion is None)
 
     for replicate in replicates:
-
+        if selection_criterion=="train_performance":     # reliable choice as it takes into account database changes and 100% of solutions in map
+            f = get_file_name_train(args.DEST, condition, test_type, replicate)
+            print("will get max index from "+str(f))
+            w, perf = get_adaptperformance_from_file(f, n_pop)
+            perf = [np.mean(perf[i]) for i in range(len(perf))]
+            max_index = np.argmax(perf)
         if type=="test":
             # perform selection criterion from data easily obtained in simulation
             # if selection_criterion=="evolution_performance":    # not reliable, as database has been updated and only 10% of solutions in map are evaluated
@@ -88,12 +93,7 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
             #         for line in f_fit:
             #             result = [x.strip() for x in line.split('\t')]
             #         max_index = np.argmax(result[:-1]) # ignore the empty character due to newline
-            if selection_criterion=="train_performance":     # reliable choice as it takes into account database changes and 100% of solutions in map
-                f = get_file_name_train(args.DEST, condition, test_type, replicate)
-                print("will get max index from "+str(f))
-                w, perf = get_adaptperformance_from_file(f, n_pop)
-                perf = [np.mean(perf[i]) for i in range(len(perf))]
-                max_index = np.argmax(perf)
+
 
             filename = get_file_name_test(args.DEST, condition, test_type, replicate)
         else:
@@ -132,7 +132,7 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
     means.append(mes)
 
 def get_performances(type,selection_criterion):
-    conditions=["meta","bo", "duty" ,"lv" ,"random"]
+    conditions=["damage_meta","envir_meta","bo", "duty" ,"lv" ,"random"]
     labels=["Meta","Body orientation","Duty factor", "Linear velocity", "Random weight"]
     test_types=["damage","envir",]
     n_pop=5
@@ -144,7 +144,7 @@ def get_performances(type,selection_criterion):
 
     for j, t in enumerate(test_types):
             for c in conditions:
-                if c=="meta":
+                if c.endswith("meta"):
                     get_performances_pop(mins[j],means[j],maxs[j],n_pop,c, t, replicates,selection_criterion, type )
                 else:
                     # mins,means,maxs, condition,test_type,replicates, type
@@ -158,5 +158,5 @@ def get_performances(type,selection_criterion):
 
 
 if __name__ == "__main__":
-    #get_performances(type="train",selection_criterion=None)
+    get_performances(type="train",selection_criterion=None)
     get_performances(type="test",selection_criterion="train_performance")

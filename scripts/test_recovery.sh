@@ -2,12 +2,12 @@
 
 DEST=$1 # destination folder
 
-for method in meta; do
-  for test_type in envir damage; do
+for method in bo; do
+  for test_type in envir; do
     
     
     if [[ "${method}" == "meta" ]]; then
-      if [[ "${method}" == "envir" ]]; then
+      if [[ "${method}" == "envir_meta" ]]; then
         last_gen=270  # leads to 2.8M evals
       else
         last_gen=260  # leads to 2.8M evals
@@ -24,7 +24,7 @@ for method in meta; do
       Outfolder="${DEST}/${method_tag}/exp${replicate}"
       echo "will write to ${Outfolder}"
 
-      ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/test_${binary_tag}_binary --load ${Outfolder}/gen_${last_gen} --d ${Outfolder} -o ${Outfolder}/${test_type}_performance &
+      ${SFERES_DIR}/build/exp/MAP-Elites-Rhex/test_${binary_tag}_binary --load ${Outfolder}/gen_${last_gen} --d ${Outfolder} -o ${Outfolder}/${test_type}_PARALLELperformance &
     done
 
   done

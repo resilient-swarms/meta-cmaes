@@ -45,14 +45,14 @@ def _build_test(bld, take_compl=[]):
 								use = 'sferes2',
 								uselib = libs,
 								target = tag+'_envir_control',
-								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # environment
+								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # environment
 								variants = ['BINARY'])
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
 							uselib = libs,
 							target = tag+'_damage_control',
-							cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES=1"],   # damage
+							cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # damage
 							variants = ['BINARY'])
 def _build_evolution(bld):
 	libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '

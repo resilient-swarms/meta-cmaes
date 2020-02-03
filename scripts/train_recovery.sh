@@ -2,7 +2,7 @@
 
 DEST=$1 # destination folder
 
-for method in meta; do
+for method in bo lv duty random; do
   for test_type in envir damage; do
     
     

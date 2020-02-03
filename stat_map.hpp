@@ -9,6 +9,17 @@
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/recovered_performance.hpp>
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <iostream>
+#include <fstream>
+#include <sys/stat.h> /* For mode constants */
+
 //modifies the stat-map to calculate averaged performance over all individuals
 
 // #define MAP_WRITE_PARENTS
@@ -67,27 +78,62 @@ public:
 #endif
         }
     }
-
-    void show(std::ostream & os, size_t k)
+    void wait_and_erase(std::vector<pid_t> & SlavePIDs)
+    {
+        // wait for a new process to finish and erase it from the list
+        int *status;
+        pid_t pid = waitpid(-1, status, 0); // -1: any child; status; 0: only children that exit
+        //std::cout<<"waited for pid "<<pid<<std::endl;
+        auto it = std::find(SlavePIDs.begin(), SlavePIDs.end(), pid);
+        SlavePIDs.erase(it); // remove the process from the list
+    }
+    void show(std::ostream & os, size_t j)
     {
         std::cout << "show stat" << std::endl;
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
-        for (const bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
+        std::vector<pid_t> SlavePIDs;
+        const bottom_indiv_t *k = _archive.data();
+        os << NUM_CORES << std::endl;
+        while (k < (_archive.data() + _archive.size()))
         {
             if (*k)
             {
-                val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
+                if (SlavePIDs.size() < NUM_CORES) // still need more
+                {
+                    /* Perform fork */
+                    SlavePIDs.push_back(::fork());
+                    if (SlavePIDs.back() == 0)
+                    {
+                        /* We're in a slave */
+                        val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
 #ifdef EVAL_ENVIR
-                val /= (float)global::world_options.size();
+                        val /= (float)global::world_options.size();
 #else
-                val /= (float)global::damage_sets.size();
+                        val /= (float)global::damage_sets.size();
 #endif
-                os << val << std::endl;
+                        os << "child" << k << std::endl;
+                        os << val << std::endl;
+                    }
+                    else
+                    {
+                        ++k;
+                        os << "parent incremented: " << k << std::endl;
+                    }
+                }
+                else
+                {
+                    this->wait_and_erase(SlavePIDs);
+                }
             }
+
+            // now wait for all the other child processes to finish
+            while (!SlavePIDs.empty())
+            {
+                wait_and_erase(SlavePIDs);
+            } // keep performing waits until an error returns, meaning no more child existing
         }
     }
-
     template <class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {

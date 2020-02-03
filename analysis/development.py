@@ -531,7 +531,7 @@ def create_coverage_development_plots():
     finish_fig(fig, args.DEST +"/Results/coverage_plot.pdf")
 
 def damage_performance():
-    filenames=[get_output_folder_test(folder=args.DEST,condition="meta",test_type="damage",replicate=r) for r in runs]
+    filenames=[get_output_folder_test(folder=args.DEST,condition="damage_meta",replicate=r) for r in runs]
     max_gen=260
     pop=5
     plotlines=[[] for i in range(pop)]
@@ -559,7 +559,7 @@ def damage_performance():
                xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear")
 
 def envir_performance():
-    filenames=[get_output_folder_test(folder=args.DEST,condition="meta",test_type="envir",replicate=r) for r in runs]
+    filenames=[get_output_folder_test(folder=args.DEST,condition="envir_meta",replicate=r) for r in runs]
     max_gen=270
     pop=5
     plotlines=[[] for i in range(pop)]
