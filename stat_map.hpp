@@ -94,7 +94,7 @@ public:
         std::cout << "read the archive" << std::endl;
         std::vector<pid_t> SlavePIDs;
         const bottom_indiv_t *k = _archive.data();
-        os << NUM_CORES << std::endl;
+        //os << NUM_CORES << std::endl;
         while (k < (_archive.data() + _archive.size()))
         {
             if (*k)
@@ -112,13 +112,13 @@ public:
 #else
                         val /= (float)global::damage_sets.size();
 #endif
-                        os << "child" << k << std::endl;
+                        //os << "child" << k << std::endl;
                         os << val << std::endl;
                     }
                     else
                     {
                         ++k;
-                        os << "parent incremented: " << k << std::endl;
+                        //os << "parent incremented: " << k << std::endl;
                     }
                 }
                 else
