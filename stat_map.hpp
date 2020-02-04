@@ -94,47 +94,56 @@ public:
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
         std::vector<pid_t> SlavePIDs;
-        const bottom_indiv_t *k = _archive.data();
-        //os << NUM_CORES << std::endl;
-        while (k < (_archive.data() + _archive.size()))
+        std::vector<bottom_indiv_t *> individuals;
+        for (bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
         {
             if (*k)
             {
-                if (SlavePIDs.size() < NUM_CORES) // still need more
+                individuals.push_back(k);
+            }
+        }
+        std::cout << "will do " << individuals.size() << "individuals" << std::endl;
+        size_t i = 0;
+        //os << NUM_CORES << std::endl;
+        while (i < individuals.size())
+        {
+
+            if (SlavePIDs.size() < NUM_CORES) // still need more
+            {
+                /* Perform fork */
+
+                SlavePIDs.push_back(::fork());
+                if (SlavePIDs.back() == 0)
                 {
-                    /* Perform fork */
-                    SlavePIDs.push_back(::fork());
-                    if (SlavePIDs.back() == 0)
-                    {
-                        /* We're in a slave */
-                        val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
+                    /* We're in a slave */
+                    val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**individuals[i]);
 #ifdef EVAL_ENVIR
-                        val /= (float)global::world_options.size();
+                    val /= (float)global::world_options.size();
 #else
-                        val /= (float)global::damage_sets.size();
+                    val /= (float)global::damage_sets.size();
 #endif
-                        //os << "child" << k << std::endl;
-                        os << val << std::endl;
-                    }
-                    else
-                    {
-                        ++k;
-                        //os << "parent incremented: " << k << std::endl;
-                    }
+                    //os << "child" << k << std::endl;
+                    os << val << std::endl;
+                    os.flush(); //make sure it is already flushed !
+                    exit(EXIT_SUCCESS);
                 }
                 else
                 {
-                    this->wait_and_erase(SlavePIDs);
+                    i++; //continue because you finished one
                 }
             }
-
-            // now wait for all the other child processes to finish
-            while (!SlavePIDs.empty())
+            else
             {
-                wait_and_erase(SlavePIDs);
-            } // keep performing waits until an error returns, meaning no more child existing
+                this->wait_and_erase(SlavePIDs);
+            }
         }
+        // now wait for all the other child processes to finish
+        while (!SlavePIDs.empty())
+        {
+            wait_and_erase(SlavePIDs);
+        } // keep performing waits until an error returns, meaning no more child existing
     }
+
     template <class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -212,7 +221,7 @@ protected:
             ++offset;
         }
     }
-};
+}; // namespace stat
 } // namespace stat
 } // namespace sferes
 
