@@ -134,7 +134,10 @@ vi) LINEAR_VELOCITY:
 
         bash scripts/train_recovery.sh  ${outputfolder} ${methods} ${test_type} ${replicates}
 
-NOTE: there are some loops in train_recovery.sh, you can remove the conditions which you don't need
+For example, 
+
+        bash scripts/train_recovery.sh ${RESULTS_DIR} random "envir damage" david55
+
 
 8B. Assessing test performance
 
@@ -149,6 +152,9 @@ NOTE: there are some loops in train_recovery.sh, you can remove the conditions w
 
         bash scripts/test_recovery.sh ${RESULTS_DIR} ${methods} ${test_type} ${replicates}
 
+For example, 
+
+        bash scripts/test_recovery.sh ${RESULTS_DIR} random "envir damage" david55
 
 8C. Assessing cross-domain transfer
 8C.1 Install the test performance script (see 8B.1-2)
