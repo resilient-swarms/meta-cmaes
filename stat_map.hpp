@@ -89,6 +89,7 @@ public:
     }
     void show(std::ostream & os, size_t j)
     {
+        std::cout << "NUM_CORES " << NUM_CORES << std::endl;
         std::cout << "show stat" << std::endl;
         float val = 0.0f;
         std::cout << "read the archive" << std::endl;
