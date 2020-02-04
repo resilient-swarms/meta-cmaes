@@ -142,6 +142,8 @@ that is, $methods is the type of method in (bo, duty, lv, or random); $test_type
 
         bash scripts/train_recovery.sh ${RESULTS_DIR} random "envir" 1
 
+The runs generate files named as "envir_trainperformance" and/or "damage_trainperformance" where applicable (in the $RESULTS_DIR/$condition/exp$replicates folder).
+
 8B. Assessing test performance
 
 8B.1 Build the test :
@@ -160,6 +162,8 @@ For example,
         bash scripts/test_recovery.sh ${RESULTS_DIR} random "envir damage" david55
 
 that is, $methods is the type of method in (bo, duty, lv, or random); $test_type is the type of adaptation test (damage and/or envir); $replicates is the identifier of your run (e.g., 1,2, or 3 is common).
+
+These runs generate files named as "envir_performance" and/or "damage_performance" where applicable (in the $RESULTS_DIR/$condition/exp$replicates folder).
 
 8C. Assessing cross-domain transfer
 8C.1 Install the test performance script (see 8B.1-2)
