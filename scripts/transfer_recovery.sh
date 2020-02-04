@@ -2,7 +2,7 @@
 
 DEST=$1 # destination folder
 
-for method in envir_meta damage_meta; do
+for method in $2; do
 
     if [[ "${method}" == "envir_meta" ]]; then
         test_type="damage"
@@ -15,7 +15,7 @@ for method in envir_meta damage_meta; do
     fi
     method_tag="${method}" # ensure we take the correct outputfolder, with the right population and the right destination folder
 
-    for replicate in 1 2 3; do
+    for replicate in $3; do
         echo "start doing ${method}, ${test_type}, run ${replicate}"
         Outfolder="${DEST}/${method_tag}/exp${replicate}"
         echo "will write to ${Outfolder}"

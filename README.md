@@ -132,7 +132,7 @@ vi) LINEAR_VELOCITY:
 
 8A.2 run the test:
 
-        bash scripts/train_recovery.sh  ${outputfolder}
+        bash scripts/train_recovery.sh  ${outputfolder} ${methods} ${test_type} ${replicates}
 
 NOTE: there are some loops in train_recovery.sh, you can remove the conditions which you don't need
 
@@ -147,11 +147,11 @@ NOTE: there are some loops in train_recovery.sh, you can remove the conditions w
 
 8B.2 Run the test:
 
-        bash scripts/test_recovery.sh ${outputfolder}
+        bash scripts/test_recovery.sh ${outputfolder} ${methods} ${test_type} ${replicates}
 
 
 8C. Assessing cross-domain transfer
 8C.1 Install the test performance script (see 8B.1-2)
 8C.2 Run the test:
 
-         bash scripts/transfer_recovery.sh
+         bash scripts/transfer_recovery.sh ${outputfolder} ${methods} ${test_type} ${replicates}
