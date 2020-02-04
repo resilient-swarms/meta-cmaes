@@ -58,7 +58,7 @@ def check_files():
                     print(counts)
                     print(archive_counts)
                     break
-                    
+
 
 def get_performances_single(mins,means,maxs, condition,test_type,replicates, type):
     mes = []

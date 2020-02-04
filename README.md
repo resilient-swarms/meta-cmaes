@@ -125,7 +125,7 @@ vi) LINEAR_VELOCITY:
 
 8A.1 build the test:
 
-        export NUM_CORES=16
+        export NUM_CORES=8
         export BUILD_TRAIN=True
         bash scripts/make.sh
         
@@ -138,12 +138,15 @@ For example,
 
         bash scripts/train_recovery.sh ${RESULTS_DIR} random "envir damage" david55
 
+that is, $methods is the type of method in (bo, duty, lv, or random); $test_type is the type of adaptation test (damage and/or envir); $replicates is the identifier of your run (e.g., 1,2, or 3 is common). in this case "envir damage" is provided together, resulting in CPU usage twice NUM_CORES; alternatively, you can use 16 (or any number of cores) and apply just a single program by providing  for example:
+
+        bash scripts/train_recovery.sh ${RESULTS_DIR} random "envir" 1
 
 8B. Assessing test performance
 
 8B.1 Build the test :
 
-        export NUM_CORES=16
+        export NUM_CORES=8
         export BUILD_TEST=True
         bash scripts/make.sh
 
@@ -155,6 +158,8 @@ For example,
 For example, 
 
         bash scripts/test_recovery.sh ${RESULTS_DIR} random "envir damage" david55
+
+that is, $methods is the type of method in (bo, duty, lv, or random); $test_type is the type of adaptation test (damage and/or envir); $replicates is the identifier of your run (e.g., 1,2, or 3 is common).
 
 8C. Assessing cross-domain transfer
 8C.1 Install the test performance script (see 8B.1-2)
