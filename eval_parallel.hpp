@@ -279,7 +279,7 @@ private:
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 
-template <typename Phen,typename Fit>
+template <typename Phen, typename Fit>
 struct _eval_parallel_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
@@ -498,7 +498,7 @@ for (size_t i = begin; i < end; ++i)
 {
   pop[i]->fit() = fit_proto;
 }
-auto helper = _eval_parallel_individuals<Phen,typename Phen::fit_t>();
+auto helper = _eval_parallel_individuals<Phen, typename Phen::fit_t>();
 helper._pop = pop;
 helper.run();
 this->_nb_evals += (end - begin);

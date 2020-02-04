@@ -183,7 +183,7 @@ def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicate
 
 def get_performances(type,selection_criterion):
     conditions=["damage_meta","envir_meta","bo", "duty" ,"lv" ,"random"]
-    labels=["Meta","Body orientation","Duty factor", "Linear velocity", "Random weight"]
+    labels=["Damage-meta","Envir-meta","Body-orientation","Duty-factor", "Linear-velocity", "Random-weight"]
     test_types=["damage","envir",]
     n_pop=5
 
