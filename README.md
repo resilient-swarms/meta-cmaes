@@ -147,7 +147,7 @@ NOTE: there are some loops in train_recovery.sh, you can remove the conditions w
 
 8B.2 Run the test:
 
-        bash scripts/test_recovery.sh ${outputfolder} ${methods} ${test_type} ${replicates}
+        bash scripts/test_recovery.sh ${RESULTS_DIR} ${methods} ${test_type} ${replicates}
 
 
 8C. Assessing cross-domain transfer
