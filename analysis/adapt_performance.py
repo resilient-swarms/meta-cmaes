@@ -13,10 +13,58 @@ parser.add_argument('-d', dest='DEST', type=str)
 args = parser.parse_args()
 
 
+def check_files():
+    conditions=["damage_meta","envir_meta","bo", "duty" ,"lv" ,"random"]
+    replicates=["1","2","3"]
+    for condition in conditions:
+        if condition=="damage_meta":
+            time=260
+        elif condition=="envir_meta":
+            time=270
+        else:
+            time=7000
+        for replicate in replicates:
+            counts=[]
+            archive_counts=[]
+            for type in ["train","test"]:
+
+                for test_type in ["damage","envir"]:
+                    count = 0
+                    archive_count=0
+                    if type == "test":
+                        filename = get_file_name_test(args.DEST, condition, test_type, replicate)
+                    else:
+                        filename = get_file_name_train(args.DEST, condition, test_type, replicate)
+                    with open(filename, 'r') as f:
+                        for line in f:
+                            count+=1
+                    counts.append(count)
+                    if not condition.endswith("meta"):
+                        filename, folder = get_archive_plus_dir(args.DEST, condition, time, index=None)
+                        with open(folder+str(replicate)+"/"+filename, 'r') as f:
+                            for line in f:
+                                    archive_count += 1
+                    else:
+                        for index in range(5):
+                            filename, folder = get_archive_plus_dir(args.DEST, condition, time, index=index)
+                            with open(folder+str(replicate)+"/"+filename, 'r') as f:
+                                for line in f:
+                                    archive_count += 1
+                    archive_counts.append(archive_count)
+            for i in range(1,len(counts)):
+                if counts[0]!=counts[i]:
+                    print(condition+replicate)
+                    print("train_damage","train_envir","test_damage","test_envir")
+                    print(counts)
+                    print(archive_counts)
+                    break
+                    
+
 def get_performances_single(mins,means,maxs, condition,test_type,replicates, type):
     mes = []
     ms = []
     Ms = []
+    lengths=[]
     for replicate in replicates:
         if type=="test":
             filename = get_file_name_test(args.DEST,condition,test_type,replicate)
@@ -28,6 +76,7 @@ def get_performances_single(mins,means,maxs, condition,test_type,replicates, typ
             for line in f:
                 if line: #avoid blank lines
                     x.append(float(line.strip()))
+        lengths.append(len(x))
         if x:
             print(condition + " " + test_type + " " + replicate + ":")
             # print(p)
@@ -39,6 +88,7 @@ def get_performances_single(mins,means,maxs, condition,test_type,replicates, typ
             print("min=" + str(mins[-1]))
         else:
             raise Exception("empty performance list")
+
     mins.append(ms)
     maxs.append(Ms)
     means.append(mes)
@@ -158,5 +208,6 @@ def get_performances(type,selection_criterion):
 
 
 if __name__ == "__main__":
+    check_files()
     get_performances(type="train",selection_criterion=None)
     get_performances(type="test",selection_criterion="train_performance")

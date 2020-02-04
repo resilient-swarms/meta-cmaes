@@ -125,13 +125,14 @@ vi) LINEAR_VELOCITY:
 
 8A.1 build the test:
 
+        export NUM_CORES=16
         export BUILD_TRAIN=True
         bash scripts/make.sh
         
 
 8A.2 run the test:
 
-        bash scripts/train_recovery.sh
+        bash scripts/train_recovery.sh  ${outputfolder}
 
 NOTE: there are some loops in train_recovery.sh, you can remove the conditions which you don't need
 
@@ -139,13 +140,14 @@ NOTE: there are some loops in train_recovery.sh, you can remove the conditions w
 
 8B.1 Build the test :
 
+        export NUM_CORES=16
         export BUILD_TEST=True
         bash scripts/make.sh
 
 
 8B.2 Run the test:
 
-        bash scripts/test_recovery.sh
+        bash scripts/test_recovery.sh ${outputfolder}
 
 
 8C. Assessing cross-domain transfer
