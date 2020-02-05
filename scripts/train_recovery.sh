@@ -7,7 +7,7 @@ for method in $2; do
     
     
     if [[ "${method}" == "meta" ]]; then
-      if [[ "${method}" == "envir" ]]; then
+      if [[ "${test_type}" == "envir" ]]; then
         last_gen=270  # leads to 2.8M evals
       else
         last_gen=260  # leads to 2.8M evals
