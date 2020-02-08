@@ -334,11 +334,11 @@ def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files
     try:
         avg_perform = avg_performances(bd_dims,  directory, runs, archive_files, 1.0,
                                        conversion_func=None,from_fitfile=from_fitfile)
-        add_boxplotlike_data(avg_perform, y_bottom, y_mid, y_top, y_label="Average_performance", method_index=i)
+        add_boxplotlike_data(avg_perform, y_bottom, y_mid, y_top, y_label="Average_performance ($m$)", method_index=i)
 
         global_perform = global_performances(bd_dims, directory, runs, archive_files, 1.0,
                                              conversion_func=None,from_fitfile=from_fitfile)
-        add_boxplotlike_data(global_perform, y_bottom, y_mid, y_top, y_label="Global_performance", method_index=i)
+        add_boxplotlike_data(global_perform, y_bottom, y_mid, y_top, y_label="Global_performance ($m$)", method_index=i)
 
         if not from_fitfile:
             # coverage = coverages(bd_shapes[i], directory, runs, archive_file)
@@ -350,8 +350,8 @@ def try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files
     except IOError as e:
             print(e)
 
-def get_time(t,label):
-    if label.endswith("meta"):
+def get_time(t,type):
+    if type.endswith("meta"):
         time=int(t//25)
     else:
         time=t
@@ -378,14 +378,15 @@ def coverage_development_plots(title,runs,times,BD_directory,title_tag, bd_type,
             projected=legend_labels[i].endswith("projected")
             abs_coverages=[]
             try:
-                time=get_time(t,legend_labels[i])
-                if bd_type[i].endswith("meta") and time <=max_gen_dict[bd_type[i]]:
-                    archive_files=[]
-                    for index in range(LAMBDA):
-                        archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time,index)
-                        archive_files.append(archive_file)
-                    abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_files)
-                    abs_coverages.append(abs_coverage)
+                time=get_time(t,bd_type[i])
+                if bd_type[i].endswith("meta") :
+                    if time <=max_gen_dict[bd_type[i]]:
+                        archive_files=[]
+                        for index in range(LAMBDA):
+                            archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time,index)
+                            archive_files.append(archive_file)
+                        abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_files)
+                        abs_coverages.append(abs_coverage)
                 else:
                     archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
                     abs_coverage=absolutecoverages(bd_shapes[i], directory, runs, archive_file)
@@ -407,8 +408,8 @@ def coverage_development_plots(title,runs,times,BD_directory,title_tag, bd_type,
         createPlot(y_mid[label],x_values=np.array(times),
                    save_filename=BD_directory + "/" + label + ".pdf", legend_labels=legend_labels,
                    colors=colors,markers=markers,xlabel="Generations",ylabel=label.replace("_"," "),
-                   xlim=[0,times[-1]+500],xscale="linear",yscale="log",ylim=[10**1,10**4],
-                   legendbox=None,annotations=[annots],xticks=[],yticks=[],task_markers=[],scatter=False,
+                   xlim=[0,times[-1]+500],xscale="linear",yscale="log",ylim=[10**0.0,10**4],
+                   legendbox=[1.005,0.36],annotations=[annots],xticks=[],yticks=[],task_markers=[],scatter=False,
                    legend_cols=1,legend_fontsize=26,legend_indexes=[],additional_lines=[maximum_line],index_x=[],
                    xaxis_style="plain",y_err=[],force=True,fill_between=(y_bottom[label],y_top[label]),
                    ax=ax,title=title )
@@ -438,7 +439,7 @@ def development_plots(title,runs,times,BD_directory,bd_type, legend_labels,bybin
     colors=["C0","C1","C2","C3","C3","C4"]  # colors for the lines
     # (numsides, style, angle)
     markers=[(1,1,0),(1,2,0),(1,3,0),(3,1,0),(3,2,0),(3,3,0),(4,1,0),(4,2,0),(4,3,0)] # markers for the lines
-    y_labels=["Global_performance","Average_performance","Map coverage","Global_coverage","Global_reliability"]
+    y_labels=["Global_performance ($m$)","Average_performance ($m$)","Map coverage","Global_coverage","Global_reliability"]
 
 
     boxes=[(.10,.40),(.10,.60),(.10,.60),(.45,.15),(0.20,0.20),(0.20,0.20)] # where to place the legend box
@@ -449,15 +450,16 @@ def development_plots(title,runs,times,BD_directory,bd_type, legend_labels,bybin
 
     for t in times:
         for i in range(len(bd_type)):
-            time=get_time(t,legend_labels[i])
+            time=get_time(t,bd_type[i])
   
             print(legend_labels[i])
-            if bd_type[i].endswith("meta") and time <=max_gen_dict[bd_type[i]]:
-                archive_files = []
-                for index in range(LAMBDA):
-                    archive_file, directory = get_archive_plus_dir(BD_directory, bd_type[i], time, index)
-                    archive_files.append(archive_file)
-                try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files, y_bottom,y_mid,y_top,from_fitfile=False)
+            if bd_type[i].endswith("meta") :
+                if time <= max_gen_dict[bd_type[i]]:
+                    archive_files = []
+                    for index in range(LAMBDA):
+                        archive_file, directory = get_archive_plus_dir(BD_directory, bd_type[i], time, index)
+                        archive_files.append(archive_file)
+                    try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_files, y_bottom,y_mid,y_top,from_fitfile=False)
             else:
                 archive_file, directory = get_archive_plus_dir(BD_directory,bd_type[i],time)
                 try_add_performance_data(i,bd_shapes,bybin_list,directory,runs,archive_file, y_bottom,y_mid,y_top,from_fitfile=False)
@@ -503,8 +505,6 @@ def apply_star_and_bold(text,descriptor,target,max_descriptor,second_max_descrip
 
 def create_all_development_plots():
 
-    bd_type = ["damage_meta", "envir_meta", "bo", "duty","lv","random"]  # file system label for bd
-    legend_labels=["damage-meta","envir-meta","body-orientation","duty-factor","linear-velocity","random"]  # labels for the legend
     bybin_list=["bd", "bd", "bd", "bd", "bd", "bd"]
     fig, axs = PLT.subplots(1, 4, figsize=(40, 10))  # coverage, avg perf., global perf., global reliability
     development_plots(title="",runs=runs, times=times,
@@ -516,11 +516,10 @@ def create_all_development_plots():
     finish_fig(fig, args.DEST+"/Results/development_plot.pdf")
 
 def create_coverage_development_plots():
-    bd_type = ["damage_meta", "envir_meta", "bo", "duty","lv","random"]  # file system label for bd
-    legend_labels=["damage-meta","envir-meta","body-orientation","duty-factor","linear-velocity","random"]  # labels for the legend
+
     bybin_list=["bd", "individual", "individual", "bd", "bd", ""]
     times=range(0,7250, 250)
-    fig, axs = PLT.subplots(1,1, figsize=(15, 10))  # coverage, avg perf., global perf., global reliability
+    fig, axs = PLT.subplots(1,1, figsize=(10, 10))  # coverage, avg perf., global perf., global reliability
     coverage_development_plots(title="",runs=runs, times=times,
                           BD_directory=args.DEST,
                          title_tag="",bd_type=bd_type,
@@ -554,49 +553,56 @@ def damage_performance():
     markers = [(1, 1, 0), (1, 2, 0), (1, 3, 0), (3, 1, 0), (3, 2, 0), (3, 3, 0), (4, 1, 0), (4, 2, 0),
                            (4, 3, 0)]
     createPlot(plotlines, x_values=np.array(ts), colors=["C"+str(i) for i in range(pop)], xlabel="Meta-generations",
-               ylabel="Damage recovery", ylim=None,markers=markers,
-               save_filename=args.DEST + "/Results/recovery.pdf", legend_labels=["i"+str(i) for i in range(pop)],
+               ylabel="Damage recovery ($m$)", ylim=None,markers=markers,
+               save_filename=args.DEST + "/Results/recovery_m.pdf", legend_labels=["i"+str(i) for i in range(pop)],
                xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear",legendbox=None)
 
 def damage_performance_sorted(include_sd=True):
     filenames = [get_output_folder_test(folder=args.DEST, condition="damage_meta", replicate=r) for r in runs]
     max_gen = 260
     pop = 5
-    plotlines = [[] for i in range(pop)]
-    bottom = [[] for i in range(pop)]
-    top = [[] for i in range(pop)]
+    meanlines = []
+    replicate_values = [[] for i in range(len(runs))]
+    bottom=[]
+    top=[]
     ts = range(0, max_gen + 10, 10)
     for t in ts:
-        all_values = [[] for i in range(pop)]
-        for f in filenames:
+        repls=[]
+        all_values=[]
+        for j, f in enumerate(filenames):
             path = f + "/recovered_perf" + str(t) + ".dat"
             line = open(path).readline()
             values = line.split("\t")
             temp_values=[]
             for i in range(pop):
                 temp_values.append(float(values[i]))
-            temp_values=np.sort(temp_values)[::-1]
-            for i in range(pop):
-                all_values[i].append(temp_values[i])
-        for i in range(pop):
-            m=np.mean(all_values[i])
-            plotlines[i].append(m)
-            sd= np.std(all_values[i])
-            bottom[i].append(m - sd)
-            top[i].append(m + sd)
+            all_values.append(np.mean(temp_values))  #get population mean
+            repls.append(all_values[-1])
+            replicate_values[j].append(repls)  # append it
+        m=np.mean(repls)
+        meanlines.append(m)
+        sd = np.std(repls)
+        #     temp_values=np.sort(temp_values)[::-1]
+        #     for i in range(pop):
+        #         all_values[i].append(temp_values[i])
+        # for i in range(pop):
+        #     m=np.mean(all_values[i])
+        #     plotlines[i].append(m)
+        #     if i == 0:
+        #         sd= np.std(all_values[i])
+        #     else:
+        #         sd=0
+        bottom.append(m - sd)
+        top.append(m + sd)
+    fill_between=([np.array(bottom)],[np.array(top)])
     markers = [(1, 1, 0), (1, 2, 0), (1, 3, 0), (3, 1, 0), (3, 2, 0), (3, 3, 0), (4, 1, 0), (4, 2, 0),
                (4, 3, 0)]
-    if include_sd:
-        fill_between=(bottom,top)
-        tag="sd"
-    else:
-        fill_between=None
-        tag=""
-    createPlot(plotlines, x_values=np.array(ts), colors=["C" + str(i) for i in range(pop)],
-               xlabel="Meta-generations",
-               ylabel="Damage recovery", ylim=None, markers=markers,
-               save_filename=args.DEST + "/Results/recoverySORTED"+tag+".pdf", legend_labels=["i" + str(i) for i in range(pop)],
-               xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear", legendbox=(0.99,0.35),fill_between=fill_between)
+    y_vals=[meanlines] #+ replicate_values
+    createPlot(y_vals, x_values=np.array(ts), colors=["C" + str(i) for i in range(6)],
+               xlabel="Meta-generations",ylim=None,
+               ylabel="Damage recovery ($m$)",markers=markers,line_width=[5],ms=[16],
+               save_filename=args.DEST + "/Results/recovery_m.pdf", legend_labels=None,
+               xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear",fill_between=fill_between)
 def damage_performance_MEANSD():
     filenames=[get_output_folder_test(folder=args.DEST,condition="damage_meta",replicate=r) for r in runs]
     max_gen=260
@@ -667,43 +673,44 @@ def envir_performance_MEANSD():
 
 def envir_performance_sorted(include_sd=True):
     filenames = [get_output_folder_test(folder=args.DEST, condition="envir_meta", replicate=r) for r in runs]
-    max_gen = 270
+    max_gen = 260
     pop = 5
-    plotlines = [[] for i in range(pop)]
-    bottom = [[] for i in range(pop)]
-    top = [[] for i in range(pop)]
+    meanlines = []
+    replicate_values = [[] for i in range(len(runs))]
+
     ts = range(0, max_gen + 10, 10)
     for t in ts:
-        all_values = [[] for i in range(pop)]
-        for f in filenames:
+        all_values=[]
+        for j, f in enumerate(filenames):
             path = f + "/recovered_perf" + str(t) + ".dat"
             line = open(path).readline()
             values = line.split("\t")
             temp_values=[]
             for i in range(pop):
                 temp_values.append(float(values[i]))
-            temp_values=np.sort(temp_values)[::-1]
-            for i in range(pop):
-                all_values[i].append(temp_values[i])
-        for i in range(pop):
-            m=np.mean(all_values[i])
-            plotlines[i].append(m)
-            sd= np.std(all_values[i])
-            bottom[i].append(m - sd)
-            top[i].append(m + sd)
+            all_values.append(np.mean(temp_values))  #get population mean
+            replicate_values[j].append(all_values[-1])  # append it
+        meanlines.append(np.median(np.array(all_values)))
+        #     temp_values=np.sort(temp_values)[::-1]
+        #     for i in range(pop):
+        #         all_values[i].append(temp_values[i])
+        # for i in range(pop):
+        #     m=np.mean(all_values[i])
+        #     plotlines[i].append(m)
+        #     if i == 0:
+        #         sd= np.std(all_values[i])
+        #     else:
+        #         sd=0
+        #     bottom[i].append(m - sd)
+        #     top[i].append(m + sd)
     markers = [(1, 1, 0), (1, 2, 0), (1, 3, 0), (3, 1, 0), (3, 2, 0), (3, 3, 0), (4, 1, 0), (4, 2, 0),
                (4, 3, 0)]
-    if include_sd:
-        fill_between=(bottom,top)
-        tag="sd"
-    else:
-        fill_between=None
-        tag=""
-    createPlot(plotlines, x_values=np.array(ts), colors=["C" + str(i) for i in range(pop)],
-               xlabel="Meta-generations",
-               ylabel="Environment adaptation", ylim=None, markers=markers,
-               save_filename=args.DEST + "/Results/adaptationSORTED"+tag+".pdf", legend_labels=["i" + str(i) for i in range(pop)],
-               xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear", legendbox=(0.75,0.35),fill_between=fill_between)
+    y_vals=[meanlines] + replicate_values
+    createPlot(y_vals, x_values=np.array(ts), colors=["C" + str(i) for i in range(6)],
+               xlabel="Meta-generations",ylim=[1,2.5],
+               ylabel="Environment adaptation", markers=markers,line_width=[5]+[1 for i in runs],ms=[16]+[4 for i in runs],
+               save_filename=args.DEST + "/Results/adaptationSORTED.pdf", legend_labels=["Mean"]+["Replicate" + str(i) for i in range(5)],
+               xlim=[0, ts[-1] + 10], xscale="linear", yscale="linear")#,fill_between=fill_between)
 def envir_performance():
     filenames=[get_output_folder_test(folder=args.DEST,condition="envir_meta",replicate=r) for r in runs]
     max_gen=270
@@ -745,9 +752,10 @@ if __name__ == "__main__":
         # global
     runs=["1","2","3","david44","david55"]
     fitfuns = [""]  # ,"DecayBorderCoverage","Flocking"]
-    bd_type = ["envir_meta","damage_meta", "bo", "duty","lv","random"
-             ]  # file system label for bd
-    bd_shapes =[(16,16,16), (16,16,16), (4,4,4,4,4,4),(4,4,4,4,4,4), (16,16,16),(16,16,16)]  # shape of the characterisation
+
+    bd_type = ["damage_meta", "bo", "duty","lv","random"]  # file system label for bd
+    legend_labels=["Meta","Body-orientation","Duty-factor","Linear-velocity","Random-weights"]  # labels for the legend
+    bd_shapes =[(16,16,16), (4,4,4,4,4,4),(4,4,4,4,4,4), (16,16,16),(16,16,16)]  # shape of the characterisation
     times=range(0,7250,250)
 
     #make_translation_table("DEBUG", [get_bd_dir(f) for f in fitfuns], runs,times=[generation],source="best")
@@ -759,10 +767,8 @@ if __name__ == "__main__":
     #make_evolution_table(fitfuns, bd_type, runs, generation,load_existing=False)
 
     damage_performance_sorted(include_sd=True)
-    damage_performance_sorted(include_sd=False)
-    envir_performance_sorted(include_sd=True)
-    envir_performance_sorted(include_sd=False)
+    #damage_performance_sorted(include_sd=False)
     #envir_performance_sorted()
-    create_coverage_development_plots()
+    #create_coverage_development_plots()
 
-    create_all_development_plots()
+    #create_all_development_plots()

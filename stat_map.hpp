@@ -104,7 +104,7 @@ public:
             it++;
         }
     }
-    void show(std::ostream & os, size_t j)
+    void show(std::ostream & os, size_t n)
     {
         std::cout << "NUM_CORES " << NUM_CORES << std::endl;
         std::cout << "show stat" << std::endl;
@@ -119,6 +119,25 @@ public:
                 individuals.push_back(k);
             }
         }
+#ifdef GRAPHIC  // we are just interested in observing a particular individual
+        size_t count = 0;
+        std::cout <<"loading individual" << n <<std::endl;
+        for (bottom_indiv_t* indiv: individuals)
+        {
+            if (*indiv)
+            {
+                if(count == n)
+                {
+                    float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**indiv);
+                    std::cout <<val <<std::endl;
+                    break;
+                }
+                ++count;
+            }
+            //std::cout << count;
+        }
+        
+#else
         std::cout << "will do " << individuals.size() << "individuals" << std::endl;
         size_t i = 0;
         size_t unShareMemSize = individuals.size() * sizeof(float); //m_unPopSize *
@@ -177,6 +196,7 @@ public:
         {
             wait_and_erase(os, SlavePIDs);
         } // keep performing waits until an error returns, meaning no more child existing
+#endif
     }
 
     template <class Archive>

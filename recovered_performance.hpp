@@ -10,9 +10,10 @@ namespace sferes
 namespace fit
 {
 
-template<typename Phen>
+template <typename Phen>
 struct RecoveredPerformance
 {
+
     static float _eval_single_envir(const Phen &indiv, size_t world_option, size_t damage_option)
     {
         // copy of controller's parameters
@@ -22,10 +23,15 @@ struct RecoveredPerformance
         for (size_t i = 0; i < 24; i++)
             _ctrl.push_back(indiv.gen().data(i));
 
+#ifdef GRAPHIC
+        std::string fileprefix = "video"+std::to_string(world_option)+std::to_string(damage_option);
+#else
+        std::string fileprefix = ""
+#endif
 #ifdef EVAL_ENVIR
         // launching the simulation
         auto robot = global::global_robot->clone();
-        simulator_t simu(_ctrl, robot, world_option);
+        simulator_t simu(_ctrl, robot, world_option,1.0);
 #else
         auto robot = global::damaged_robots[damage_option]->clone();
         simulator_t simu(_ctrl, robot, world_option, 1.0, global::damage_sets[damage_option]);
@@ -72,15 +78,18 @@ struct RecoveredPerformance
         for (size_t i = 0; i < global::damage_sets.size(); ++i)
         {
             // initilisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
-            val += _eval_single_envir(indiv, 0, i);
+            float temp = _eval_single_envir(indiv, 0, i);
+#ifdef GRAPHIC
+            std::cout << "performance "<< temp << std::endl;
+#endif
+             val += temp;
         }
         return val;
     }
 #endif
 };
 
-}
-}
-
+} // namespace fit
+} // namespace sferes
 
 #endif

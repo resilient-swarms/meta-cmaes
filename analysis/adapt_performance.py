@@ -12,11 +12,11 @@ parser = argparse.ArgumentParser(description='Process destination folder.')
 parser.add_argument('-d', dest='DEST', type=str)
 
 args = parser.parse_args()
-conditions = ["damage_meta", "envir_meta", "bo", "duty", "lv", "random"]
+conditions = ["damage_meta", "bo", "duty", "lv", "random"]
 replicates=["1","2","3","david44","david55"]
 types=["train","test"]
-test_types = ["damage", "envir", ]
-labels = ["Damage-meta", "Envir-meta", "Body-orientation", "Duty-factor", "Linear-velocity", "Random-weight"]
+test_types = ["damage"]
+labels = ["Damage-meta", "Body-orientation", "Duty-factor", "Linear-velocity", "Random-weight"]
 
 def check_files():
 
@@ -56,6 +56,11 @@ def check_files():
                                 for line in f:
                                     archive_count += 1
                     archive_counts.append(archive_count)
+
+            # print(condition + replicate)
+            # print("train_damage", "train_envir", "test_damage", "test_envir")
+            # print(counts)
+            # print(archive_counts)
             for i in range(1,len(counts)):
                 if counts[0]!=counts[i]:
                     print(condition+replicate)
@@ -114,7 +119,7 @@ def get_adaptperformance_from_file(filename,n_pop):
                         weights.append(temp_w)
                         temp_w = []
                     else:
-                        temp_w=np.array(stripped.split(),dtype=float)
+                        temp_w.append(np.array(stripped.split(),dtype=float))
                 else:  # collecting performance data
                     if stripped == "END TEST META-INDIVIDUAL":
                         x[p] = temp
@@ -123,6 +128,66 @@ def get_adaptperformance_from_file(filename,n_pop):
                     else:
                         temp.append(float(stripped))
     return weights, x
+
+def get_weight_hist(n_pop, condition, test_type, replicates,selection_criterion):
+    mes = []
+    ms = []
+    Ms = []
+
+    #if type!="test": assert(selection_criterion is None)
+    joined_w={"bo": [],"duty":[],"lv":[]}
+    for replicate in replicates:
+        if selection_criterion=="train_performance":     # reliable choice as it takes into account database changes and 100% of solutions in map
+            f = get_file_name_train(args.DEST, condition, test_type, replicate)
+            print("will get max index from "+str(f))
+            w, perf = get_adaptperformance_from_file(f, n_pop)
+
+            perf = [np.mean(perf[i]) for i in range(len(perf))]
+            max_index = np.argmax(perf)
+
+            temp_w=w[max_index][0][0:6]
+            temp_w=np.append(temp_w,w[max_index][1][0:6])
+            temp_w=np.append(temp_w,w[max_index][2][0:6])
+            joined_w["bo"] = np.append(joined_w["bo"], temp_w)
+            PLT.hist(list(temp_w), bins=5)
+            PLT.savefig(args.DEST + "/Results/histBO"+condition+str(replicate)+".pdf")
+            PLT.close()
+
+            temp_w=w[max_index][0][6:12]
+            temp_w=np.append(temp_w,w[max_index][1][6:12])
+            temp_w=np.append(temp_w,w[max_index][2][6:12])
+            joined_w["duty"] = np.append(joined_w["duty"], temp_w)
+            PLT.hist(list(temp_w), bins=5)
+            PLT.savefig(args.DEST + "/Results/histDUTY"+condition+str(replicate)+".pdf")
+            PLT.close()
+
+            temp_w=w[max_index][0][12:15]
+            temp_w=np.append(temp_w,w[max_index][1][12:15])
+            temp_w=np.append(temp_w,w[max_index][2][12:15])
+            joined_w["lv"] = np.append(joined_w["lv"], temp_w)
+            PLT.hist(list(temp_w), bins=5)
+            PLT.savefig(args.DEST + "/Results/histLV"+condition+str(replicate)+".pdf")
+            PLT.close()
+
+    weight_sums=[]
+    for D,W in joined_w.items():
+        print(D+str(np.sum(W)))
+        PLT.hist(list(W), bins=5)
+        PLT.savefig(args.DEST + "/Results/histJOINED"+D+condition+".pdf")
+        PLT.close()
+
+
+def get_weight_hist_expected():
+
+    temp_w=np.random.random((100000,15))
+    for i in range(len(temp_w)):
+        temp_w[i]/=sum(temp_w[i])
+    PLT.hist(list(temp_w.flatten()), bins=20)
+    PLT.savefig(args.DEST + "/Results/random.pdf")
+    PLT.close()
+    # PLT.hist(w[max_index][6:12], bins=range(0, 0.40, 0.05))
+    # PLT.hist(w[max_index][], bins=range(0, 0.40, 0.05))
+
 
 
 def get_performances_pop(mins,means,maxs, n_pop, condition, test_type, replicates,selection_criterion, type):
@@ -205,14 +270,21 @@ def get_performances(type,selection_criterion):
                     get_performances_single(mins[j],means[j],maxs[j],c,t,replicates, type)
     with open(type+"_performances.txt", "w") as f:
         make_table(f, (means,),
-                   rowlabels=["damage","environment"],
+                   rowlabels=["damage"],
                    columnlabels=labels,
                    conditionalcolumnlabels=[("Mean", "float2")],
                    transpose=True)
+    print(type)
+    print()
+    print("damage")
     make_significance_table(means[0],0)   # damage -> comp to damage
-    make_significance_table(means[0],1)  # damage -> comp to damage
-    make_significance_table(means[1],0)  # envir --> comp to envir
-    make_significance_table(means[1],1)   # envir --> comp to envir
+    make_significance_table(means[0],4)  # damage -> comp to damage
+
+    # print(type)
+    # print()
+    # print("envir")
+    # make_significance_table(means[1],0)  # envir --> comp to envir
+    # make_significance_table(means[4],1)   # envir --> comp to envir
 
 def make_significance_table(means,comp_index,table_type="resilience"):
 
@@ -276,5 +348,9 @@ def cliffs_delta(x,y):
     return count, label
 if __name__ == "__main__":
     check_files()
-    #get_performances(type="train",selection_criterion=None)
-    get_performances(type="test",selection_criterion=None)
+    get_performances(type="train",selection_criterion="train_performance")
+    get_performances(type="test",selection_criterion="train_performance")
+
+    get_weight_hist(5, "envir_meta", "damage", replicates, "train_performance")
+    get_weight_hist(5, "damage_meta", "damage", replicates, "train_performance")
+    get_weight_hist_expected()

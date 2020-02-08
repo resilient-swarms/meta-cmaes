@@ -25,6 +25,12 @@ def _build_test(bld, take_compl=[]):
 		tag="test"
 	else:
 		tag="train"
+
+	if os.environ.get('BUILD_GRAPHIC',"False") == "True":
+		cxxflags+=["-DGRAPHIC"]
+		libs += 'DART_GRAPHIC'
+
+	
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',

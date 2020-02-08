@@ -229,13 +229,13 @@ def add_line(x,y,plt):
     l.set_dashes([2, 2, 10, 2])
     return l
 
-def get_plot(ax,index, xx, stats, colors, markers, markers_on,y_err=[],fill_between=[]):
+def get_plot(ax,index, xx, stats, colors, markers, line_widths,ms,markers_on,y_err=[],fill_between=[]):
     if y_err:
-        line = ax.errorbar(xx, stats[index],yerr=y_err[index], color=colors[index], marker=markers[index], markevery=markers_on, ms=16,
-                    linewidth=4)
+        line = ax.errorbar(xx, stats[index],yerr=y_err[index], color=colors[index], marker=markers[index], markevery=markers_on, ms=ms[index],
+                    linewidth=line_widths[index])
     else:
-        line, = ax.plot(xx, stats[index], color=colors[index], marker=markers[index], markevery=markers_on, ms=16,
-                            linewidth=4)
+        line, = ax.plot(xx, stats[index], color=colors[index], marker=markers[index], markevery=markers_on, ms=ms[index],
+                            linewidth=line_widths[index])
 
 
         if fill_between:
@@ -267,11 +267,15 @@ def finish_fig(fig,save_filename, colorbar=None):
 
 
 def createPlot(stats,x_values,colors,markers,xlabel,ylabel,ylim,save_filename,legend_labels,xlim=None,xscale="linear",yscale="linear",
-               legendbox=(.10,.10),annotations=[],xticks=[],yticks=[],task_markers=[],scatter=False,
+               legendbox=None,annotations=[],xticks=[],yticks=[],task_markers=[],scatter=False,
                legend_cols=1,legend_fontsize=26,legend_indexes=[],additional_lines=[],index_x=[],
-               xaxis_style="plain",y_err=[],force=False,fill_between=[],
+               xaxis_style="plain",y_err=[],force=False,fill_between=[],line_width=None,ms=None,
                ax=None, title=None
                ):
+    if line_width is None:
+        line_width=[4 for i in stats]
+    if ms is None:
+        ms=[16 for i in stats]
     print("prepare plotting "+ylabel)
     if not force:
         skip=input("skip y/n")
@@ -320,7 +324,7 @@ def createPlot(stats,x_values,colors,markers,xlabel,ylabel,ylim,save_filename,le
                 else:
                     xx= x if len(stats[index])==len(x) else x[0:len(stats[index])]
                 markers_on = range(0, len(xx), interval_width)
-                line=get_plot(ax,index,xx,stats,colors,markers,markers_on,y_err, fill_between)
+                line=get_plot(ax,index,xx,stats,colors,markers,line_width,ms,markers_on,y_err, fill_between)
 
             lines.append(line)
         #axes = PLT.gca()
@@ -383,16 +387,16 @@ def createPlot(stats,x_values,colors,markers,xlabel,ylabel,ylim,save_filename,le
             ax.set_yticks(yticks)
 
         ax.grid(True)
-        if legendbox is None:
-            leg = ax.legend(lines, labels=legend_labels, loc="best", ncol=legend_cols,
-                            prop={'size': legend_fontsize},
-                            fancybox=True)
-        else:
-            leg = ax.legend(lines, labels=legend_labels, ncol=legend_cols,
-                            prop={'size': legend_fontsize},
-                            fancybox=True,bbox_to_anchor=legendbox)
-
-        leg.set_alpha(0.20)
+        # if legendbox is None:
+        #     leg = ax.legend(lines, labels=legend_labels, loc="best", ncol=legend_cols,
+        #                     prop={'size': legend_fontsize},
+        #                     fancybox=True)
+        # else:
+        #     leg = ax.legend(lines, labels=legend_labels, ncol=legend_cols,
+        #                     prop={'size': legend_fontsize},
+        #                     fancybox=True,bbox_to_anchor=legendbox)
+        #
+        # leg.set_alpha(0.20)
 
         if fig is None: return # nothing to save, just a subplot
         fig.tight_layout()

@@ -11,6 +11,9 @@
 #include <meta-cmaes/stat_map.hpp>
 #include <Eigen/Dense>
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 // #define MAP_WRITE_PARENTS
 
 namespace boost
@@ -80,21 +83,45 @@ public:
     // show the n-th individual from zero'th map in the population
     void show(std::ostream & os, size_t k)
     {
-        for (size_t i= 0; i < this->_pop.size(); ++i)
+
+        auto t1 = Clock::now();
+
+        for (size_t i = 0; i < this->_pop.size(); ++i)
         {
             this->_pop[i]->develop(); // don't take into account any additions to the database; so you know which one is the best according to evolution
             os << this->_pop[i]->W << std::endl;
-            os << "END WEIGHTS" << std::endl;  
+            os << "END WEIGHTS" << std::endl;
+        }
+        auto t2 = Clock::now();
+        std::cout << "database load time for 5 maps: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+                  << " milliseconds" << std::endl;
+#ifdef GRAPHIC // we are just interested in observing a particular individual
+        size_t count = 0;
+        std::cout << "loading individual" << k << std::endl;
+        for (const bottom_indiv_t *j = this->_pop[0]->archive().data(); j < (this->_pop[0]->archive().data() + this->_pop[0]->archive().num_elements()); ++j)
+        {
+            if (*j)
+            {
+                if (count == k)
+                {
+                    float val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**j);
+                    std::cout << val << std::endl;
+                    break;
+                }
+                ++count;
+            }
+            //std::cout << count;
         }
 
+#else
         // don't take into account any additions to the database; so you know which one is the best according to evolution
         for (size_t i = 0; i < this->_pop.size(); ++i)
         {
-            
- 
+
             _show_(os, this->_pop[i]->archive());
         }
-        
+#endif
     }
 
     void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
@@ -108,9 +135,9 @@ public:
             {
                 val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**k);
 #ifdef EVAL_ENVIR
-                val /= (float) global::world_options.size();
+                val /= (float)global::world_options.size();
 #else
-                val /= (float) global::damage_sets.size();
+                val /= (float)global::damage_sets.size();
 #endif
                 os << val << std::endl;
             }
