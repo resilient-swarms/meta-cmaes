@@ -211,35 +211,7 @@ public:
     void test_max_recovery(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
     {
         //
-        std::random_device rd;  //Will be used to obtain a seed for the random number engine
-        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-        std::cout << "will check " << individuals.size() << "individuals in random order" << std::endl;
-#ifdef EVAL_ENVIR
-        int damage = NULL; // will be ignored in eval_single_envir
-        for (size_t world = 0; world < global::world_options.size(); ++world)
-        {
-            os << "ENVIR \t" << world << std::endl;
-#else
-        size_t world = 0; // normal environment
-        for (size_t damage = 0; damage < global::damage_sets.size(); ++damage)
-        {
-            os << "DAMAGE \t" << damage << std::endl;
-#endif
-
-            std::vector<bottom_indiv_t> ids_left = individuals;
-            float best_so_far = -std::numeric_limits<float>::infinity();
-            while (ids_left.size() > 0)
-            {
-                //random choice
-                std::uniform_int_distribution<> dis(0, ids_left.size() - 1);
-                int index = dis(gen);
-                float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(*ids_left[index], world, damage);
-                if (val > best_so_far)
-                {
-                    best_so_far = val;
-                }
-            }
-        }
+        sferes::fit::RecoveredPerformance<Phen>::_eval_taskmax(os,individuals);
     }
 
     template <class Archive>

@@ -32,7 +32,7 @@ def _build_test(bld, take_compl=[]):
 	if os.environ.get('BUILD_INDIVIDUAL_DAMAGE',"False") == "True":
 		cxxflags+=["-DINDIVIDUAL_DAMAGE"]
 
-	
+	cxxflags+=['-g']
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
