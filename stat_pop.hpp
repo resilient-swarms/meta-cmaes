@@ -127,8 +127,25 @@ public:
     void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
     {
         std::cout << "show stat" << std::endl;
-        float val = 0.0f;
         std::cout << "read the archive" << std::endl;
+#ifdef INDIVIDUAL_DAMAGE
+        test_max_recovery(os, individuals);
+#else
+        test_recoveredperformance(os, individuals);
+#endif
+    }
+    void test_recoveredperformance(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
+    {
+        float val = 0.0f;
+
+        std::vector<bottom_indiv_t *> individuals;
+        for (bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.size()); ++k)
+        {
+            if (*k)
+            {
+                individuals.push_back(k);
+            }
+        }
         for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
         {
             if (*k)
@@ -145,7 +162,49 @@ public:
 
         os << "END TEST META-INDIVIDUAL" << std::endl;
     }
+    // assess maximal recovery for each damage separately
+    void test_max_recovery(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
+    {
 
+        std::vector<bottom_indiv_t *> individuals;
+        for (bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.size()); ++k)
+        {
+            if (*k)
+            {
+                individuals.push_back(k);
+            }
+        }
+        //
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::cout << "will check " << individuals.size() << "individuals in random order" << std::endl;
+#ifdef EVAL_ENVIR
+        int damage = NULL; // will be ignored in eval_single_envir
+        for (size_t world = 0; world < global::world_options.size(); ++world)
+        {
+            os << "ENVIR \t" << world << std::endl;
+#else
+        size_t world = 0; // normal environment
+        for (size_t damage = 0; damage < global::damage_sets.size(); ++damage)
+        {
+            os << "DAMAGE \t" << damage << std::endl;
+#endif
+
+            std::vector<bottom_indiv_t *> ids_left;
+            float best_so_far = -std::numeric_limits<float>::infinity();
+            while (ids_left.size() > 0)
+            {
+                //random choice
+                std::uniform_int_distribution<> dis(0, ids_left.size() - 1);
+                int index = dis(gen);
+                float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(ids_left[index], world, damage);
+                if (val > best_so_far)
+                {
+                    best_so_far = val;
+                }
+            }
+        }
+    }
     template <class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {

@@ -26,7 +26,7 @@ struct RecoveredPerformance
 #ifdef GRAPHIC
         std::string fileprefix = "video"+std::to_string(world_option)+std::to_string(damage_option);
 #else
-        std::string fileprefix = ""
+        std::string fileprefix = "";
 #endif
 #ifdef EVAL_ENVIR
         // launching the simulation

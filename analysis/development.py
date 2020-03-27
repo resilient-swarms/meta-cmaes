@@ -359,9 +359,9 @@ def get_time(t,type):
 
 def coverage_development_plots(title,runs,times,BD_directory,title_tag, bd_type, legend_labels,bybin_list,fig=None,ax=None,metrics=None):
 
-    colors=["C0","C1","C2","C3","C3","C4"]  # colors for the lines
+    colors=["C0","C1","C2","C3","C4"]  # colors for the lines
     # (numsides, style, angle)
-    markers=[(1,1,0),(1,2,0),(1,3,0),(3,1,0),(3,2,0),(3,3,0),(4,1,0),(4,2,0),(4,3,0)] # markers for the lines
+    markers=["o","^","s","X","D"] # markers for the lines
     y_labels=["Map coverage"]
 
 
@@ -436,9 +436,9 @@ def development_plots(title,runs,times,BD_directory,bd_type, legend_labels,bybin
 
 
 
-    colors=["C0","C1","C2","C3","C3","C4"]  # colors for the lines
+    colors=["C0","C1","C2","C3","C4"]  # colors for the lines
     # (numsides, style, angle)
-    markers=[(1,1,0),(1,2,0),(1,3,0),(3,1,0),(3,2,0),(3,3,0),(4,1,0),(4,2,0),(4,3,0)] # markers for the lines
+    markers=["o","^","s","X","D"] # markers for the lines
     y_labels=["Global_performance ($m$)","Average_performance ($m$)","Map coverage","Global_coverage","Global_reliability"]
 
 
@@ -766,9 +766,10 @@ if __name__ == "__main__":
 
     #make_evolution_table(fitfuns, bd_type, runs, generation,load_existing=False)
 
-    damage_performance_sorted(include_sd=True)
+    #damage_performance_sorted(include_sd=True)
     #damage_performance_sorted(include_sd=False)
     #envir_performance_sorted()
     #create_coverage_development_plots()
 
-    #create_all_development_plots()
+    create_all_development_plots()
+    create_coverage_development_plots()
