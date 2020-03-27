@@ -109,13 +109,8 @@ public:
         std::cout << "NUM_CORES " << NUM_CORES << std::endl;
         std::cout << "show stat" << std::endl;
         std::cout << "read the archive" << std::endl;
-<<<<<<< HEAD
 
         std::vector<bottom_indiv_t> individuals;
-=======
-        
-        std::vector<bottom_indiv_t *> individuals;
->>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         for (bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
         {
             if (*k)
@@ -127,27 +122,13 @@ public:
         float val = 0.0f;
         size_t count = 0;
         std::cout << "loading individual" << n << std::endl;
-<<<<<<< HEAD
         for (bottom_indiv_t indiv : individuals)
-=======
-        for (bottom_indiv_t *indiv : individuals)
->>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         {
             if (count == n)
             {
-<<<<<<< HEAD
                 float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*indiv);
                 std::cout << val << std::endl;
                 break;
-=======
-                if (count == n)
-                {
-                    float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**indiv);
-                    std::cout << val << std::endl;
-                    break;
-                }
-                ++count;
->>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
             }
             ++count;
 
@@ -156,21 +137,13 @@ public:
 
 #else
 #ifdef INDIVIDUAL_DAMAGE
-<<<<<<< HEAD
         test_max_recovery(os, individuals);
-=======
-        test_max_recovery(os,individuals);
->>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
 #else
         test_recoveredperformance(os, individuals);
 #endif
 #endif
     }
-<<<<<<< HEAD
     void test_recoveredperformance(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
-=======
-    void test_recoveredperformance(std::ostream & os,std::vector<bottom_indiv_t *> & individuals)
->>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
     {
         float val = 0.0f;
         std::cout << "will do " << individuals.size() << "individuals" << std::endl;
