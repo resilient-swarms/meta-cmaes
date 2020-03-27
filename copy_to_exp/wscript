@@ -29,6 +29,8 @@ def _build_test(bld, take_compl=[]):
 	if os.environ.get('BUILD_GRAPHIC',"False") == "True":
 		cxxflags+=["-DGRAPHIC"]
 		libs += 'DART_GRAPHIC'
+	if os.environ.get('BUILD_INDIVIDUAL_DAMAGE',"False") == "True":
+		cxxflags+=["-DINDIVIDUAL_DAMAGE"]
 
 	
 	sferes.create_variants(bld,
@@ -90,7 +92,7 @@ def _build_evolution(bld):
 								cxxflags = cxxflags + ['-march=native',"-DEXPERIMENT_TYPE="+str(1+i),"-DNUM_CORES="+str(num_cores)],   # -march=native
 								variants = ['BINARY'])
 def build(bld):
-
+	
 	if os.environ.get('BUILD_TEST',"False") == "True":
 		_build_test(bld,take_compl=["-DTAKE_COMPLEMENT"])
 	elif os.environ.get('BUILD_TRAIN',"False") == "True":

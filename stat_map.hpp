@@ -94,7 +94,7 @@ public:
             if (it->second == pid)
             {
                 //std::cout << "writing " << it->first << std::endl;
-                os << m_pfSharedMem[it->first]<<std::endl; // remove the process from the list
+                os << m_pfSharedMem[it->first] << std::endl; // remove the process from the list
                 os.flush();
                 //std::cout << "erasing " << it->first << "," << std::endl;
                 SlavePIDs.erase(it); // remove the process from the list
@@ -108,39 +108,48 @@ public:
     {
         std::cout << "NUM_CORES " << NUM_CORES << std::endl;
         std::cout << "show stat" << std::endl;
-        float val = 0.0f;
         std::cout << "read the archive" << std::endl;
-        std::map<size_t, pid_t> SlavePIDs;
-        std::vector<bottom_indiv_t *> individuals;
+
+        std::vector<bottom_indiv_t> individuals;
         for (bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
         {
             if (*k)
             {
-                individuals.push_back(k);
+                individuals.push_back(*k);
             }
         }
-#ifdef GRAPHIC  // we are just interested in observing a particular individual
+#ifdef GRAPHIC // we are just interested in observing a particular individual
+        float val = 0.0f;
         size_t count = 0;
-        std::cout <<"loading individual" << n <<std::endl;
-        for (bottom_indiv_t* indiv: individuals)
+        std::cout << "loading individual" << n << std::endl;
+        for (bottom_indiv_t indiv : individuals)
         {
-            if (*indiv)
+            if (count == n)
             {
-                if(count == n)
-                {
-                    float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**indiv);
-                    std::cout <<val <<std::endl;
-                    break;
-                }
-                ++count;
+                float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*indiv);
+                std::cout << val << std::endl;
+                break;
             }
+            ++count;
+
             //std::cout << count;
         }
-        
+
 #else
+#ifdef INDIVIDUAL_DAMAGE
+        test_max_recovery(os, individuals);
+#else
+        test_recoveredperformance(os, individuals);
+#endif
+#endif
+    }
+    void test_recoveredperformance(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
+    {
+        float val = 0.0f;
         std::cout << "will do " << individuals.size() << "individuals" << std::endl;
         size_t i = 0;
         size_t unShareMemSize = individuals.size() * sizeof(float); //m_unPopSize *
+        std::map<size_t, pid_t> SlavePIDs;
         /* Get pointer to shared memory area */
         // Memory buffer will be readable and writable:
         int protection = PROT_READ | PROT_WRITE;
@@ -166,7 +175,7 @@ public:
                 if (SlavePIDs[i] == 0)
                 {
                     /* We're in a slave */
-                    val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**individuals[i]);
+                    val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*individuals[i]);
 #ifdef EVAL_ENVIR
                     val /= (float)global::world_options.size();
 #else
@@ -196,7 +205,41 @@ public:
         {
             wait_and_erase(os, SlavePIDs);
         } // keep performing waits until an error returns, meaning no more child existing
+    }
+
+    // assess maximal recovery for each damage separately
+    void test_max_recovery(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
+    {
+        //
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::cout << "will check " << individuals.size() << "individuals in random order" << std::endl;
+#ifdef EVAL_ENVIR
+        int damage = NULL; // will be ignored in eval_single_envir
+        for (size_t world = 0; world < global::world_options.size(); ++world)
+        {
+            os << "ENVIR \t" << world << std::endl;
+#else
+        size_t world = 0; // normal environment
+        for (size_t damage = 0; damage < global::damage_sets.size(); ++damage)
+        {
+            os << "DAMAGE \t" << damage << std::endl;
 #endif
+
+            std::vector<bottom_indiv_t> ids_left = individuals;
+            float best_so_far = -std::numeric_limits<float>::infinity();
+            while (ids_left.size() > 0)
+            {
+                //random choice
+                std::uniform_int_distribution<> dis(0, ids_left.size() - 1);
+                int index = dis(gen);
+                float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(*ids_left[index], world, damage);
+                if (val > best_so_far)
+                {
+                    best_so_far = val;
+                }
+            }
+        }
     }
 
     template <class Archive>
