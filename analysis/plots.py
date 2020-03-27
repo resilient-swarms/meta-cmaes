@@ -387,16 +387,16 @@ def createPlot(stats,x_values,colors,markers,xlabel,ylabel,ylim,save_filename,le
             ax.set_yticks(yticks)
 
         ax.grid(True)
-        # if legendbox is None:
-        #     leg = ax.legend(lines, labels=legend_labels, loc="best", ncol=legend_cols,
-        #                     prop={'size': legend_fontsize},
-        #                     fancybox=True)
-        # else:
-        #     leg = ax.legend(lines, labels=legend_labels, ncol=legend_cols,
-        #                     prop={'size': legend_fontsize},
-        #                     fancybox=True,bbox_to_anchor=legendbox)
-        #
-        # leg.set_alpha(0.20)
+        if legendbox is None:
+            leg = ax.legend(lines, labels=legend_labels, loc="best", ncol=legend_cols,
+                            prop={'size': legend_fontsize},
+                            fancybox=True)
+        else:
+            leg = ax.legend(lines, labels=legend_labels, ncol=legend_cols,
+                            prop={'size': legend_fontsize},
+                            fancybox=True,bbox_to_anchor=legendbox)
+
+        leg.set_alpha(0.20)
 
         if fig is None: return # nothing to save, just a subplot
         fig.tight_layout()

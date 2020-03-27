@@ -8,8 +8,6 @@ from collections import OrderedDict
 from distance_metrics import *
 
 
-import matplotlib as mpl
-
 import sys,os
 HOME_DIR = os.environ["HOME"]
 
