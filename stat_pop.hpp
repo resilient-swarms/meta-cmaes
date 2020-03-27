@@ -137,6 +137,7 @@ public:
     void test_recoveredperformance(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
     {
         float val = 0.0f;
+
         for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
         {
             if (*k)

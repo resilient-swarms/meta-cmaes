@@ -109,8 +109,13 @@ public:
         std::cout << "NUM_CORES " << NUM_CORES << std::endl;
         std::cout << "show stat" << std::endl;
         std::cout << "read the archive" << std::endl;
+<<<<<<< HEAD
 
         std::vector<bottom_indiv_t> individuals;
+=======
+        
+        std::vector<bottom_indiv_t *> individuals;
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         for (bottom_indiv_t *k = _archive.data(); k < (_archive.data() + _archive.size()); ++k)
         {
             if (*k)
@@ -122,13 +127,27 @@ public:
         float val = 0.0f;
         size_t count = 0;
         std::cout << "loading individual" << n << std::endl;
+<<<<<<< HEAD
         for (bottom_indiv_t indiv : individuals)
+=======
+        for (bottom_indiv_t *indiv : individuals)
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         {
             if (count == n)
             {
+<<<<<<< HEAD
                 float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*indiv);
                 std::cout << val << std::endl;
                 break;
+=======
+                if (count == n)
+                {
+                    float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**indiv);
+                    std::cout << val << std::endl;
+                    break;
+                }
+                ++count;
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
             }
             ++count;
 
@@ -137,13 +156,21 @@ public:
 
 #else
 #ifdef INDIVIDUAL_DAMAGE
+<<<<<<< HEAD
         test_max_recovery(os, individuals);
+=======
+        test_max_recovery(os,individuals);
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
 #else
         test_recoveredperformance(os, individuals);
 #endif
 #endif
     }
+<<<<<<< HEAD
     void test_recoveredperformance(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
+=======
+    void test_recoveredperformance(std::ostream & os,std::vector<bottom_indiv_t *> & individuals)
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
     {
         float val = 0.0f;
         std::cout << "will do " << individuals.size() << "individuals" << std::endl;
@@ -208,32 +235,54 @@ public:
     }
 
     // assess maximal recovery for each damage separately
+<<<<<<< HEAD
     void test_max_recovery(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
+=======
+    void test_max_recovery(std::ostream & os,std::vector<bottom_indiv_t *> & individuals)
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
     {
         //
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
         std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
         std::cout << "will check " << individuals.size() << "individuals in random order" << std::endl;
 #ifdef EVAL_ENVIR
+<<<<<<< HEAD
         int damage = NULL; // will be ignored in eval_single_envir
+=======
+        int damage = NULL;// will be ignored in eval_single_envir
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         for (size_t world = 0; world < global::world_options.size(); ++world)
         {
             os << "ENVIR \t" << world << std::endl;
 #else
+<<<<<<< HEAD
         size_t world = 0; // normal environment
+=======
+        size_t world = 0;// normal environment
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
         for (size_t damage = 0; damage < global::damage_sets.size(); ++damage)
         {
             os << "DAMAGE \t" << damage << std::endl;
 #endif
 
+<<<<<<< HEAD
             std::vector<bottom_indiv_t> ids_left = individuals;
+=======
+            std::vector<bottom_indiv_t *> ids_left;
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
             float best_so_far = -std::numeric_limits<float>::infinity();
             while (ids_left.size() > 0)
             {
                 //random choice
+<<<<<<< HEAD
                 std::uniform_int_distribution<> dis(0, ids_left.size() - 1);
                 int index = dis(gen);
                 float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(*ids_left[index], world, damage);
+=======
+                std::uniform_int_distribution<> dis(0,ids_left.size() - 1 );
+                int index = dis(gen);
+                float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(ids_left[index], world, damage);
+>>>>>>> 07461d7a631b2f75a4c818b60e900429fe0605ac
                 if (val > best_so_far)
                 {
                     best_so_far = val;
