@@ -100,7 +100,6 @@ int main(int argc, char **argv)
 #endif
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
     global::init_simu(std::string(argv[1]), std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
-
     run_ea(argc, argv, ea);
 
     global::global_robot.reset();

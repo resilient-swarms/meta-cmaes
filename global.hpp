@@ -7,6 +7,9 @@
 #include <rhex_dart/rhex.hpp>
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 
+#if META()
+#include <meta-cmaes/params.hpp>
+#endif
 namespace global
 {
 // sampling without replacement (see https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement)

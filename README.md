@@ -165,6 +165,13 @@ that is, $methods is the type of method in (bo, duty, lv, or random); $test_type
 
 These runs generate files named as "envir_performance" and/or "damage_performance" where applicable (in the $RESULTS_DIR/$condition/exp$replicates folder).
 
+Note that there is also a test with cmaes from scratch. This can be done as follows:
+
+        bash scripts/test_recovery.sh ${RESULTS_DIR} cmaescheck damage david55 0
+
+where the final number 0 is the index of the damage in the damage_set
+
+
 8C. Assessing cross-domain transfer
 8C.1 Install the test performance script (see 8B.1-2)
 8C.2 Run the test:
