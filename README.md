@@ -73,6 +73,12 @@ and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the
 
    This will generate either 2 binaries (the two meta-learning conditions) or 4 binaries (the control-conditions), depending on BUILD_META.
 
+   Note that, when you have already compiled the binaries before and changed the code, you need to use
+
+        bash scripts/make_update.sh
+
+   
+
 
 7. To run, use the binary path obtained from the compilation, and add the replicate_number and the folder where you want to store the results.
 
