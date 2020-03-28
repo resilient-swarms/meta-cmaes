@@ -6,7 +6,6 @@
 #include <rhex_dart/descriptors.hpp>
 #include <rhex_dart/rhex.hpp>
 #include <meta-cmaes/feature_vector_typedefs.hpp>
-#include <meta-cmaes/params.hpp>
 
 namespace global
 {
@@ -46,7 +45,9 @@ std::set<size_t> _take_complement(std::set<size_t> full_set, std::set<size_t> su
                         std::inserter(diff, diff.begin()));
     return diff;
 }
-
+#if CMAES_CHECK()
+size_t damage_index;
+#endif
 const double BODY_LENGTH = .54;
 const double BODY_WIDTH = .39;
 const double BODY_HEIGHT = .139;
@@ -113,7 +114,7 @@ void init_damage(std::string seed, std::string robot_file)
             std::cout << damage_type << "," << leg << "\n";
             ofs << damage_type << "," << leg << "\n";
 #ifndef TAKE_COMPLEMENT
-            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); // world 0 has been remove that is why +1
+            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); 
 #endif
         }
     }
@@ -128,7 +129,7 @@ void init_damage(std::string seed, std::string robot_file)
         {
             std::cout << damage_type << "," << leg << "\n";
             ofs << damage_type << "," << leg << "\n";
-            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); // world 0 has been remove that is why +1
+            damage_sets.push_back({rhex_dart::RhexDamage(damage_type.c_str(), std::to_string(leg).c_str())}); 
         }
     }
     std::cout << std::endl;

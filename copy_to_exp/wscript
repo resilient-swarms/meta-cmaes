@@ -31,6 +31,7 @@ def _build_test(bld, take_compl=[]):
 		libs += 'DART_GRAPHIC'
 	if os.environ.get('BUILD_INDIVIDUAL_DAMAGE',"False") == "True":
 		cxxflags+=["-DINDIVIDUAL_DAMAGE"]
+		do_cmaes_check=True
 
 	cxxflags+=['-g']
 	sferes.create_variants(bld,
@@ -48,13 +49,13 @@ def _build_test(bld, take_compl=[]):
 								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # damage
 								variants = ['BINARY'])
 	# build control conditions; no descriptors needed anymore -> 1 binary for all control conditions is enough
-	sferes.create_variants(bld,
-								source = 'rhex_metaCMAES.cpp',
-								use = 'sferes2',
-								uselib = libs,
-								target = tag+'_envir_control',
-								cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # environment
-								variants = ['BINARY'])
+	# sferes.create_variants(bld,
+	# 							source = 'rhex_metaCMAES.cpp',
+	# 							use = 'sferes2',
+	# 							uselib = libs,
+	# 							target = tag+'_envir_control',
+	# 							cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=2","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # environment
+	# 							variants = ['BINARY'])
 	sferes.create_variants(bld,
 							source = 'rhex_metaCMAES.cpp',
 							use = 'sferes2',
@@ -62,6 +63,16 @@ def _build_test(bld, take_compl=[]):
 							target = tag+'_damage_control',
 							cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=2","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # damage
 							variants = ['BINARY'])
+	if do_cmaes_check:
+		# note this is not a meta-condition but can only generate up to 4 binaries at a time
+		sferes.create_variants(bld,
+									source = 'rhex_metaCMAES.cpp',
+									use = 'sferes2',
+									uselib = libs,
+									target = tag+'_damage_cmaescheck',
+									cxxflags = take_compl +  cxxflags + ['-DTEST','-march=native',"-DEXPERIMENT_TYPE=5","-DNUM_CORES="+str(os.environ.get('NUM_CORES',"1"))],   # damage
+									variants = ['BINARY'])
+
 def _build_evolution(bld):
 	libs = 'RHEX_DART RHEX_CONTROLLER DART EIGEN BOOST_DART BOOST TBB '
 	cxxflags = bld.get_env()['CXXFLAGS']
@@ -81,6 +92,7 @@ def _build_evolution(bld):
 							target = 'rhex_metaCMAES_damage_meta',
 							cxxflags = cxxflags + ['-g','-march=native',"-DEXPERIMENT_TYPE=0","-DNUM_CORES="+str(num_cores)],   # -march=native
 							variants = ['BINARY'])
+
 	else:  
 		control_conditions=["random","duty","bo","lv"]
 		for i,c in enumerate(control_conditions):

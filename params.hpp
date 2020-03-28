@@ -78,6 +78,8 @@ struct BottomParams
     };
 };
 
+
+#if META()
 /* params for the top-level map */
 struct CMAESParams
 {
@@ -122,5 +124,5 @@ struct CMAESParams
         SFERES_CONST float max = 1.0f;
     };
 };
-
+#endif
 #endif

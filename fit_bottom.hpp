@@ -5,7 +5,6 @@
 
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
-
 #include <Eigen/Dense>
 
 #if CONTROL()
@@ -21,7 +20,7 @@ namespace sferes
 {
 namespace fit
 {
-#if CONTROL()
+#if CONTROL() 
 
 SFERES_FITNESS(FitBottom, sferes::fit::FitMap)
 {
@@ -223,6 +222,7 @@ protected:
     template <typename Indiv>
     void _eval(Indiv & indiv)
     {
+
         // copy of controller's parameters
         _ctrl.clear();
 
@@ -268,6 +268,7 @@ protected:
 #ifdef PRINTING
             std::cout << " fitness is " << this->_value << std::endl;
 #endif
+
         }
     }
 

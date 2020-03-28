@@ -4,6 +4,12 @@
 
 #include <meta-cmaes/global.hpp>
 
+#if CMAES_CHECK()
+#include <meta-cmaes/cmaescheck_typedefs.hpp>
+typedef CMAESCHECKParams BottomParams;
+#endif
+
+
 namespace sferes
 {
 
@@ -54,7 +60,7 @@ struct RecoveredPerformance
             return fitness;
         }
     }
-    static void _eval_taskmax(std::ostream& os, std::vector<bottom_indiv_t>& individuals)
+    static void _eval_taskmax(std::ostream& os, std::vector<boost::shared_ptr<Phen>>& individuals)
     {
 	std::random_device rd;  //Will be used to obtain a seed for the random number engine
         std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -71,7 +77,7 @@ struct RecoveredPerformance
             os << "DAMAGE \t" << damage << std::endl;
 #endif
 
-            std::vector<bottom_indiv_t> ids_left = individuals;
+            std::vector<boost::shared_ptr<Phen>> ids_left = individuals;
             float best_so_far = -std::numeric_limits<float>::infinity();
             while (ids_left.size() > 0)
             {
@@ -84,8 +90,8 @@ struct RecoveredPerformance
                     best_so_far = val;
                 }
                 // remove index
-		ids_left.erase(ids_left.begin() + index);
-		os << best_so_far << std::endl;
+		        ids_left.erase(ids_left.begin() + index);
+		        os << best_so_far << std::endl;
             }
 	    
 
