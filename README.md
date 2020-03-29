@@ -171,7 +171,15 @@ that is, $methods is the type of method in (bo, duty, lv, or random); $test_type
 
 These runs generate files named as "envir_performance" and/or "damage_performance" where applicable (in the $RESULTS_DIR/$condition/exp$replicates folder).
 
-Note that there is also a test with cmaes from scratch. This can be done as follows:
+
+The above test runs will assess performance averaged across all damages. To test the maximal performance on each task, do the make script with the setting
+
+
+	export BUILD_INDIVIDUAL_DAMAGE=True && export BUILD_TEST=True
+	bash scripts/make.sh
+
+
+Note that there is also a test with cmaes from scratch for this setting. This can be done as follows:
 
         bash scripts/test_recovery.sh ${RESULTS_DIR} cmaescheck damage david55 0
 
@@ -183,3 +191,7 @@ where the final number 0 is the index of the damage in the damage_set
 8C.2 Run the test:
 
          bash scripts/transfer_recovery.sh ${outputfolder} ${methods} ${test_type} ${replicates}
+
+
+
+
