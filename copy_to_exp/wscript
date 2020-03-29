@@ -34,13 +34,13 @@ def _build_test(bld, take_compl=[]):
 		do_cmaes_check=True
 
 	cxxflags+=['-g']
-	sferes.create_variants(bld,
-							source = 'rhex_metaCMAES.cpp',
-							use = 'sferes2',
-							uselib = libs,
-							target = tag+'_envir_meta',
-							cxxflags = take_compl + cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # environment
-							variants = ['BINARY'])
+	#sferes.create_variants(bld,
+	#						source = 'rhex_metaCMAES.cpp',
+	#						use = 'sferes2',
+	#						uselib = libs,
+	#						target = tag+'_envir_meta',
+	#						cxxflags = take_compl + cxxflags + ['-DTEST','-march=native',"-DEVAL_ENVIR","-DEXPERIMENT_TYPE=0","-DNUM_CORES=1"],   # environment
+	#						variants = ['BINARY'])
 	sferes.create_variants(bld,
 								source = 'rhex_metaCMAES.cpp',
 								use = 'sferes2',

@@ -136,6 +136,10 @@ void init_damage(std::string seed, std::string robot_file)
         }
     }
     std::cout << std::endl;
+#if CMAES_CHECK()
+	std::cout << "will do damage " << global::damage_index << std::endl;
+	std::cout << damage_sets[i].type << ", " << damage_sets[i].data << std::endl;
+#endif
 #endif
     for (size_t i = 0; i < global::damage_sets.size(); ++i)
     {

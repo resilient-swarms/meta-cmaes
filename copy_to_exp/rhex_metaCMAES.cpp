@@ -97,6 +97,7 @@ int main(int argc, char **argv)
 
 #if CMAES_CHECK()
     global::damage_index = atoi(argv[2]);
+    std::cout << "will do damage " << global::damage_index << std::endl;
 #endif
     // initialisation of the simulation and the simulated robot, robot morphology currently set to raised.skel only
     global::init_simu(std::string(argv[1]), std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel");
