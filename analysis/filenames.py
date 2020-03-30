@@ -7,8 +7,10 @@ def get_output_folder_test(folder,condition,replicate):
 
     return folder+"/"+condition+"/exp"+replicate
 
+
+
 def get_file_name_test(folder,condition,test_type,replicate):
-    
+
     Outfolder=get_output_folder_test(folder,condition,replicate)
     return Outfolder+"/"+test_type+"_performance"
 
