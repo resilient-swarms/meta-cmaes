@@ -12,11 +12,11 @@ parser = argparse.ArgumentParser(description='Process destination folder.')
 parser.add_argument('-d', dest='DEST', type=str)
 
 args = parser.parse_args()
-conditions = ["damage_meta", "bo", "duty", "lv", "random"]
-replicates=["1","2","3","david44","david55"]
+conditions = ["damage_meta","bo", "duty", "lv", "random"]
+replicates=["2","3","david44","david55"]
 types=["train","test"]
 test_types = ["damage"]
-labels = ["Damage-meta", "Body-orientation", "Duty-factor", "Linear-velocity", "Random-weight"]
+labels = ["Meta","Body-orientation", "Duty-factor", "Linear-velocity", "Random-weight"]
 
 def check_files():
 

@@ -2,32 +2,35 @@
 from adapt_performance import *
 
 
-conditions =  "cmaescheck" + conditions
-labels = "Single-objective EA" + labels
+conditions =  ["cmaescheck"] + conditions
+labels = ["Single-objective EA"] + labels
 
 
-def get_damagemaxperformance_from_file_cmaescheck(fileprefix):
+def get_damagemaxperformance_from_file_cmaescheck(fileprefix, function_evaluations, slicing_factor):
     num_damages = 12
     max_value = -float("infinity")
-    temp = []
+    temp = [[] for i in range(num_damages)]
+    num_lines=function_evaluations/float(slicing_factor)
     for damage in range(num_damages):
-        filename = fileprefix+"/damage"+str(damage)+"/best_fit.dat"
-
+        filename = fileprefix+"/damage"+str(damage)+"/bestfit.dat"
+        print("will get performance at " + filename)
         with open(filename, 'r') as f:
             for line in f:
                 if line:  # avoid blank lines
-                    stripped = line.strip().split('\t')[-1] # get the second value, the best value of the current generation
+                    stripped = line.strip().split(' ')[-1] # get the second value, the best value of the current generation
                     current_value=float(stripped)
                     if current_value > max_value:
                         max_value = current_value
-                    temp.append(max_value)
-
+                    temp[damage].append(max_value)
+                    if len(temp[damage]) == num_lines:
+                        break
     return temp
 
 
-def get_damagemaxperformance_from_file_pop(filename,n_pop):
+def get_damagemaxperformance_from_file_pop(filename,n_pop,function_evaluations, slicingfactor, strip_weights=False):
+    print("will get performance at " + filename)
     num_damages=12
-    x = [[] for i in range(n_pop)]
+    x = [[[] for j in range(num_damages)] for i in range(n_pop)]
     map_index=0
     damage_index=-1
     p = 0
@@ -38,7 +41,7 @@ def get_damagemaxperformance_from_file_pop(filename,n_pop):
         for line in f:
             if line:  # avoid blank lines
                 stripped = (line.strip())
-                if len(weights) < n_pop:  # collecting weights
+                if strip_weights and len(weights) < n_pop:  # collecting weights
                     if stripped == "END WEIGHTS":
                         weights.append(temp_w)
                         temp_w = []
@@ -46,105 +49,97 @@ def get_damagemaxperformance_from_file_pop(filename,n_pop):
                         temp_w.append(np.array(stripped.split(),dtype=float))
                 else:  # collecting performance data
                     if stripped.startswith("DAMAGE"): # start new damage
-                        damage_index+=1
-                        if damage_index >= 0 :
-                            x[map_index]=temp
+
+
+
+                        print("map index is now " + str(map_index))
+                        print("damage index is now " + str(damage_index+1))
+                        if damage_index >= 0:
+                            x[map_index][damage_index]=temp[slicingfactor:function_evaluations+slicingfactor:slicingfactor]
                             temp=[]
-                        if damage_index == num_damages-1:
-                            damage_index=0
+
+                        if damage_index == num_damages - 1:
+                            # finish this list
+                            damage_index=-1
                             map_index+=1
+                            continue
+
+
+                        damage_index += 1
 
                     else:
+
                         temp.append(float(stripped))
+
+        x[map_index-1][num_damages-1] = temp[slicingfactor:function_evaluations+slicingfactor:slicingfactor] # finish the last one as well
     return weights, x
 
 
-def get_damageperformances_pop(mins,means,maxs, n_pop, condition, test_type, replicates,selection_criterion):
-    mes = []
-    ms = []
-    Ms = []
+def get_damageperformances_pop(mean_lines,sd_lines1, sd_lines2, n_pop, condition, test_type, replicates,selection_criterion,strip_weights,function_evaluations=80,slicing_factor=5):
 
+
+    max_index=0
+    num_damages=12
     #if type!="test": assert(selection_criterion is None)
-
-    for replicate in replicates:
+    lines=np.zeros((len(replicates),num_damages,int(function_evaluations/float(slicing_factor))))
+    for i, replicate in enumerate(replicates):
         if n_pop > 1:
             if selection_criterion=="train_performance":     # reliable choice as it takes into account database changes and 100% of solutions in map
                 f = get_file_name_train(args.DEST, condition, test_type, replicate)
                 print("will get max index from "+str(f))
-                w, perf = get_damagemaxperformance_from_file_pop(f, n_pop)
-                perf = [np.mean(perf[i]) for i in range(len(perf))]
-                max_index = np.argmax(perf)
-
-        filename = get_file_name_test(args.DEST, condition, test_type, replicate)
-
-        print("will get performance at " + filename)
+                w, perf = get_damagemaxperformance_from_file_pop(f, n_pop, function_evaluations, slicing_factor, strip_weights)
+                m=np.mean(lines,axis=(0,1))
+                max_index = np.argmax(m[-1])
         if condition == "cmaescheck":
-            w, x = get_damagemaxperformance_from_file_cmaescheck(filename,n_pop)
+
+            x = get_damagemaxperformance_from_file_cmaescheck(args.DEST+"/cmaescheck/exp"+replicate, function_evaluations, slicing_factor=slicing_factor)
         else:
-            w, x = get_damagemaxperformance_from_file_pop(filename, n_pop)
+
+            filename = get_file_name_test(args.DEST, condition, test_type, replicate)
+            _w, x = get_damagemaxperformance_from_file_pop(filename, n_pop, function_evaluations, slicing_factor,strip_weights)
         #assert len(x) == n_pop
+        lines[i] = x[max_index]
 
-        print("will select based on train performance")
-        print(condition + " " + test_type + " " + replicate + ":")
-        # print(p)
-        mes.append(np.mean(x[max_index]))
-        print("mean=" + str(mes[-1]))
-        Ms.append(np.max(x[max_index]))
-        print("max=" + str(Ms[-1]))  #
-        ms.append(np.min(x[max_index]))
-        print("min=" + str(ms[-1]))
+    # all done, now aggregate and add to lines to plot
+    m=np.mean(lines,axis=(0,1))
+    mean_lines.append(m)
+    means=np.mean(lines,axis=1)
+    sd=np.std(means,axis=0) # SD over replicates
+    sd_lines1.append(m-sd)
+    sd_lines2.append(m+sd)
 
-                # else:
-                #     raise Exception("empty performance list")
-
-
-    mins.append(ms)
-    maxs.append(Ms)
-    means.append(mes)
 
 def get_performances(type,selection_criterion):
 
-
-
-
-
-
-    mins=[[] for i in test_types]
-    maxs=[[] for i in test_types]
-    means=[[] for i in test_types]
-
-
+    mean_lines=[]
+    sd_lines1=[]
+    sd_lines2=[]
     for j, t in enumerate(test_types):
             for c in conditions:
                     if c.endswith("meta"):
                         n_pop = 5
+                        strip_weights=True
                     else:
                         n_pop = 1
-                    get_damageperformances_pop(mins,means,maxs, n_pop, c, t, replicates,selection_criterion)
-    with open(type+"_performances.txt", "w") as f:
-        make_table(f, (means,),
-                   rowlabels=["damage"],
-                   columnlabels=labels,
-                   conditionalcolumnlabels=[("Mean", "float2")],
-                   transpose=True)
-    print(type)
-    print()
-    print("damage")
-    make_significance_table(means[0],0)   # damage -> comp to damage
-    make_significance_table(means[0],4)  # damage -> comp to damage
+                        strip_weights=False
+                    get_damageperformances_pop(mean_lines,sd_lines1,sd_lines2, n_pop, c, t, replicates,selection_criterion, strip_weights=strip_weights)
 
+    colors = ["C5","C0", "C1", "C2", "C3", "C4"]  # colors for the lines
+    # (numsides, style, angle)
+    markers = ["*","o", "^", "s", "X", "D"]  # markers for the lines
+    y_labels = ["Map coverage"]
 
-
-
-
-
-
-
-
-
+    time=np.array(range(5,85,5))
+    createPlot(mean_lines, x_values=time,
+                   save_filename="damagetest.pdf", legend_labels=labels,
+                   colors=colors, markers=markers, xlabel="Function evaluations", ylabel="Best test-performance ($m$)",
+                   xlim=[0, time[-1] + 5], xscale="linear", yscale="linear", ylim=None,
+                   legendbox=None, annotations=[], xticks=[], yticks=[], task_markers=[], scatter=False,
+                   legend_cols=1, legend_fontsize=26, legend_indexes=[], additional_lines=[], index_x=[],
+                   xaxis_style="plain", y_err=[], force=True, fill_between=(sd_lines1, sd_lines2))
 
 
 
 if __name__ == "__main__":
-    get_performances(type="train",selection_criterion="train_performance")
+    #get_performances(type="train",selection_criterion="train_performance")
     get_performances(type="test",selection_criterion="train_performance")
