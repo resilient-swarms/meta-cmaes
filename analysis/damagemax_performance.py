@@ -3,7 +3,7 @@ from adapt_performance import *
 
 
 conditions =  ["cmaescheck"] + conditions
-labels = ["Single-objective EA"] + labels
+labels = ["Traditional EA"] + labels
 
 
 def get_damagemaxperformance_from_file_cmaescheck(fileprefix, function_evaluations, slicing_factor):

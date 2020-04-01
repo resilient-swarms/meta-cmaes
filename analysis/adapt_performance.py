@@ -13,7 +13,7 @@ parser.add_argument('-d', dest='DEST', type=str)
 
 args = parser.parse_args()
 conditions = ["damage_meta","bo", "duty", "lv", "random"]
-replicates=["2","3","david44","david55"]
+replicates=["1","2","3","david44","david55"]
 types=["train","test"]
 test_types = ["damage"]
 labels = ["Meta","Body-orientation", "Duty-factor", "Linear-velocity", "Random-weight"]
