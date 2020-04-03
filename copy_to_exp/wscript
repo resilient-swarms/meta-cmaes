@@ -32,6 +32,8 @@ def _build_test(bld, take_compl=[]):
 	if os.environ.get('BUILD_INDIVIDUAL_DAMAGE',"False") == "True":
 		cxxflags+=["-DINDIVIDUAL_DAMAGE"]
 		do_cmaes_check=True
+	else:
+		do_cmaes_check=False
 
 	cxxflags+=['-g']
 	#sferes.create_variants(bld,
