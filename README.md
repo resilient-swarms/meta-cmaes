@@ -13,7 +13,7 @@ If you don't have an environment yet, do:
 
         conda create --name py2.7 python=2.7
 
-Then activate the py2.7 environment before doing the install:   
+Then activate the py2.7 environment before doing the install: 
 
         conda active py2.7
 
@@ -59,10 +59,16 @@ and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the
         export BUILD_META=False 
 
 
-5. Set the number of cores you are using, e.g.:
+5. Two other optional settings are the number of cores, e.g.,
 
 
         export NUM_CORES=16
+
+
+and whether or not to visualise the results True/False
+
+
+        export BUILD_GRAPHIC=True
 
 
 6. To compile, do:
