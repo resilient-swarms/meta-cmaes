@@ -11,6 +11,7 @@
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/eval_parallel.hpp>
 #include <meta-cmaes/parameter_control.hpp>
+#include <meta-cmaes/statfuns.hpp>
 
 // now that FitBottom is defined, define the rest of the bottom level
 typedef sferes::fit::FitBottom bottom_fit_t;
