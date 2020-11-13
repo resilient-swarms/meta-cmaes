@@ -37,15 +37,15 @@ B. When installing the rhex_common files, replace the rhex_common/rhex_controlle
 3. Clone the meta-cmaes folder
 
     
-        git clone https://github.com/bossdm/meta-cmaes.git
+        git clone https://github.com/resilient-swarms/meta-cmaes.git
 
 
 
-and then go to the meta-cmaes folder, and copy the files in 'copy_to_exp' to the your sferes experiment folder:
+and then clone MAP-ElitesRhex to your sferes experiment folder:
 
-        cd ${RESIBOTS_DIR}/include/meta-cmaes
+        cd ${SFERES_DIR}/exp
 
-        cp copy_to_exp/* ${SFERES_DIR}/exp/MAP-Elites-Rhex
+        git clone https://github.com/resilient-swarms/MAP-Elites-Rhex
 
 
 

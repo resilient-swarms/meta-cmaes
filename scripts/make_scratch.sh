@@ -3,6 +3,7 @@
 
 export BUILD_GRAPHIC=True
 cd
+echo $RESIBOTS_DIR
 cd rhex_common/rhex_models
 ./waf distclean
 ./waf configure --prefix=$RESIBOTS_DIR

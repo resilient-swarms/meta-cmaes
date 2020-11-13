@@ -4,4 +4,4 @@
 cd $SFERES_DIR
 ./waf distclean
 ./waf configure --exp MAP-Elites-Rhex
-./waf --exp MAP-Elites-Rhex
+./waf --exp MAP-Elites-Rhex 

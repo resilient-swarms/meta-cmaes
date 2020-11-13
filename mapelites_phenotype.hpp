@@ -10,6 +10,7 @@
 #include <meta-cmaes/fit_bottom.hpp>
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/eval_parallel.hpp>
+#include <meta-cmaes/parameter_control.hpp>
 
 // now that FitBottom is defined, define the rest of the bottom level
 typedef sferes::fit::FitBottom bottom_fit_t;
@@ -282,7 +283,9 @@ public:
   }
   std::vector<bottom_indiv_t> sample_individuals()
   {
-    size_t num_individuals = std::max(1, (int)std::round(CMAESParams::pop::percentage_evaluated * _non_empty_indices.size()));
+    float percent = param_ctrl->get_percentage_evaluated();;
+    int num_individuals = std::max(1, (int)std::round(percent * _non_empty_indices.size()));
+    std::cout << "will pick " << num_individuals << "out of " << _non_empty_indices.size() << "individuals" << std::endl;
     return _pick(_non_empty_indices.size(), num_individuals);
   }
 

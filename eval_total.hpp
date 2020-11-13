@@ -4,6 +4,7 @@
 #include <sferes/eval/eval.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
 
+
 // eval class which allows us to:
 // 1.  develop the individual maps for a few generations after which they are evaluated by their recovered performance
 // 2.  count the total number of function evaluations (including those for the recovered performance calc.)
@@ -25,14 +26,15 @@ public:
     assert(pop.size());
     assert(begin < pop.size());
     assert(end <= pop.size());
+    size_t bot_epochs = param_ctrl->get_bottom_epochs();
     for (size_t i = begin; i < end; ++i)
     {
 #ifdef PRINTING
-      std::cout << "running the map for " + std::to_string(BottomParams::bottom_epochs) + " epochs" << std::endl;
+      std::cout << "running the map for " + std::to_string(bot_epochs) + " epochs" << std::endl;
       std::cout << typeid(pop[i]).name() << std::endl;
 #endif
       //pop[i]->develop();// already developed into a map, see cmaes.hpp
-      pop[i]->do_epochs(BottomParams::bottom_epochs);
+      pop[i]->do_epochs(bot_epochs);
 #ifdef PRINTING
       std::cout << "evaluating meta-individual  " + std::to_string(i) << std::endl;
 #endif
