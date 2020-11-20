@@ -23,6 +23,7 @@ const double BODY_LENGTH = .54;
 const double BODY_WIDTH = .39;
 const double BODY_HEIGHT = .139;
 size_t nb_evals = 0;
+size_t generations = 0;
 std::shared_ptr<rhex_dart::Rhex> global_robot;
 
 #if ENVIR_TESTS()

@@ -16,9 +16,6 @@
 #include <boost/serialization/array.hpp>
 
 #include <boost/fusion/container/vector.hpp>
-
-//#include <boost/circular_buffer.hpp>
-//#include <meta-cmaes/circular_buffer_serialisation.hpp>
 #include <meta-cmaes/sampled.hpp>
 #include <stdexcept>
 
@@ -35,7 +32,6 @@ typedef boost::fusion::vector<> base_safe_t;
 typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation, rhex_dart::descriptors::AvgCOMVelocities> base_desc_t;
 typedef rhex_controller::RhexControllerBuehler base_controller_t;
 typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<base_desc_t>> simulator_t;
-// note to self:
-// adding rhex_dart::rhex_control<base_controller_t> as first argument to Simu type seems to fail
+
 
 #endif

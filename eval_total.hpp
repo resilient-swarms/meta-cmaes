@@ -3,11 +3,13 @@
 #include <sferes/stc.hpp>
 #include <sferes/eval/eval.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
-
+#include <meta-cmaes/parameter_control.hpp>
 
 // eval class which allows us to:
 // 1.  develop the individual maps for a few generations after which they are evaluated by their recovered performance
 // 2.  count the total number of function evaluations (including those for the recovered performance calc.)
+
+
 
 namespace sferes
 {
@@ -26,6 +28,7 @@ public:
     assert(pop.size());
     assert(begin < pop.size());
     assert(end <= pop.size());
+
     size_t bot_epochs = param_ctrl->get_bottom_epochs();
     for (size_t i = begin; i < end; ++i)
     {
@@ -45,11 +48,14 @@ public:
 #ifdef PRINTING
       std::cout<< "number of evaluations is now "<<_nb_evals<<std::endl;
 #endif
+    ++global::generations;
   }
   unsigned nb_evals() const { return _nb_evals; }
 
+
 protected:
   unsigned _nb_evals;
+  unsigned _generations;
   
 };
 } // namespace eval

@@ -6,7 +6,6 @@
 
 #include <sferes/gen/evo_float.hpp>
 #include <meta-cmaes/sampled.hpp>
-#include <meta-cmaes/parameter_control.hpp>
 
 using namespace sferes;
 using namespace sferes::gen::evo_float;
@@ -55,12 +54,12 @@ struct BottomParams
         SFERES_CONST int dump_period = 250; //20
 #endif
         // NOTE: multiply size by 2 to obtain the actual batch ! !
-        SFERES_CONST unsigned size = 3; //---> 400 individuals; note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
+        SFERES_CONST unsigned size = 200; //---> 400 individuals; note this is the size per map, for each bottom generation (total of 10,000 evals for bottom-level)
         //  --> leads to a total of at most 20,000 evaluations per meta-generation (400*25 + 0.10*4,096*25) for the environments case, and at most 1/1 ratio
         // filling up all or even half of the cells is quite unlikely though , so not too many worries for the damage case !
 
         // NOTE: do NOT multiply by 2 to get initial size
-        SFERES_CONST unsigned init_size = 3;
+        SFERES_CONST unsigned init_size = 2000;
         ; //initial population for all maps
         SFERES_CONST int initial_aleat = 1;
     };
@@ -123,8 +122,6 @@ struct CMAESParams
         SFERES_CONST float max = 1.0f;
     };
 };
-
-ParameterControl<BottomParams, CMAESParams> *param_ctrl;
 
 #endif
 #endif
