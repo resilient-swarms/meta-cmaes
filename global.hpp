@@ -11,8 +11,11 @@
 #if META()
 #include <meta-cmaes/database.hpp>
 #include <meta-cmaes/params.hpp>
+#endif
+#if META() || CMAES_CHECK()
 #include <sferes/ea/cmaes_interface.h>
 #endif
+
 namespace global
 {
 
@@ -160,8 +163,12 @@ void init_simu(std::string seed, std::string robot_file)
 #endif
 }
 
-#if META()
+#if META() || CMAES_CHECK()
 cmaes_t evo;
+#endif
+
+#if META()
+
 
 // will use first-in-first-out queue such that latest DATABASE_SIZE individuals are maintained
 typedef SampledDataEntry data_entry_t;
