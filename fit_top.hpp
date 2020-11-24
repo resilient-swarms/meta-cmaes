@@ -81,8 +81,7 @@ public:
         return _nb_evals;
     }
 
-protected:
-    float _value;
+protected:ssssssss
     size_t _nb_evals = 0;
     // descriptor work done here, in this case duty cycle
     template <typename MetaIndiv>
