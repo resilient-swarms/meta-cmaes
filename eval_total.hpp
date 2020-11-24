@@ -48,7 +48,7 @@ public:
 #ifdef PRINTING
       std::cout<< "number of evaluations is now "<<_nb_evals<<std::endl;
 #endif
-    ++global::generations;
+    
   }
   unsigned nb_evals() const { return _nb_evals; }
 

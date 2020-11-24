@@ -66,7 +66,7 @@ public:
     void refresh(const E &ea)
     {
 
-        if (ea.gen() % CMAESParams::pop::dump_period == 0)
+        if (ea.gen() % CMAESParams::pop::dump_period == 0 || ea.is_stopped())
         {
 #ifdef PRINTING
             std::cout << "starting dump of Stat_Map" << std::endl;

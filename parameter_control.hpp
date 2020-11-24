@@ -45,9 +45,9 @@ struct EpochAnnealing : public ParameterControl<B_Pars, C_Pars>
     }
     virtual int get_bottom_epochs()
     {
-        float ratio = (float)(C_Pars::pop::nb_gen - global::generations) / (float)C_Pars::pop::nb_gen;
+        float ratio = (float)(C_Pars::pop::max_evals - global::nb_evals) / (float)C_Pars::pop::max_evals;
         int bot_epochs = (int)std::round(this->min_bottom_epochs + ratio * (this->bottom_epochs_factor * B_Pars::bottom_epochs - this->min_bottom_epochs)); //
-        std::cout << "bottom epochs " << bot_epochs << " at generation " << global::generations << " / " << C_Pars::pop::nb_gen << std::endl;
+        std::cout << "bottom epochs " << bot_epochs << " at generation " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         return bot_epochs;
     }
 };

@@ -101,6 +101,12 @@ namespace sferes
         }
         //
         cmaes_UpdateDistribution(&global::evo, _ar_funvals);
+
+        if(global::nb_evals > Params::pop::max_evals )
+        {
+          this->stop();// interrupt the ea
+
+        }
       }
 
     protected:

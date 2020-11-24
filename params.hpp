@@ -113,6 +113,7 @@ struct CMAESParams
         SFERES_CONST int dump_period = 10;   // every 10 meta-generations (at most 4 hours, based on 20,000 per meta-generation, and 1 eval/s)
         SFERES_CONST int size = 5;           // number of maps
         SFERES_CONST int initial_aleat = 1;
+        SFERES_CONST int max_evals = 10000000;// nb_gen*(size*2) for comparability with control
     };
 
     // parameter limits between 1.0 and 2.0  ( avoids negative weights ! )

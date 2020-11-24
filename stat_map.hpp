@@ -73,7 +73,7 @@ public:
             _archive.push_back(p);
         }
 
-        if (ea.gen() % Params::pop::dump_period == 0)
+        if (ea.gen() % Params::pop::dump_period == 0 || ea.is_stopped())
         {
             _write_archive(ea.archive(), std::string("archive_"), ea);
 #ifdef MAP_WRITE_PARENTS
