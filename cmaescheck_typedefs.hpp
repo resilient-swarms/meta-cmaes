@@ -36,7 +36,7 @@
 using namespace sferes;
 using namespace sferes::gen::evo_float;
 
-/* params for the top-level map */
+/* params for CMAES CHECK */
 struct CMAESCHECKParams
 {
     // grid properties, discretise 3 dimensions into 10 bins each
@@ -67,9 +67,10 @@ struct CMAESCHECKParams
     // save map every 50 iterations
     struct pop
     {
-        SFERES_CONST unsigned nb_gen = 1001; // at most 1000 meta-generations
-        SFERES_CONST int dump_period = 1;   // every generation
-        SFERES_CONST int size = 5;           // number of maps
+        SFERES_CONST unsigned nb_gen = 1001;  // just for compilation 
+        SFERES_CONST int dump_period = 1;    
+        SFERES_CONST int size = 5;           
+        SFERES_CONST unsigned max_evals = 1000000; //  just for compilation 
     };
 
     // parameter limits between 1.0 and 2.0  ( avoids negative weights ! )
