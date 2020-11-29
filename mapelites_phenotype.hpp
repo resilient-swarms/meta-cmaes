@@ -41,7 +41,7 @@ struct _eval_serial_individuals
 };
 
 #ifdef PARALLEL_RUN
-typedef sferes::eval::_eval_parallel_individuals<base_phen_t,bottom_fit_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<base_phen_t, bottom_fit_t> bottom_eval_helper_t;
 #else
 typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 #endif
@@ -64,10 +64,7 @@ public:
 #endif
   }
 
-  
-
 protected:
-  
 };
 
 typedef EvalIndividuals bottom_eval_t;
@@ -86,9 +83,9 @@ public:
   typedef boost::multi_array<bottom_phen_ptr_t, behav_dim> array_t;
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
-  bottom_pop_t _pop; // current batch
-  weight_t W; //characteristic weight matrix of this map
-  bottom_eval_t eval_individuals;//
+  bottom_pop_t _pop;              // current batch
+  weight_t W;                     //characteristic weight matrix of this map
+  bottom_eval_t eval_individuals; //
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
   MapElites()
   {
@@ -284,7 +281,8 @@ public:
   }
   std::vector<bottom_indiv_t> sample_individuals()
   {
-    float percent = param_ctrl->get_percentage_evaluated();;
+    float percent = param_ctrl->get_percentage_evaluated();
+    ;
     int num_individuals = std::max(1, (int)std::round(percent * _non_empty_indices.size()));
     std::cout << "will pick " << num_individuals << "out of " << _non_empty_indices.size() << "individuals" << std::endl;
     return _pick(_non_empty_indices.size(), num_individuals);
@@ -419,10 +417,7 @@ public:
     undevelop();
     /* fill map j with individuals */
     genotype_to_mat(this->gen().data());
-    for (int i = 0; i < global::database.size(); ++i)
-    {
-      entry_to_map(global::database[i], W); // obtain behavioural features and put individuals in the map
-    }
+    database_to_map(W);
 #ifdef PRINTING
     std::cout << "stop developing the map-phenotype" << std::endl;
 #endif
@@ -430,7 +425,7 @@ public:
   /* get rid of the previous map at this meta-population index */
   void undevelop()
   {
-    this->_array = array_t(behav_shape);//
+    this->_array = array_t(behav_shape); //
     //std::cout << "map empty : "<<  this->_non_empty_indices.empty() << std::endl;
     this->_non_empty_indices.clear();
   }
@@ -452,6 +447,32 @@ public:
 #ifdef PRINTING
     std::cout << "added individual to archive " << std::endl;
 #endif
+  }
+
+  void entry_to_map(const std::vector<global::data_entry_t> &entries, const weight_t &weight)
+  {
+    for (global::data_entry_t entry : entries)
+    {
+      entry_to_map(entry, W);
+    }
+  }
+
+  // do several entries at a time, useful for BestKPerBin database type
+  void database_to_map(const weight_t &weight)
+  {
+    for (auto it = global::database.data.begin(); it != global::database.data.end(); ++it)
+    {
+      entry_to_map(iterator_get(it), W);
+    }
+  }
+
+  global::data_entry_t iterator_get(std::vector<global::data_entry_t>::iterator it)
+  {
+    return *it;
+  }
+  std::vector<global::data_entry_t> iterator_get(std::map<std::vector<float>, std::vector<global::data_entry_t>>::iterator it)
+  {
+    return it->second;
   }
 };
 

@@ -11,6 +11,7 @@
 #include <meta-cmaes/stat_map.hpp>
 #include <Eigen/Dense>
 #include <chrono>
+
 typedef std::chrono::high_resolution_clock Clock;
 
 // #define MAP_WRITE_PARENTS
@@ -75,19 +76,13 @@ namespace sferes
             }
             void get_database()
             {
-                _capacity = global::database.get_capacity();
                 _database = global::database;
-                _sp = global::database.sp;
-                _max_sp = global::database.max_sp;
                 _nb_evals = global::nb_evals;
             }
             void set_globals()
             {
                 // reset the data-base
                 global::database = _database;
-                global::database.sp = _sp;
-                global::database.max_sp = _max_sp;
-                global::nb_evals = _nb_evals;
                 int n = _resume_file.length();
                 char *_resume_f = new char[n + 1];
                 strcpy(_resume_f, _resume_file.c_str());
@@ -186,14 +181,9 @@ namespace sferes
             {
                 // reset the data-base
                 ar &BOOST_SERIALIZATION_NVP(_pop);
-                ar &BOOST_SERIALIZATION_NVP(_capacity);
 
-                for (size_t i = 0; i < _capacity; ++i)
-                {
-                    ar &BOOST_SERIALIZATION_NVP(_database[i]);
-                }
-                ar &BOOST_SERIALIZATION_NVP(_sp);
-                ar &BOOST_SERIALIZATION_NVP(_max_sp);
+                ar &BOOST_SERIALIZATION_NVP(_database);
+              
                 ar &BOOST_SERIALIZATION_NVP(_nb_evals);
                 ar &BOOST_SERIALIZATION_NVP(_resume_file);
                 if (Archive::is_loading::value)
@@ -215,10 +205,7 @@ namespace sferes
                 std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix + std::string(".dat");
 
                 std::ofstream ofs(fname.c_str());
-                for (size_t k = 0; k < global::database.size(); ++k)
-                {
-                    ofs << global::database[k].base_features << "\t" << global::database[k].fitness << std::endl;
-                }
+		global::database.write(ofs);
             }
 
             template <typename EA>

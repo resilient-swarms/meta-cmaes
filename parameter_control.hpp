@@ -52,6 +52,7 @@ struct EpochAnnealing : public ParameterControl<B_Pars, C_Pars>
     }
 };
 
+
 template <typename B_Params, typename C_Params>
 ParameterControl<B_Params, C_Params> *init_parameter_control(std::string choice)
 {
