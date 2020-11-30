@@ -251,6 +251,8 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
         if (k == 1)
         {
             std::cout << "k=1 so no more pruning allowed" << std::endl;
+	    std::cout << "WARNING: did you select DATABASE size equal to the bins^dims? otherwise this should not happen" << std::endl;
+	    return;
         }
         std::cout << "pruning " << std::endl;
         for (auto it = data.begin(); it != data.end(); ++it)
