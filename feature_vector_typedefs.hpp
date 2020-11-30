@@ -6,7 +6,7 @@
 #define SELECTION 1
 #define NONLINEAR 2
 
-#define FEATUREMAP NONLINEAR
+//#define FEATUREMAP NONLINEAR
 
 #define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
 #include <Eigen/Dense>
