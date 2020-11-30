@@ -62,7 +62,7 @@ namespace sferes
                     _write_recovered_performances(std::string("recovered_perf"), ea);
                     get_database();
                     std::cout << "number of evaluations so far " << _nb_evals << std::endl;
-                    _resume_file = (ea.res_dir() + "/resume_file_gen_"+std::to_string(ea.gen())+".dat");
+                    _resume_file = (ea.res_dir() + "/resume_file_gen_" + std::to_string(ea.gen()) + ".dat");
                 }
             }
 
@@ -97,8 +97,7 @@ namespace sferes
                 for (size_t i = 0; i < this->_pop.size(); ++i)
                 {
                     this->_pop[i]->develop(); // don't take into account any additions to the database; so you know which one is the best according to evolution
-                    os << this->_pop[i]->W << std::endl;
-                    os << "END WEIGHTS" << std::endl;
+                    this->_pop[i]->feature_map.print_weights(os);
                 }
                 auto t2 = Clock::now();
                 std::cout << "database load time for 5 maps: "
@@ -183,7 +182,7 @@ namespace sferes
                 ar &BOOST_SERIALIZATION_NVP(_pop);
 
                 ar &BOOST_SERIALIZATION_NVP(_database);
-              
+
                 ar &BOOST_SERIALIZATION_NVP(_nb_evals);
                 ar &BOOST_SERIALIZATION_NVP(_resume_file);
                 if (Archive::is_loading::value)
@@ -205,7 +204,7 @@ namespace sferes
                 std::string fname = ea.res_dir() + "/" + boost::lexical_cast<std::string>(ea.gen()) + prefix + std::string(".dat");
 
                 std::ofstream ofs(fname.c_str());
-		global::database.write(ofs);
+                global::database.write(ofs);
             }
 
             template <typename EA>

@@ -135,7 +135,7 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
         assert(lhs.size() == rhs.size() && lhs.size() == num_base_features);
         while (i < num_base_features)
         {
-            if (std::round(lhs[i] * bins_within) / bins_within != std::round(rhs[i] * bins_within) / bins_within)
+            if (std::floor(lhs[i] * bins_within) / bins_within != std::floor(rhs[i] * bins_within) / bins_within)
             {
                 return false;
             }
@@ -143,6 +143,7 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
         }
         return true;
     }
+
     struct classcomp
     {
         /* to sort the std::map */
@@ -152,9 +153,9 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
             size_t dim = num_base_features;
             assert(lhs.size() == rhs.size() && lhs.size() == dim);
             size_t i = 0;
-            while (i < dim - 1 && std::round(lhs[i] * bins_per_dim) / bins_per_dim == std::round(rhs[i] * bins_per_dim) / bins_per_dim) //lhs[i]==rhs[i])
+            while (i < dim - 1 && std::floor(lhs[i] * bins_per_dim) / bins_per_dim == std::floor(rhs[i] * bins_per_dim) / bins_per_dim) //lhs[i]==rhs[i])
                 i++;
-            return std::round(lhs[i] * bins_per_dim) / bins_per_dim < std::round(rhs[i] * bins_per_dim) / bins_per_dim; //lhs[i]<rhs[i];
+            return std::floor(lhs[i] * bins_per_dim) / bins_per_dim < std::floor(rhs[i] * bins_per_dim) / bins_per_dim; //lhs[i]<rhs[i];
         }
     };
 
@@ -251,8 +252,8 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
         if (k == 1)
         {
             std::cout << "k=1 so no more pruning allowed" << std::endl;
-	    std::cout << "WARNING: did you select DATABASE size equal to the bins^dims? otherwise this should not happen" << std::endl;
-	    return;
+            std::cout << "WARNING: did you select DATABASE size equal to the bins^dims? otherwise this should not happen" << std::endl;
+            return;
         }
         std::cout << "pruning " << std::endl;
         for (auto it = data.begin(); it != data.end(); ++it)

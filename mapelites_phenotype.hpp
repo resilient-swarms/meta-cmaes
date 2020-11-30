@@ -12,6 +12,7 @@
 #include <meta-cmaes/eval_parallel.hpp>
 #include <meta-cmaes/statfuns.hpp>
 #include <meta-cmaes/parameter_control.hpp>
+#include <meta-cmaes/feature_map.hpp>
 
 // now that FitBottom is defined, define the rest of the bottom level
 typedef sferes::fit::FitBottom bottom_fit_t;
@@ -83,8 +84,8 @@ public:
   typedef boost::multi_array<bottom_phen_ptr_t, behav_dim> array_t;
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
+  feature_map_t feature_map;//characteristic featuremap of this behaviour-performance map
   bottom_pop_t _pop;              // current batch
-  weight_t W;                     //characteristic weight matrix of this map
   bottom_eval_t eval_individuals; //
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
   MapElites()
@@ -164,13 +165,13 @@ public:
       std::cout << "will develop individual " << 2 * i << std::endl;
 #endif
       i1->develop();
-      i1->fit() = bottom_fit_t(this->W);
+      i1->fit() = bottom_fit_t(this->feature_map);
 #ifdef PRINTING
 
       std::cout << "will develop individual " << 2 * i + 1 << std::endl;
 #endif
       i2->develop();
-      i2->fit() = bottom_fit_t(this->W);
+      i2->fit() = bottom_fit_t(this->feature_map);
 
       ptmp.push_back(i1);
       ptmp.push_back(i2);
@@ -368,32 +369,7 @@ public:
   //   //     std::cout <<" \n " << W << std::endl;
   //   // #endif
   // }
-  void genotype_to_mat(const std::vector<float> &weights)
-  {
-    size_t count = 0;
-#ifdef PRINTING
-    std::cout << "before conversion " << std::endl;
-#endif
-    for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
-    {
-      float sum = std::accumulate(weights.begin() + j * NUM_BASE_FEATURES, weights.begin() + (j + 1) * NUM_BASE_FEATURES, 0.0);
-      for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
-      {
-        W(j, k) = weights[count] / sum; // put it available for the MapElites parent class
 
-#ifdef PRINTING
-        std::cout << "sum " << sum << std::endl;
-        std::cout << weights[count] << std::endl;
-        std::cout << W(j, k) << "," << std::endl;
-#endif
-        ++count;
-      }
-    }
-#ifdef PRINTING
-    std::cout << "after conversion " << std::endl;
-    std::cout << W << std::endl;
-#endif
-  }
   void random_pop()
   {
     bottom_pop_t ptmp;
@@ -416,8 +392,8 @@ public:
 
     undevelop();
     /* fill map j with individuals */
-    genotype_to_mat(this->gen().data());
-    database_to_map(W);
+    feature_map = feature_map_t(this->gen().data());
+    database_to_map();
 #ifdef PRINTING
     std::cout << "stop developing the map-phenotype" << std::endl;
 #endif
@@ -430,7 +406,7 @@ public:
     this->_non_empty_indices.clear();
   }
 
-  void entry_to_map(const global::data_entry_t &entry, const weight_t &weight)
+  void entry_to_map(const global::data_entry_t &entry)
   {
 
     // use weight and base features --> bottom-level features
@@ -438,7 +414,7 @@ public:
     // create new individual
     boost::shared_ptr<base_phen_t> individual(new base_phen_t());
     //
-    individual->fit() = bottom_fit_t(weight);
+    individual->fit() = bottom_fit_t(feature_map);
     individual->fit().set_desc(individual->fit().get_desc(entry.base_features));
     individual->fit().set_value(entry.fitness);
     entry.set_genotype<boost::shared_ptr<base_phen_t>>(individual);
@@ -449,20 +425,20 @@ public:
 #endif
   }
 
-  void entry_to_map(const std::vector<global::data_entry_t> &entries, const weight_t &weight)
+  void entry_to_map(const std::vector<global::data_entry_t> &entries)
   {
     for (global::data_entry_t entry : entries)
     {
-      entry_to_map(entry, W);
+      entry_to_map(entry);
     }
   }
 
   // do several entries at a time, useful for BestKPerBin database type
-  void database_to_map(const weight_t &weight)
+  void database_to_map()
   {
     for (auto it = global::database.begin(); it != global::database.end(); ++it)
     {
-      entry_to_map(iterator_get(it), W);
+      entry_to_map(iterator_get(it));
     }
   }
 

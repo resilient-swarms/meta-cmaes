@@ -1,0 +1,188 @@
+#ifndef FEATURE_MAP_HPP
+#define FEATURE_MAP_HPP
+
+#include <meta-cmaes/feature_vector_typedefs.hpp>
+
+#if FEATUREMAP == NONLINEAR
+struct NonLinearFeatureMap
+{
+    weight_t W;
+    NonLinearFeatureMap() {}
+    NonLinearFeatureMap(const std::vector<float> &weights)
+    {
+        genotype_to_mat(weights);
+    }
+    bottom_features_t out(const base_features_t &b)
+    {
+
+        hidden_t h = (W.W1 * b + hidden_t::Constant(W.B1)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoid));
+        bottom_features_t f = (W.W2 * h + bottom_features_t::Constant(W.B2)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoid));
+        return f;
+    }
+
+    static float sigmoid(float x)
+    {
+        return 1. / (1. + std::exp(-x));
+    }
+
+    void genotype_to_mat(const std::vector<float> &weights)
+    {
+        size_t count = 0;
+#ifdef PRINTING
+        std::cout << "before conversion " << std::endl;
+#endif
+        for (size_t j = 0; j < NUM_HIDDEN; ++j)
+        {
+            for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+            {
+                W.W1(j, k) = weights[count]; // put it available for the MapElites parent class
+
+#ifdef PRINTING
+                std::cout << weights[count] << std::endl;
+                std::cout << W.W1(j, k) << "," << std::endl;
+#endif
+                ++count;
+            }
+        }
+        W.B1 = weights[count];
+        ++count;
+        for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
+        {
+            for (size_t k = 0; k < NUM_HIDDEN; ++k)
+            {
+                W.W2(j, k) = weights[count]; // put it available for the MapElites parent class
+
+#ifdef PRINTING
+                std::cout << weights[count] << std::endl;
+                std::cout << W.W2(j, k) << "," << std::endl;
+#endif
+                ++count;
+            }
+        }
+        W.B2 = weights[count];
+        ++count;
+
+#ifdef PRINTING
+        std::cout << "after conversion " << std::endl;
+        std::cout << "W1=" << W.W1 << "\nB1" << W.B1 << "\nW2=" << W.W2 << "\nB2" << W.B2 << std::endl;
+#endif
+    }
+    void print_weights(std::ostream &os)
+    {
+
+        os << W.W1 << "\n"
+           << W.B1 << "\n"
+           << W.W2 << "\n"
+           << W.B2 << std::endl;
+        os << "END WEIGHTS" << std::endl;
+    }
+};
+typedef NonLinearFeatureMap feature_map_t;
+#elif FEATUREMAP == SELECTION
+struct FeatureSelectionMap
+{
+    weight_t W;
+    FeatureSelectionMap() {}
+    FeatureSelectionMap(const std::vector<float> &weights)
+    {
+        genotype_to_mat(weights);
+    }
+    bottom_features_t out(const base_features_t &b)
+    {
+        bottom_features_t f;
+        for (size_t i = 0; i < f.rows(); ++i)
+        {
+            f[i] = W.row(i).maxCoeff();
+        }
+        return f;
+    }
+
+    void genotype_to_mat(const std::vector<float> &weights)
+    {
+        size_t count = 0;
+#ifdef PRINTING
+        std::cout << "before conversion " << std::endl;
+#endif
+        for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
+        {
+            for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+            {
+                W(j, k) = weights[count]; // put it available for the MapElites parent class
+
+#ifdef PRINTING
+                std::cout << weights[count] << std::endl;
+                std::cout << W(j, k) << "," << std::endl;
+#endif
+                ++count;
+            }
+        }
+#ifdef PRINTING
+        std::cout << "after conversion " << std::endl;
+        std::cout << W << std::endl;
+#endif
+    }
+    void print_weights(std::ostream &os)
+    {
+
+        os << W << "\n"
+           << std::endl;
+        os << "END WEIGHTS" << std::endl;
+    }
+};
+
+typedef FeatureSelectionMap feature_map_t;
+#else
+struct LinearFeatureMap
+{
+    weight_t W;
+    LinearFeatureMap() {}
+    LinearFeatureMap(const std::vector<float> &weights)
+    {
+        genotype_to_mat(weights);
+    }
+    bottom_features_t out(const base_features_t &b)
+    {
+        bottom_features_t f;
+        return W * b;
+    }
+
+    void genotype_to_mat(const std::vector<float> &weights)
+    {
+        size_t count = 0;
+#ifdef PRINTING
+        std::cout << "before conversion " << std::endl;
+#endif
+        for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
+        {
+            float sum = std::accumulate(weights.begin() + j * NUM_BASE_FEATURES, weights.begin() + (j + 1) * NUM_BASE_FEATURES, 0.0);
+            for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+            {
+                W(j, k) = weights[count] / sum; // put it available for the MapElites parent class
+
+#ifdef PRINTING
+                std::cout << "sum " << sum << std::endl;
+                std::cout << weights[count] << std::endl;
+                std::cout << W(j, k) << "," << std::endl;
+#endif
+                ++count;
+            }
+        }
+#ifdef PRINTING
+        std::cout << "after conversion " << std::endl;
+        std::cout << W << std::endl;
+#endif
+    }
+
+    void print_weights(std::ostream &os)
+    {
+
+        os << W << "\n"
+           << std::endl;
+        os << "END WEIGHTS" << std::endl;
+    }
+};
+typedef LinearFeatureMap feature_map_t;
+
+#endif
+
+#endif
