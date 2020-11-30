@@ -27,6 +27,7 @@ struct NonLinearFeatureMap
         boost::random::uniform_real_distribution<> dist(0, 1);
         fm.B1 = dist(gen);
         fm.B2 = dist(gen);
+        return fm;
     }
     bottom_features_t out(const base_features_t &b)
     {
@@ -118,6 +119,7 @@ struct FeatureSelectionMap
         weight_t W = weight_t::Random();       //random numbers between (-1,1)
         W = (W + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W = W;
+        return fm;
     }
     bottom_features_t out(const base_features_t &b)
     {
@@ -203,6 +205,7 @@ struct LinearFeatureMap
             }
         }
         fm.W = W;
+        return fm;
     }
     bottom_features_t out(const base_features_t &b)
     {
