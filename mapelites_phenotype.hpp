@@ -84,7 +84,7 @@ public:
   typedef boost::multi_array<bottom_phen_ptr_t, behav_dim> array_t;
   typedef std::array<typename array_t::index, behav_dim> behav_index_t;
   behav_index_t behav_shape;
-  feature_map_t feature_map;//characteristic featuremap of this behaviour-performance map
+  feature_map_t feature_map;      //characteristic featuremap of this behaviour-performance map
   bottom_pop_t _pop;              // current batch
   bottom_eval_t eval_individuals; //
   // EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // note not needed when we use NoAlign
