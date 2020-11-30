@@ -17,16 +17,16 @@ struct NonLinearFeatureMap
         NonLinearFeatureMap fm = NonLinearFeatureMap();
         weight1_t W1 = weight1_t::Random();       //random numbers between (-1,1)
         W1 = (W1 + weight1_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
-        fm.W1 = W1;
+        fm.W.W1 = W1;
 
         weight2_t W2 = weight2_t::Random();       //random numbers between (-1,1)
         W2 = (W2 + weight2_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
-        fm.W2 = W2;
+        fm.W.W2 = W2;
 
         boost::random::mt19937 gen;
         boost::random::uniform_real_distribution<> dist(0, 1);
-        fm.B1 = dist(gen);
-        fm.B2 = dist(gen);
+        fm.W.B1 = dist(gen);
+        fm.W.B2 = dist(gen);
         return fm;
     }
     bottom_features_t out(const base_features_t &b)
