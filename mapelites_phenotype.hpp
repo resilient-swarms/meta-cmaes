@@ -460,7 +460,7 @@ public:
   // do several entries at a time, useful for BestKPerBin database type
   void database_to_map(const weight_t &weight)
   {
-    for (auto it = global::database.data.begin(); it != global::database.data.end(); ++it)
+    for (auto it = global::database.begin(); it != global::database.end(); ++it)
     {
       entry_to_map(iterator_get(it), W);
     }

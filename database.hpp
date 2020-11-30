@@ -77,6 +77,14 @@ struct CircularBuffer
     {
         return data[idx];
     }
+    typename std::vector<DataType>::iterator end()
+    {
+        return data.begin() + max_sp;
+    }
+    typename std::vector<DataType>::iterator begin()
+    {
+        return data.begin();
+    }
     size_t size()
     {
         return max_sp;
@@ -116,7 +124,7 @@ struct CircularBuffer
 template <size_t num_base_features, size_t capacity, typename DataType>
 struct BestKPerBin // filtering based on BD, with approximately the same capacity, but solutions are only replaced by better ones in same behavioural bin
 {
-    size_t k = 5000;             // maximal entries per bin (will decrease to 1 minimally over the run)
+    size_t k = 5000;           // maximal entries per bin (will decrease to 1 minimally over the run)
     size_t sp;                 //keep count
     float bins_per_dim = 3.0f; // very coarse map (with 14D around 5M unique bins)
 
@@ -152,7 +160,14 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
 
     typedef std::map<std::vector<float>, std::vector<DataType>, classcomp> archive_t;
     std::map<std::vector<float>, std::vector<DataType>, classcomp> data;
-
+    typename archive_t::iterator end()
+    {
+        return data.end();
+    }
+    typename archive_t::iterator begin()
+    {
+        return data.begin();
+    }
     void write(const std::ofstream &ofs)
     {
         for (auto it = data.begin(); it != data.end(); ++it)
@@ -197,14 +212,14 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
                 {
                     if (equal(current_vec[j].base_features, d.base_features))
                     {
-                        break;// if so, break
+                        break; // if so, break
                     }
                 }
                 // if not, insert the new entry
                 current_vec.insert(current_vec.begin() + i, d);
                 if (current_vec.size() > k) // bin is full
                 {
-                    current_vec.erase(current_vec.begin());//remove lowest-fitness element
+                    current_vec.erase(current_vec.begin()); //remove lowest-fitness element
                 }
                 else
                 {
@@ -233,9 +248,9 @@ struct BestKPerBin // filtering based on BD, with approximately the same capacit
 
     void prune()
     {
-        if(k==1)
+        if (k == 1)
         {
-            std::cout << "k=1 so no more pruning allowed"<<std::endl;
+            std::cout << "k=1 so no more pruning allowed" << std::endl;
         }
         std::cout << "pruning " << std::endl;
         for (auto it = data.begin(); it != data.end(); ++it)
