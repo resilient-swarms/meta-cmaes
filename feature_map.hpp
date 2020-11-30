@@ -15,12 +15,12 @@ struct NonLinearFeatureMap
     static NonLinearFeatureMap random()
     {
         NonLinearFeatureMap fm = NonLinearFeatureMap();
-        weight1_t W1 = weight_t::Random();       //random numbers between (-1,1)
-        W1 = (W1 + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
+        weight1_t W1 = weight1_t::Random();       //random numbers between (-1,1)
+        W1 = (W1 + weight1_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W1 = W1;
 
-        weight2_t W2 = weight_t::Random();       //random numbers between (-1,1)
-        W2 = (W2 + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
+        weight2_t W2 = weight2_t::Random();       //random numbers between (-1,1)
+        W2 = (W2 + weight2_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W2 = W2;
 
         boost::random::mt19937 gen;
