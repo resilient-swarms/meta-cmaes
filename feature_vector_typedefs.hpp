@@ -2,6 +2,10 @@
 #ifndef FEATURE_VEC_TYPES_HPP
 #define FEATURE_VEC_TYPES_HPP
 
+
+#define LINEAR 0
+#define SELECTION 1
+#define NONLINEAR 2
 //#define FEATUREMAP NONLINEAR
 
 #define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"

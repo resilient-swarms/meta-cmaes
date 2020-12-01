@@ -3,10 +3,6 @@
 
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 
-#define LINEAR 0
-#define SELECTION 1
-#define NONLINEAR 2
-
 #if FEATUREMAP == NONLINEAR
 struct NonLinearFeatureMap
 {
