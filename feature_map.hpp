@@ -108,6 +108,7 @@ typedef NonLinearFeatureMap feature_map_t;
 struct FeatureSelectionMap
 {
     weight_t W;
+    base_indices_t max_indices;
     FeatureSelectionMap() {}
     FeatureSelectionMap(const std::vector<float> &weights)
     {
@@ -119,14 +120,15 @@ struct FeatureSelectionMap
         weight_t W = weight_t::Random();       //random numbers between (-1,1)
         W = (W + weight_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W = W;
+        fm.sparsify();
         return fm;
     }
     bottom_features_t out(const base_features_t &b)
     {
         bottom_features_t f;
-        for (size_t i = 0; i < f.rows(); ++i)
+        for (size_t i = 0; i < max_indices.size(); ++i)
         {
-            f[i] = W.row(i).maxCoeff();
+            f[i] = b[max_indices[i]];
         }
         return f;
     }
@@ -139,21 +141,48 @@ struct FeatureSelectionMap
 #endif
         for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
         {
+            float max = -INFINITY;
+            size_t maxInd = 0;
             for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
             {
                 W(j, k) = weights[count]; // put it available for the MapElites parent class
-
+                if (W(j, k) > max)
+                {
+                    maxInd = k;
+                    max = W(j, k);
+                }
 #ifdef PRINTING
                 std::cout << weights[count] << std::endl;
                 std::cout << W(j, k) << "," << std::endl;
 #endif
                 ++count;
             }
+            max_indices[j] = maxInd;
         }
 #ifdef PRINTING
         std::cout << "after conversion " << std::endl;
         std::cout << W << std::endl;
 #endif
+    }
+
+    void set_max_indices()
+    {
+        // rather than computing the argmax each time, we just compute a sparse matrix one time
+        // then apply matrix product later
+        for (size_t j = 0; j < NUM_BOTTOM_FEATURES; ++j)
+        {
+
+            for (size_t k = 0; k < NUM_BASE_FEATURES; ++k)
+            {
+                if (W(j, k) > max)
+                {
+                    maxInd = k;
+                    max = W(j, k);
+                }
+                W(j, k) = 0.;
+            }
+            W(j, maxInd) = 1.;
+        }
     }
     void print_weights(std::ostream &os)
     {
