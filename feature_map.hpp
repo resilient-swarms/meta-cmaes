@@ -108,7 +108,7 @@ typedef NonLinearFeatureMap feature_map_t;
 struct FeatureSelectionMap
 {
     weight_t W;
-    bottom_indices_t max_indices;
+    bottom_indices_t max_indices = bottom_indices_t::Constant(0);
     FeatureSelectionMap() {}
     FeatureSelectionMap(const std::vector<float> &weights)
     {
