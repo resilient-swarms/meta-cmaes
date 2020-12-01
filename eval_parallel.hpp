@@ -151,7 +151,7 @@ public:
   /**
        * Class destructor.
        */
-  ~CSharedMem()
+  virtual ~CSharedMem()
   {
     munmap(m_pfSharedMem, get_block_size() * sizeof(float));
   }
