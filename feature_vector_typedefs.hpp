@@ -17,7 +17,7 @@ const int NUM_BOTTOM_FEATURES = 3; // number of features for bottom level maps
 
 /* base-features */
 typedef Eigen::Matrix<float, NUM_BASE_FEATURES, 1, Eigen::DontAlign, NUM_BASE_FEATURES, 1> base_features_t; // 0 options and size cannot grow
-typedef Eigen::Matrix<size_t, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BASE_FEATURES, 1> bottom_indices_t; // 0 options and size cannot grow
+typedef Eigen::Matrix<size_t, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BOTTOM_FEATURES, 1> bottom_indices_t; // 0 options and size cannot grow
 #if FEATUREMAP == NONLINEAR
 
 const int NUM_HIDDEN = 10; //number of hidden units
