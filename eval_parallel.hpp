@@ -261,7 +261,7 @@ public:
              sizeof(bool));
   }
 
-private:
+protected:
   /** Descriptor size */
   size_t m_unDescriptorSize;
 
@@ -279,7 +279,7 @@ private:
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 
-template <typename Phen, typename Fit>
+template <typename Memory,typename Phen, typename Fit>
 struct _eval_parallel_individuals
 {
   typedef std::vector<boost::shared_ptr<Phen>> pop_t;
@@ -327,9 +327,9 @@ struct _eval_parallel_individuals
     for (int i = 0; i < to_add; ++i)
     {
 #if META()
-      shared_memory.push_back(new CSharedMem(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+      shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
 #else
-      shared_memory.push_back(new CSharedMem(BottomParams::ea::behav_dim));
+      shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
 #endif
     }
     //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
@@ -483,6 +483,7 @@ struct _eval_parallel_individuals
 //std::cout <<"evaluation time: "<< duration.count() <<'\n';
 //std::cout.Flush()
 
+template <typename Memory>
 void init_shared_mem()
 {
   // times 2 because two individuals generated per reproduction
@@ -491,9 +492,9 @@ void init_shared_mem()
   for (size_t i = 0; i < num_memory; ++i)
   {
 #if META()
-    shared_memory.push_back(new sferes::eval::CSharedMem(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+    shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
 #else
-    shared_memory.push_back(new sferes::eval::CSharedMem(BottomParams::ea::behav_dim));
+    shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
 #endif
   }
 }

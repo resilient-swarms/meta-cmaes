@@ -34,7 +34,7 @@ struct _eval_serial_meta
 };
 
 template <typename Phen, typename Fit>
-struct _eval_parallel_meta : public _eval_parallel_individuals<base_phen_t, bottom_fit_t>
+struct _eval_parallel_meta : public _eval_parallel_individuals<CSharedMem,base_phen_t, bottom_fit_t>
 {
       float value;
       size_t nb_evals;
