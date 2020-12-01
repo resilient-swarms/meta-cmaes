@@ -276,6 +276,46 @@ protected:
   float *m_pfSharedMem;
   bool *died;
 };
+
+
+       /* this class gets the position from the base-features assuming an index */
+        class CSharedMemPosition : public CSharedMem
+        {
+	    public:
+            CSharedMemPosition(size_t descriptor_size, size_t base_feature_size) : CSharedMem(descriptor_size, base_feature_size)
+            {
+            }
+
+		
+            /**
+             * Sets the end-position of an individual.
+             */
+            inline Eigen::Vector2d getPosition()
+            {
+                float *descriptor = &this->m_pfSharedMem[this->m_unDescriptorSize + 1]; // pointer to the descriptor
+                Eigen::Vector2d pos;
+                for (int i =0; i < 2; ++i)
+                {
+                    pos[i] = descriptor[i];
+                }
+                return pos;
+            }
+
+            /**
+             * Sets the end-position of an individual.
+             */
+            inline void setPosition(const Eigen::VectorXd &pos)
+            {
+                for (int i = 0; i < pos.size(); ++i)
+                {
+                    ::memcpy(this->m_pfSharedMem + (this->m_unDescriptorSize + i + 1),
+                             &pos[i],
+                             sizeof(float));
+                }
+            }
+
+        };
+
 /** The shared memory manager */
 static std::vector<CSharedMem *> shared_memory;
 

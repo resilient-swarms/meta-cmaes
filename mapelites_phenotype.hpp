@@ -42,7 +42,7 @@ struct _eval_serial_individuals
 };
 
 #ifdef PARALLEL_RUN
-typedef sferes::eval::_eval_parallel_individuals<base_phen_t, bottom_fit_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<shared_memory_t,base_phen_t, bottom_fit_t> bottom_eval_helper_t;
 #else
 typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 #endif

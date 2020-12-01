@@ -32,6 +32,5 @@ typedef boost::fusion::vector<> base_safe_t;
 typedef boost::fusion::vector<rhex_dart::descriptors::DutyCycle, rhex_dart::descriptors::BodyOrientation, rhex_dart::descriptors::AvgCOMVelocities> base_desc_t;
 typedef rhex_controller::RhexControllerBuehler base_controller_t;
 typedef rhex_dart::RhexDARTSimu<rhex_dart::safety<base_safe_t>, rhex_dart::desc<base_desc_t>> simulator_t;
-
-
+typedef shared_memory_t CSharedMem;
 #endif
