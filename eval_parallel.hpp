@@ -87,18 +87,15 @@ namespace sferes
        * @param un_genome_size The size of the genome of an individual.
        * @param un_pop_size The size of the population.
        */
-#if META()
 
       CSharedMem(size_t descriptor_size, size_t base_feature_size) : m_unDescriptorSize(descriptor_size), m_unBasefeatures(base_feature_size)
       {
         init_shared_mem();
       }
-#else
       CSharedMem(size_t descriptor_size) : m_unDescriptorSize(descriptor_size)
       {
         init_shared_mem();
       }
-#endif
       void init_shared_mem()
       {
         size_t unShareMemSize = get_block_size() * sizeof(float); //m_unPopSize *

@@ -28,7 +28,7 @@ namespace sferes
                 {
                     pop[i]->fit() = fit_proto;
                 }
-                auto helper = _eval_parallel_individuals<Phen, typename Phen::fit_t>();
+                auto helper = _eval_parallel_individuals<shared_memory_t,Phen, typename Phen::fit_t>();
                 helper._pop = pop;
                 helper.run();
                 this->_nb_evals += (end - begin);
