@@ -74,471 +74,483 @@
 
 namespace sferes
 {
-namespace eval
-{
-int num_memory;
-/** Shared memory manager for data exchange between master and slaves */
-class CSharedMem
-{
+  namespace eval
+  {
+    int num_memory;
+    /** Shared memory manager for data exchange between master and slaves */
+    class CSharedMem
+    {
 
-public:
-  /**
+    public:
+      /**
        * Class constructor.
        * @param un_genome_size The size of the genome of an individual.
        * @param un_pop_size The size of the population.
        */
 #if META()
 
-  CSharedMem(size_t descriptor_size, size_t base_feature_size) : m_unDescriptorSize(descriptor_size), m_unBasefeatures(base_feature_size)
-  {
-    init_shared_mem();
-  }
+      CSharedMem(size_t descriptor_size, size_t base_feature_size) : m_unDescriptorSize(descriptor_size), m_unBasefeatures(base_feature_size)
+      {
+        init_shared_mem();
+      }
 #else
-  CSharedMem(size_t descriptor_size) : m_unDescriptorSize(descriptor_size)
-  {
-    init_shared_mem();
-  }
+      CSharedMem(size_t descriptor_size) : m_unDescriptorSize(descriptor_size)
+      {
+        init_shared_mem();
+      }
 #endif
-  void init_shared_mem()
-  {
-    size_t unShareMemSize = get_block_size() * sizeof(float); //m_unPopSize *
-    /* Get pointer to shared memory area */
-    // Memory buffer will be readable and writable:
-    int protection = PROT_READ | PROT_WRITE;
-    // The buffer will be shared (meaning other processes can access it), but
-    // anonymous (meaning third-party processes cannot obtain an address for it),
-    // so only this process and its children will be able to use it:
-    int visibility = MAP_ANONYMOUS | MAP_SHARED;
-    m_pfSharedMem = reinterpret_cast<float *>(::mmap(NULL, unShareMemSize, protection, visibility, -1, 0));
-    if (m_pfSharedMem == MAP_FAILED)
-    {
-      ::perror("shared memory, vector float");
-      exit(1);
-    }
-    died = reinterpret_cast<bool *>(::mmap(NULL, sizeof(bool), protection, visibility, -1, 0));
-    if (died == MAP_FAILED)
-    {
-      ::perror("shared memory, bool");
-      exit(1);
-    }
-  }
+      void init_shared_mem()
+      {
+        size_t unShareMemSize = get_block_size() * sizeof(float); //m_unPopSize *
+        /* Get pointer to shared memory area */
+        // Memory buffer will be readable and writable:
+        int protection = PROT_READ | PROT_WRITE;
+        // The buffer will be shared (meaning other processes can access it), but
+        // anonymous (meaning third-party processes cannot obtain an address for it),
+        // so only this process and its children will be able to use it:
+        int visibility = MAP_ANONYMOUS | MAP_SHARED;
+        m_pfSharedMem = reinterpret_cast<float *>(::mmap(NULL, unShareMemSize, protection, visibility, -1, 0));
+        if (m_pfSharedMem == MAP_FAILED)
+        {
+          ::perror("shared memory, vector float");
+          exit(1);
+        }
+        died = reinterpret_cast<bool *>(::mmap(NULL, sizeof(bool), protection, visibility, -1, 0));
+        if (died == MAP_FAILED)
+        {
+          ::perror("shared memory, bool");
+          exit(1);
+        }
+      }
 
-  void init_shared_mem_filedescriptor()
-  {
-    /* Create shared memory area for master-slave communication */
-    // m_nSharedMemFD = ::shm_open(SHARED_MEMORY_FILE.c_str(),
-    //                      O_RDWR | O_CREAT,
-    //                      S_IRUSR | S_IWUSR);
-    // if(m_nSharedMemFD < 0) {
-    //     ::perror(SHARED_MEMORY_FILE.c_str());
-    //     exit(1);
-    // }
-    // size_t unShareMemSize = m_unPopSize * get_block_size() * sizeof(float);
-    //::ftruncate(m_nSharedMemFD, unShareMemSize);
-    /* Get pointer to shared memory area */
-    // m_pfSharedMem = reinterpret_cast<float*>(
-    //     ::mmap(NULL,
-    //           unShareMemSize,
-    //           PROT_READ | PROT_WRITE,
-    //           MAP_SHARED,
-    //           m_nSharedMemFD,
-    //           0));
-    // if(m_pfSharedMem == MAP_FAILED) {
-    //     ::perror("shared memory");
-    //     exit(1);
-    // }
-  }
-  /**
+      void init_shared_mem_filedescriptor()
+      {
+        /* Create shared memory area for master-slave communication */
+        // m_nSharedMemFD = ::shm_open(SHARED_MEMORY_FILE.c_str(),
+        //                      O_RDWR | O_CREAT,
+        //                      S_IRUSR | S_IWUSR);
+        // if(m_nSharedMemFD < 0) {
+        //     ::perror(SHARED_MEMORY_FILE.c_str());
+        //     exit(1);
+        // }
+        // size_t unShareMemSize = m_unPopSize * get_block_size() * sizeof(float);
+        //::ftruncate(m_nSharedMemFD, unShareMemSize);
+        /* Get pointer to shared memory area */
+        // m_pfSharedMem = reinterpret_cast<float*>(
+        //     ::mmap(NULL,
+        //           unShareMemSize,
+        //           PROT_READ | PROT_WRITE,
+        //           MAP_SHARED,
+        //           m_nSharedMemFD,
+        //           0));
+        // if(m_pfSharedMem == MAP_FAILED) {
+        //     ::perror("shared memory");
+        //     exit(1);
+        // }
+      }
+      /**
        * Class destructor.
        */
-  virtual ~CSharedMem()
-  {
-    munmap(m_pfSharedMem, get_block_size() * sizeof(float));
-  }
+      virtual ~CSharedMem()
+      {
+        munmap(m_pfSharedMem, get_block_size() * sizeof(float));
+      }
 
-  /* get the memory block size */
+      /* get the memory block size */
 
-  inline size_t get_block_size()
-  {
+      inline size_t get_block_size()
+      {
 #if META()
-    return (m_unDescriptorSize + m_unBasefeatures + 1);
+        return (m_unDescriptorSize + m_unBasefeatures + 1);
 #else
-    return (m_unDescriptorSize + 1);
+        return (m_unDescriptorSize + 1);
 #endif
-  }
-  /**
+      }
+      /**
        * Returns the score of an individual.
        * @param un_individual The individual.
        */
-  inline float getFitness()
-  {
-    return m_pfSharedMem[0];
-  }
-  /**
+      inline float getFitness()
+      {
+        return m_pfSharedMem[0];
+      }
+      /**
        * Returns the descriptor of an individual.
        * @param un_individual The individual.
        */
-  inline std::vector<float> getDescriptor()
-  {
-    float *descriptor = &m_pfSharedMem[1]; // pointer to the descriptor
-    std::vector<float> bd;
-    bd.resize(m_unDescriptorSize);
-    for (int i = 0; i < m_unDescriptorSize; ++i)
-    {
-      bd[i] = descriptor[i];
-    }
-    return bd;
-  }
+      inline std::vector<float> getDescriptor()
+      {
+        float *descriptor = &m_pfSharedMem[1]; // pointer to the descriptor
+        std::vector<float> bd;
+        bd.resize(m_unDescriptorSize);
+        for (int i = 0; i < m_unDescriptorSize; ++i)
+        {
+          bd[i] = descriptor[i];
+        }
+        return bd;
+      }
 
-  inline base_features_t getBaseDescriptor()
-  {
-    float *descriptor = &m_pfSharedMem[m_unDescriptorSize + 1]; // pointer to the descriptor
-    base_features_t b;
-    for (int i = 0; i < m_unBasefeatures; ++i)
-    {
-      b(i, 0) = descriptor[i];
-    }
-    return b;
-  }
+      inline base_features_t getBaseDescriptor()
+      {
+        float *descriptor = &m_pfSharedMem[m_unDescriptorSize + 1]; // pointer to the descriptor
+        base_features_t b;
+        for (int i = 0; i < m_unBasefeatures; ++i)
+        {
+          b(i, 0) = descriptor[i];
+        }
+        return b;
+      }
 
-  inline bool getDeath()
-  {
-    return died[0];
-  }
-  /**
+      inline bool getDeath()
+      {
+        return died[0];
+      }
+      /**
        * Sets the score of an individual.
        * @param un_individual The individual.
        * @param f_score The score.
        */
-  inline void setFitness(float f_score)
-  {
-    /* fitness is copied to the 0'th index of each block */
-    ::memcpy(m_pfSharedMem + 0,
-             &f_score,
-             sizeof(float));
-  }
+      inline void setFitness(double f_score)
+      {
+        /* fitness is copied to the 0'th index of each block */
+        ::memcpy(m_pfSharedMem + 0,
+                 &f_score,
+                 sizeof(float));
+      }
 
-  /**
+      /**
        * Sets the descriptor of an individual.
        * @param un_individual The individual.
        * @param desc The descriptor
        */
-  inline void setDescriptor(std::vector<float> desc)
-  {
-    /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
-    for (int i = 0; i < desc.size(); ++i)
-    {
-      ::memcpy(m_pfSharedMem + (i + 1),
-               &desc[i],
-               sizeof(float));
-    }
-  }
+      inline void setDescriptor(std::vector<float> desc)
+      {
+        /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
+        for (int i = 0; i < desc.size(); ++i)
+        {
+          ::memcpy(m_pfSharedMem + (i + 1),
+                   &desc[i],
+                   sizeof(float));
+        }
+      }
 
-  /**
+      /**
        * Sets the descriptor of an individual.
        * @param un_individual The individual.
        * @param desc The descriptor
        */
-  inline void setBaseFeatures(base_features_t b)
-  {
-
-    /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
-
-    for (int i = 0; i < m_unBasefeatures; ++i)
-    {
-
-      ::memcpy(m_pfSharedMem + (m_unDescriptorSize + i + 1),
-               &b(i, 0),
-               sizeof(float));
-    }
-  }
-
-  inline void setDeath(bool dead)
-  {
-    /* death is copied to the final index of each block */
-    ::memcpy(died + 0,
-             &dead,
-             sizeof(bool));
-  }
-
-protected:
-  /** Descriptor size */
-  size_t m_unDescriptorSize;
-
-  size_t m_unBasefeatures;
-  // /** Population size */
-  // size_t m_unPopSize;
-
-  /** File descriptor for shared memory area */
-  //int m_nSharedMemFD;
-
-  /** Pointer to the shared memory area */
-  float *m_pfSharedMem;
-  bool *died;
-};
-
-
-       /* this class gets the position from the base-features assuming an index */
-        class CSharedMemPosition : public CSharedMem
-        {
-	    public:
-            CSharedMemPosition(size_t descriptor_size, size_t base_feature_size) : CSharedMem(descriptor_size, base_feature_size)
-            {
-            }
-
-		
-            /**
-             * Sets the end-position of an individual.
-             */
-            inline Eigen::Vector2d getPosition()
-            {
-                float *descriptor = &this->m_pfSharedMem[this->m_unDescriptorSize + 1]; // pointer to the descriptor
-                Eigen::Vector2d pos;
-                for (int i =0; i < 2; ++i)
-                {
-                    pos[i] = descriptor[i];
-                }
-                return pos;
-            }
-
-            /**
-             * Sets the end-position of an individual.
-             */
-            inline void setPosition(const Eigen::VectorXd &pos)
-            {
-                for (int i = 0; i < pos.size(); ++i)
-                {
-                    ::memcpy(this->m_pfSharedMem + (this->m_unDescriptorSize + i + 1),
-                             &pos[i],
-                             sizeof(float));
-                }
-            }
-
-        };
-
-/** The shared memory manager */
-static std::vector<CSharedMem *> shared_memory;
-
-template <typename Memory,typename Phen, typename Fit>
-struct _eval_parallel_individuals
-{
-  typedef std::vector<boost::shared_ptr<Phen>> pop_t;
-  pop_t _pop;
-  std::vector<float> bd;
-  /** PID of the master process */
-  pid_t MasterPID;
-
-  /** PIDs of the slave processes */
-  std::vector<pid_t> SlavePIDs;
-
-  ~_eval_parallel_individuals(){};
-
-  _eval_parallel_individuals() : MasterPID(::getpid())
-  {
-  }
-
-  _eval_parallel_individuals(pop_t &pop) : _pop(pop),
-                                           MasterPID(::getpid())
-  {
-    run();
-  }
-  _eval_parallel_individuals(const _eval_parallel_individuals &ev) : _pop(ev._pop),
-                                                                     MasterPID(::getpid())
-  {
-    run();
-  }
-  void run()
-  {
-    allocate_additional_memory(this->_pop.size());
-    create_processes();
-    destroy_additional_memory();
-  }
-  void run(pop_t &pop)
-  {
-    this->_pop = pop;
-    allocate_additional_memory(this->_pop.size());
-    create_processes();
-    destroy_additional_memory();
-  }
-  void allocate_additional_memory(int num_pop)
-  {
-    int to_add = num_pop - num_memory; //need to use integer not size_t, can be negative
-
-    for (int i = 0; i < to_add; ++i)
-    {
-#if META()
-      shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
-#else
-      shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
-#endif
-    }
-    //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
-  }
-
-  void destroy_additional_memory()
-  {
-
-    shared_memory.erase(shared_memory.begin() + num_memory, shared_memory.end());
-    //std::cout<<"erased memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
-  }
-  inline void quit()
-  {
-    //std::cout.Flush();
-    //std::err.Flush();
-    exit(EXIT_SUCCESS);
-  }
-
-  virtual void LaunchSlave(size_t slave_id)
-  {
-
-    //pid_t slave_pid = SlavePIDs[slave_id];
-    /* Install handler for SIGTERM */
-    //::signal(SIGTERM, SlaveHandleSIGTERM);
-
-    // initialise the fitness function and the genotype
-    this->_pop[slave_id]->develop();
-    assert(slave_id < this->_pop.size());
-    // evaluate the individual
-    this->_pop[slave_id]->fit().eval(*this->_pop[slave_id]);
-
-    assert(!std::isnan(this->_pop[slave_id]->fit().value())); // ASSUMES SINGLE OBJECTIVE
-    // write fitness and descriptors to shared memory
-    shared_memory[slave_id]->setFitness(this->_pop[slave_id]->fit().value()); // ASSUME SINGLE OBJECTIVE
-    bd = this->_pop[slave_id]->fit().desc();
-    shared_memory[slave_id]->setDescriptor(bd);
-    shared_memory[slave_id]->setDeath(this->_pop[slave_id]->fit().dead());
-#if META()
-    shared_memory[slave_id]->setBaseFeatures(this->_pop[slave_id]->fit().b());
-#ifdef CHECK_PARALLEL
-    std::cout << " child base descriptor " << this->_pop[slave_id]->fit().b() << std::endl;
-    std::cout << " child base descriptor (shared mem)" << shared_memory[slave_id]->getBaseDescriptor() << std::endl;
-#endif
-#endif
-#ifdef CHECK_PARALLEL
-    std::cout << "child fitness " << slave_id << " " << this->_pop[slave_id]->fit().value() << std::endl;
-    std::cout << "child: descriptor for individual " << slave_id << std::endl;
-
-    for (size_t j = 0; j < this->_pop[slave_id]->fit().desc().size(); ++j)
-    {
-      std::cout << "   " << this->_pop[slave_id]->fit().desc()[j] << std::endl;
-    }
-
-    std::cout << "child: descriptor (sharedmem) for individual " << slave_id << std::endl;
-    std::vector<float> temp = shared_memory[slave_id]->getDescriptor();
-    for (size_t j = 0; j < temp.size(); ++j)
-    {
-      std::cout << "   " << temp[j] << std::endl;
-    }
-    std::cout << "child: death " << this->_pop[slave_id]->fit().dead() << std::endl;
-#endif
-    quit();
-  }
-
-  virtual void write_data()
-  {
-    /* Back in the parent, copy the scores into the population data */
-    for (size_t i = 0; i < this->_pop.size(); ++i)
-    {
-      this->_pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
-#if META()
-      this->_pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
-#endif
-      bd = shared_memory[i]->getDescriptor();
-      this->_pop[i]->fit().set_desc(bd);
-      this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
-
-#if META()
-      Fit::add_to_database(*this->_pop[i]);
-#ifdef CHECK_PARALLEL
-      std::cout << " parent base descriptor " << this->_pop[i]->fit().b() << std::endl;
-#endif
-#endif
-#ifdef CHECK_PARALLEL
-      std::cout << "parent fitness " << i << " " << this->_pop[i]->fit().value() << std::endl;
-      std::cout << "parent: descriptor for individual " << i << std::endl;
-      for (size_t j = 0; j < this->_pop[i]->fit().desc().size(); ++j)
+      inline void setBaseFeatures(base_features_t b)
       {
-        std::cout << "   " << this->_pop[i]->fit().desc()[j] << std::endl;
-      }
-      std::cout << "parent: death " << this->_pop[i]->fit().dead() << std::endl;
-#endif
-    }
-  }
 
-  void wait_and_erase()
-  {
-    // wait for a new process to finish and erase it from the list
-    int *status;
-    pid_t pid = waitpid(-1, status, 0); // -1: any child; status; 0: only children that exit
-    //std::cout<<"waited for pid "<<pid<<std::endl;
-    auto it = std::find(SlavePIDs.begin(), SlavePIDs.end(), pid);
-    SlavePIDs.erase(it); // remove the process from the list
-  }
+        /* descriptor is copied to the 1:m_unDescriptorSize'th index of each block */
 
-  /* create the different child processes */
-  void create_processes()
-  {
-
-    /* Create and run slave processes until all individuals done; but never start more then NUM_CORES processes */
-    size_t i = 0;
-    while (i < this->_pop.size())
-    {
-      //std::cout<<"count "<< i << std::endl;
-
-      if (SlavePIDs.size() < NUM_CORES) // still need more
-      {
-        /* Perform fork */
-        SlavePIDs.push_back(::fork());
-        if (SlavePIDs.back() == 0)
+        for (int i = 0; i < m_unBasefeatures; ++i)
         {
-          /* We're in a slave */
-          this->LaunchSlave(i);
-        }
-        else
-        {
-          ++i; // increment the parent's index
+
+          ::memcpy(m_pfSharedMem + (m_unDescriptorSize + i + 1),
+                   &b(i, 0),
+                   sizeof(float));
         }
       }
-      else
+
+      inline void setDeath(bool dead)
       {
-        wait_and_erase();
+        /* death is copied to the final index of each block */
+        ::memcpy(died + 0,
+                 &dead,
+                 sizeof(bool));
+      }
+
+    protected:
+      /** Descriptor size */
+      size_t m_unDescriptorSize;
+
+      size_t m_unBasefeatures;
+      // /** Population size */
+      // size_t m_unPopSize;
+
+      /** File descriptor for shared memory area */
+      //int m_nSharedMemFD;
+
+      /** Pointer to the shared memory area */
+      float *m_pfSharedMem;
+      bool *died;
+    };
+
+    /* this class gets the position from the base-features assuming an index */
+    class CSharedMemPosition : public CSharedMem
+    {
+    public:
+      double *position;
+      CSharedMemPosition(size_t descriptor_size, size_t base_feature_size)  : CSharedMem(descriptor_size,base_feature_size)
+      {
+        /* Get pointer to shared memory area */
+        // Memory buffer will be readable and writable:
+        int protection = PROT_READ | PROT_WRITE;
+        // The buffer will be shared (meaning other processes can access it), but
+        // anonymous (meaning third-party processes cannot obtain an address for it),
+        // so only this process and its children will be able to use it:
+        int visibility = MAP_ANONYMOUS | MAP_SHARED;
+        
+        position = reinterpret_cast<double *>(::mmap(NULL, 2*sizeof(double), protection, visibility, -1, 0));
+        if (position == MAP_FAILED)
+        {
+          ::perror("shared memory, vector double");
+          exit(1);
+        }
+        
+      }
+
+      /**
+             * Sets the end-position of an individual.
+             */
+      inline Eigen::Vector2d getPosition()
+      {
+        Eigen::Vector2d pos;
+        for (int i = 0; i < 2; ++i)
+        {
+          pos[i] = this->position[i];
+        }
+        return pos;
+      }
+
+      /**
+             * Sets the end-position of an individual.
+             */
+      inline void setPosition(const Eigen::VectorXd &pos)
+      {
+        for (int i = 0; i < 2; ++i)
+        {
+          ::memcpy(this->position + i,
+                   &pos.data()[i],
+                   sizeof(double));
+        }
+      }
+    };
+
+    /** The shared memory manager */
+    static std::vector<CSharedMem *> shared_memory;
+
+    template <typename Memory, typename Phen, typename Fit>
+    struct _eval_parallel_individuals
+    {
+      typedef std::vector<boost::shared_ptr<Phen>> pop_t;
+      pop_t _pop;
+      std::vector<float> bd;
+      /** PID of the master process */
+      pid_t MasterPID;
+
+      /** PIDs of the slave processes */
+      std::vector<pid_t> SlavePIDs;
+
+      ~_eval_parallel_individuals(){};
+
+      _eval_parallel_individuals() : MasterPID(::getpid())
+      {
+      }
+
+      _eval_parallel_individuals(pop_t &pop) : _pop(pop),
+                                               MasterPID(::getpid())
+      {
+        run();
+      }
+      _eval_parallel_individuals(const _eval_parallel_individuals &ev) : _pop(ev._pop),
+                                                                         MasterPID(::getpid())
+      {
+        run();
+      }
+      void run()
+      {
+        allocate_additional_memory(this->_pop.size());
+        create_processes();
+        destroy_additional_memory();
+      }
+      void run(pop_t &pop)
+      {
+        this->_pop = pop;
+        allocate_additional_memory(this->_pop.size());
+        create_processes();
+        destroy_additional_memory();
+      }
+      void allocate_additional_memory(int num_pop)
+      {
+        int to_add = num_pop - num_memory; //need to use integer not size_t, can be negative
+
+        for (int i = 0; i < to_add; ++i)
+        {
+#if META()
+          shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+#else
+          shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
+#endif
+        }
+        //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
+      }
+
+      void destroy_additional_memory()
+      {
+
+        shared_memory.erase(shared_memory.begin() + num_memory, shared_memory.end());
+        //std::cout<<"erased memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
+      }
+      inline void quit()
+      {
+        //std::cout.Flush();
+        //std::err.Flush();
+        exit(EXIT_SUCCESS);
+      }
+
+      virtual void LaunchSlave(size_t slave_id)
+      {
+
+        //pid_t slave_pid = SlavePIDs[slave_id];
+        /* Install handler for SIGTERM */
+        //::signal(SIGTERM, SlaveHandleSIGTERM);
+
+        // initialise the fitness function and the genotype
+        this->_pop[slave_id]->develop();
+        assert(slave_id < this->_pop.size());
+        // evaluate the individual
+        this->_pop[slave_id]->fit().eval(*this->_pop[slave_id]);
+
+        assert(!std::isnan(this->_pop[slave_id]->fit().value())); // ASSUMES SINGLE OBJECTIVE
+        // write fitness and descriptors to shared memory
+        shared_memory[slave_id]->setFitness(this->_pop[slave_id]->fit().value()); // ASSUME SINGLE OBJECTIVE
+        bd = this->_pop[slave_id]->fit().desc();
+        shared_memory[slave_id]->setDescriptor(bd);
+        shared_memory[slave_id]->setDeath(this->_pop[slave_id]->fit().dead());
+#if META()
+        shared_memory[slave_id]->setBaseFeatures(this->_pop[slave_id]->fit().b());
+#ifdef CHECK_PARALLEL
+        std::cout << " child base descriptor " << this->_pop[slave_id]->fit().b() << std::endl;
+        std::cout << " child base descriptor (shared mem)" << shared_memory[slave_id]->getBaseDescriptor() << std::endl;
+#endif
+#endif
+#ifdef CHECK_PARALLEL
+        std::cout << "child fitness " << slave_id << " " << this->_pop[slave_id]->fit().value() << std::endl;
+        std::cout << "child: descriptor for individual " << slave_id << std::endl;
+
+        for (size_t j = 0; j < this->_pop[slave_id]->fit().desc().size(); ++j)
+        {
+          std::cout << "   " << this->_pop[slave_id]->fit().desc()[j] << std::endl;
+        }
+
+        std::cout << "child: descriptor (sharedmem) for individual " << slave_id << std::endl;
+        std::vector<float> temp = shared_memory[slave_id]->getDescriptor();
+        for (size_t j = 0; j < temp.size(); ++j)
+        {
+          std::cout << "   " << temp[j] << std::endl;
+        }
+        std::cout << "child: death " << this->_pop[slave_id]->fit().dead() << std::endl;
+#endif
+        quit();
+      }
+
+      virtual void write_data()
+      {
+        /* Back in the parent, copy the scores into the population data */
+        for (size_t i = 0; i < this->_pop.size(); ++i)
+        {
+          this->_pop[i]->fit().set_fitness(shared_memory[i]->getFitness());
+#if META()
+          this->_pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
+#endif
+          bd = shared_memory[i]->getDescriptor();
+          this->_pop[i]->fit().set_desc(bd);
+          this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
+
+#if META()
+          Fit::add_to_database(*this->_pop[i]);
+#ifdef CHECK_PARALLEL
+          std::cout << " parent base descriptor " << this->_pop[i]->fit().b() << std::endl;
+#endif
+#endif
+#ifdef CHECK_PARALLEL
+          std::cout << "parent fitness " << i << " " << this->_pop[i]->fit().value() << std::endl;
+          std::cout << "parent: descriptor for individual " << i << std::endl;
+          for (size_t j = 0; j < this->_pop[i]->fit().desc().size(); ++j)
+          {
+            std::cout << "   " << this->_pop[i]->fit().desc()[j] << std::endl;
+          }
+          std::cout << "parent: death " << this->_pop[i]->fit().dead() << std::endl;
+#endif
+        }
+      }
+
+      void wait_and_erase()
+      {
+        // wait for a new process to finish and erase it from the list
+        int *status;
+        pid_t pid = waitpid(-1, status, 0); // -1: any child; status; 0: only children that exit
+        //std::cout<<"waited for pid "<<pid<<std::endl;
+        auto it = std::find(SlavePIDs.begin(), SlavePIDs.end(), pid);
+        SlavePIDs.erase(it); // remove the process from the list
+      }
+
+      /* create the different child processes */
+      void create_processes()
+      {
+
+        /* Create and run slave processes until all individuals done; but never start more then NUM_CORES processes */
+        size_t i = 0;
+        while (i < this->_pop.size())
+        {
+          //std::cout<<"count "<< i << std::endl;
+
+          if (SlavePIDs.size() < NUM_CORES) // still need more
+          {
+            /* Perform fork */
+            SlavePIDs.push_back(::fork());
+            if (SlavePIDs.back() == 0)
+            {
+              /* We're in a slave */
+              this->LaunchSlave(i);
+            }
+            else
+            {
+              ++i; // increment the parent's index
+            }
+          }
+          else
+          {
+            wait_and_erase();
+          }
+        }
+        // now wait for all the other child processes to finish
+        while (!SlavePIDs.empty())
+        {
+          wait_and_erase();
+        }; // keep performing waits until an error returns, meaning no more child existing
+
+        write_data(); //write data once finished
+        //std::cout.Flush();
+        //std::err.Flush();
+        //std::cout << "finished all processes "<< std::endl;
+      }
+    };
+
+    // Some computation here
+    //auto t2 = std::chrono::system_clock::now();
+    //std::chrono::duration<double> duration =t2 - t1;
+    //std::cout <<"evaluation time: "<< duration.count() <<'\n';
+    //std::cout.Flush()
+
+    template <typename Memory>
+    void init_shared_mem()
+    {
+      // times 2 because two individuals generated per reproduction
+      num_memory = 2 * BottomParams::pop::init_size; // for the initial population, allocate on the spot
+      shared_memory.clear();
+      for (size_t i = 0; i < num_memory; ++i)
+      {
+#if META()
+        shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+#else
+        shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
+#endif
       }
     }
-    // now wait for all the other child processes to finish
-    while (!SlavePIDs.empty())
-    {
-      wait_and_erase();
-    }; // keep performing waits until an error returns, meaning no more child existing
-
-    write_data(); //write data once finished
-    //std::cout.Flush();
-    //std::err.Flush();
-    //std::cout << "finished all processes "<< std::endl;
-  }
-};
-
-// Some computation here
-//auto t2 = std::chrono::system_clock::now();
-//std::chrono::duration<double> duration =t2 - t1;
-//std::cout <<"evaluation time: "<< duration.count() <<'\n';
-//std::cout.Flush()
-
-template <typename Memory>
-void init_shared_mem()
-{
-  // times 2 because two individuals generated per reproduction
-  num_memory = 2 * BottomParams::pop::init_size; // for the initial population, allocate on the spot
-  shared_memory.clear();
-  for (size_t i = 0; i < num_memory; ++i)
-  {
-#if META()
-    shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
-#else
-    shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
-#endif
-  }
-}
-} // namespace eval
+  } // namespace eval
 } // namespace sferes
 
 #endif
