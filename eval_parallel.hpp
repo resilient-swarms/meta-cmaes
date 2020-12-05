@@ -36,7 +36,7 @@
 #ifndef EVAL_PARALLEL_HPP
 #define EVAL_PARALLEL_HPP
 
-#define CHECK_PARALLEL
+//#define CHECK_PARALLEL
 
 #include <cmath>
 #include <sferes/eval/eval.hpp>
