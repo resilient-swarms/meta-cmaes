@@ -14,7 +14,7 @@
 #include <boost/serialization/vector.hpp> // serialising database vector
 
 #include <boost/serialization/array.hpp>
-
+#include <meta-cmaes/eval_parallel.hpp>
 #include <boost/fusion/container/vector.hpp>
 #include <meta-cmaes/sampled.hpp>
 #include <stdexcept>

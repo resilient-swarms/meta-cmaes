@@ -210,7 +210,7 @@ namespace sferes
        * @param un_individual The individual.
        * @param f_score The score.
        */
-      inline void setFitness(double f_score)
+      inline void setFitness(float f_score)
       {
         /* fitness is copied to the 0'th index of each block */
         ::memcpy(m_pfSharedMem + 0,
