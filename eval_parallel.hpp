@@ -36,6 +36,8 @@
 #ifndef EVAL_PARALLEL_HPP
 #define EVAL_PARALLEL_HPP
 
+#define CHECK_PARALLEL
+
 #include <cmath>
 #include <sferes/eval/eval.hpp>
 #include <vector>
@@ -151,6 +153,7 @@ namespace sferes
       virtual ~CSharedMem()
       {
         munmap(m_pfSharedMem, get_block_size() * sizeof(float));
+	munmap(died, sizeof(float));
       }
 
       /* get the memory block size */
@@ -297,7 +300,15 @@ namespace sferes
         }
         
       }
-
+            /**
+       * Class destructor.
+       */
+      virtual ~CSharedMemPosition()
+      {
+        munmap(m_pfSharedMem, get_block_size() * sizeof(float));
+	munmap(died, sizeof(float));
+	munmap(position, 2*sizeof(double));
+      }
       /**
              * Sets the end-position of an individual.
              */
