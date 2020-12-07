@@ -6,11 +6,12 @@
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/params.hpp>
 
-template <typename B_Pars, typename C_Pars> //bottom params
+template <typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct ParameterControl
 {
     float bottom_epochs_factor = 1.0f;
     float percentage_evaluated_factor = 1.0f;
+    MetaPhen phenotype;
     ParameterControl(float bf, float pf)
     {
         this->bottom_epochs_factor = bf;
@@ -36,13 +37,14 @@ struct ParameterControl
     }
 };
 
-template <typename B_Pars, typename C_Pars> //bottom params
-struct EpochAnnealing : public ParameterControl<B_Pars, C_Pars>
+template <typename MetaPhen,typename B_Pars, typename C_Pars> //bottom params
+struct EpochAnnealing : public ParameterControl<MetaPhen, B_Pars, C_Pars>
 {
     float min_bottom_epochs = 1.0f;
-    EpochAnnealing(float bf, float pf) : ParameterControl<B_Pars, C_Pars>(bf, pf)
+    EpochAnnealing(float bf, float pf) : ParameterControl<MetaPhen,B_Pars, C_Pars>(bf, pf)
     {
     }
+    
     virtual int get_bottom_epochs()
     {
         float ratio = (float)(C_Pars::pop::max_evals - global::nb_evals) / (float)C_Pars::pop::max_evals;
@@ -52,81 +54,101 @@ struct EpochAnnealing : public ParameterControl<B_Pars, C_Pars>
     }
 };
 
+template <typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
+struct EpochEndogenous : public ParameterControl<MetaPhen,B_Pars, C_Pars>
+{
+    float min_bottom_epochs = 1.0f;
+    EpochEndogenous(float bf, float pf) : ParameterControl<MetaPhen,B_Pars, C_Pars>(bf, pf)
+    {
+    }
 
-template <typename B_Params, typename C_Params>
-ParameterControl<B_Params, C_Params> *init_parameter_control(std::string choice)
+    virtual int get_bottom_epochs(const MetaPhen &phen)
+    {
+        size_t last = NUM_GENES - 1;
+        float last_gene = phen.gen().data()[last]; // in [0,1]
+        int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * B_Pars::bottom_epochs - this->min_bottom_epochs)); //
+        return bot_epochs;
+    }
+};
+
+template <typename MetaPhen, typename B_Params, typename C_Params>
+ParameterControl<MetaPhen,B_Params, C_Params> *init_parameter_control(std::string choice)
 {
     if (choice == "b1p1")
     {
-        return new ParameterControl<B_Params, C_Params>(1.f, 1.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(1.f, 1.f);
     }
     else if (choice == "b1p2")
     {
-        return new ParameterControl<B_Params, C_Params>(1.f, 2.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(1.f, 2.f);
     }
     else if (choice == "b1p5")
     {
-        return new ParameterControl<B_Params, C_Params>(1.f, 5.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(1.f, 5.f);
     }
     else if (choice == "b1p10")
     {
-        return new ParameterControl<B_Params, C_Params>(1.f, 10.f); //100%
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(1.f, 10.f); //100%
     }
     else if (choice == "b2p1")
     {
-        return new ParameterControl<B_Params, C_Params>(2.f, 1.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(2.f, 1.f);
     }
     else if (choice == "b2p2")
     {
-        return new ParameterControl<B_Params, C_Params>(2.f, 2.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(2.f, 2.f);
     }
     else if (choice == "b2p5")
     {
-        return new ParameterControl<B_Params, C_Params>(2.f, 5.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(2.f, 5.f);
     }
     else if (choice == "b2p10")
     {
-        return new ParameterControl<B_Params, C_Params>(2.f, 10.f); //100%
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(2.f, 10.f); //100%
     }
     else if (choice == "b5p1")
     {
-        return new ParameterControl<B_Params, C_Params>(5.f, 1.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(5.f, 1.f);
     }
     else if (choice == "b5p2")
     {
-        return new ParameterControl<B_Params, C_Params>(5.f, 2.f);
+        return new ParameterControl< MetaPhen,B_Params, C_Params>(5.f, 2.f);
     }
     else if (choice == "b5p5")
     {
-        return new ParameterControl<B_Params, C_Params>(5.f, 5.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(5.f, 5.f);
     }
     else if (choice == "b5p10")
     {
-        return new ParameterControl<B_Params, C_Params>(5.f, 10.f); //100%
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(5.f, 10.f); //100%
     }
     else if (choice == "b10p1")
     {
-        return new ParameterControl<B_Params, C_Params>(10.f, 1.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(10.f, 1.f);
     }
     else if (choice == "b10p2")
     {
-        return new ParameterControl<B_Params, C_Params>(10.f, 2.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(10.f, 2.f);
     }
     else if (choice == "b10p5")
     {
-        return new ParameterControl<B_Params, C_Params>(10.f, 5.f);
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(10.f, 5.f);
     }
     else if (choice == "b10p10")
     {
-        return new ParameterControl<B_Params, C_Params>(10.f, 10.f); //100%
+        return new ParameterControl<MetaPhen,B_Params, C_Params>(10.f, 10.f); //100%
     }
     else if (choice == "epochannealing_b2p1")
     {
-        return new EpochAnnealing<B_Params, C_Params>(2.f, 1.f);
+        return new EpochAnnealing<MetaPhen,B_Params, C_Params>(2.f, 1.f);
     }
     else if (choice == "epochannealing_b10p1")
     {
-        return new EpochAnnealing<B_Params, C_Params>(10.f, 1.f);
+        return new EpochAnnealing<MetaPhen,B_Params, C_Params>(10.f, 1.f);
+    }
+    else if (choice == "epochendogeneous_b10p1")
+    {
+        return new EpochEndogenous<MetaPhen,B_Params, C_Params>(10.f, 1.f);
     }
     else
     {
@@ -134,6 +156,6 @@ ParameterControl<B_Params, C_Params> *init_parameter_control(std::string choice)
     }
 }
 
-ParameterControl<BottomParams, CMAESParams> *param_ctrl;
+
 
 #endif

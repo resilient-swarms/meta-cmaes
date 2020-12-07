@@ -11,7 +11,6 @@
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/eval_parallel.hpp>
 #include <meta-cmaes/statfuns.hpp>
-#include <meta-cmaes/parameter_control.hpp>
 #include <meta-cmaes/feature_map.hpp>
 
 // now that FitBottom is defined, define the rest of the bottom level
@@ -280,10 +279,9 @@ public:
     }
     return false;
   }
-  std::vector<bottom_indiv_t> sample_individuals()
+  std::vector<bottom_indiv_t> sample_individuals(float percent)
   {
-    float percent = param_ctrl->get_percentage_evaluated();
-    ;
+    
     int num_individuals = std::max(1, (int)std::round(percent * _non_empty_indices.size()));
     std::cout << "will pick " << num_individuals << "out of " << _non_empty_indices.size() << "individuals" << std::endl;
     return _pick(_non_empty_indices.size(), num_individuals);
@@ -451,5 +449,8 @@ public:
     return it->second;
   }
 };
+
+
+
 
 #endif

@@ -153,7 +153,6 @@ namespace global
     typedef SampledDataEntry data_entry_t;
     typedef CircularBuffer<BottomParams::MAX_DATABASE_SIZE, data_entry_t> database_t;
     database_t database;
-
 #endif
 } // namespace global
 

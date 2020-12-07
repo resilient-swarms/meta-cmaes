@@ -6,8 +6,8 @@
 #include <vector>
 #include <meta-cmaes/feature_vector_typedefs.hpp>
 #include <meta-cmaes/bottom_typedefs.hpp>
-#include <meta-cmaes/mapelites_phenotype.hpp>
 #include <meta-cmaes/eval_parallel.hpp>
+
 
 namespace sferes
 {
@@ -18,9 +18,9 @@ struct _eval_serial_meta
 {
       size_t nb_evals;
       float value;
-      _eval_serial_meta(Phen &meta_i)
+      _eval_serial_meta(Phen &meta_i, float percent)
       {
-            std::vector<boost::shared_ptr<base_phen_t>> pop = meta_i.sample_individuals();
+            std::vector<boost::shared_ptr<base_phen_t>> pop = meta_i.sample_individuals(percent);
             value = 0.0f;
             for (size_t i = 0; i < pop.size(); ++i)
             {
@@ -39,10 +39,9 @@ struct _eval_parallel_meta : public _eval_parallel_individuals<CSharedMem,base_p
       float value;
       size_t nb_evals;
       Phen meta_indiv;
-      _eval_parallel_meta(Phen &meta_i)
+      _eval_parallel_meta(Phen &meta_i, float percent)
       { //now join the bottom-level fitnesses
-            meta_indiv = meta_i;
-            this->_pop = meta_i.sample_individuals();
+            this->_pop = meta_i.sample_individuals(percent);
             this->run();
       }
 

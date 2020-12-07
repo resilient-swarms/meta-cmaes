@@ -6,6 +6,7 @@
 #define LINEAR 0
 #define SELECTION 1
 #define NONLINEAR 2
+
 //#define FEATUREMAP NONLINEAR
 
 #define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
@@ -21,7 +22,7 @@ typedef Eigen::Matrix<size_t, NUM_BOTTOM_FEATURES, 1, Eigen::DontAlign, NUM_BOTT
 #if FEATUREMAP == NONLINEAR
 
 const int NUM_HIDDEN = 10; //number of hidden units
-const int NUM_GENES = NUM_BASE_FEATURES * NUM_HIDDEN + NUM_HIDDEN * NUM_BOTTOM_FEATURES + 2;
+const int NUM_GENES = NUM_BASE_FEATURES * NUM_HIDDEN + NUM_HIDDEN * NUM_BOTTOM_FEATURES + 2 + ADDITIONAL;
 /* weights to construct bottom-level map features from base_features */
 typedef Eigen::Matrix<float, NUM_HIDDEN, NUM_BASE_FEATURES, Eigen::DontAlign, NUM_HIDDEN, NUM_BASE_FEATURES> weight1_t;
 typedef Eigen::Matrix<float, NUM_BOTTOM_FEATURES, NUM_HIDDEN, Eigen::DontAlign, NUM_BOTTOM_FEATURES, NUM_HIDDEN> weight2_t;

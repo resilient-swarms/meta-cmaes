@@ -25,6 +25,8 @@
 
 #include <meta-cmaes/stat_maps.hpp>
 #include <meta-cmaes/stat_pop.hpp>
+#include <meta-cmaes/eval_total.hpp>
+
 //#include <sferes/ea/cmaes_interface.h> // to access parameter initialisation functions
 //#include <meta-cmaes/params.hpp>
 
@@ -44,7 +46,7 @@ public:
         SFERES_EA_FRIEND(MetaCmaes);
         typedef boost::shared_ptr<phen_t> indiv_t;
         typedef typename std::vector<indiv_t> pop_t;
-
+        
         MetaCmaes()
         {
         }
@@ -117,8 +119,10 @@ public:
 } // namespace sferes
 
 
+
 typedef boost::fusion::vector<sferes::stat::Stat_Pop<phen_t, CMAESParams>, sferes::stat::Stat_Maps<phen_t, CMAESParams>> stat_t;
 
 typedef modif::Dummy<> modifier_t;
+typedef sferes::eval::EvalTotal<CMAESParams> eval_t;
 typedef ea::MetaCmaes<phen_t, eval_t, stat_t, modifier_t, CMAESParams> ea_t;
 #endif
