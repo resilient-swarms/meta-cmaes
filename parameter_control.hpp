@@ -62,7 +62,7 @@ struct EpochEndogenous : public ParameterControl<MetaPhen,B_Pars, C_Pars>
     {
     }
 
-    virtual int get_bottom_epochs(const MetaPhen &phen)
+    virtual int get_bottom_epochs()
     {
         size_t last = NUM_GENES - 1;
         float last_gene = phen.gen().data()[last]; // in [0,1]
