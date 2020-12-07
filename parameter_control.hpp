@@ -65,7 +65,7 @@ struct EpochEndogenous : public ParameterControl<MetaPhen,B_Pars, C_Pars>
     virtual int get_bottom_epochs()
     {
         size_t last = NUM_GENES - 1;
-        float last_gene = phen.gen().data()[last]; // in [0,1]
+        float last_gene = phenotype.gen().data()[last]; // in [0,1]
         int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * B_Pars::bottom_epochs - this->min_bottom_epochs)); //
         return bot_epochs;
     }
