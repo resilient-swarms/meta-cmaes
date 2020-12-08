@@ -32,14 +32,36 @@ struct NonLinearFeatureMap
     bottom_features_t out(const base_features_t &b)
     {
 
-        hidden_t h = (W.W1 * b + hidden_t::Constant(W.B1)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoid));
-        bottom_features_t f = (W.W2 * h + bottom_features_t::Constant(W.B2)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoid));
+        hidden_t h = (W.W1 * b + hidden_t::Constant(W.B1)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoidInner));
+        bottom_features_t f = (W.W2 * h + bottom_features_t::Constant(W.B2)).unaryExpr(std::ptr_fun(NonLinearFeatureMap::sigmoidOuter));
         return f;
     }
 
-    static float sigmoid(float x)
+    static float sigmoidInner(float x)
     {
-        return 1. / (1. + std::exp(-x));
+	// from range [0,NUM_BASE_FEATURES + 1] to [-5,5]
+        //std::cout << "raw " << x << std::endl;
+        return normSigmoid(x,(float)(NUM_BASE_FEATURES+1.0));
+    }
+
+    static float sigmoidOuter(float x)
+    {
+	// from range [0,NUM_HIDDEN + 1] to [-5,5]
+        //std::cout << "raw " << x << std::endl;
+        return normSigmoid(x,(float)(NUM_HIDDEN+1.0));
+    }
+    static float normSigmoid(float x, float norm)
+    {
+
+	x = -10.0f + 30.0f * x/norm;//
+	if(x > 20.0f || x < -10.0f)
+	{
+	    std::cout << "WARNING: normalisation not in [-10,20]; if performing random_pop(), OK; otherwise you have a problem" << std::endl;
+	}
+        //std::cout << "normalised " << x << std::endl;
+        x = 1.f / (1.f + std::exp(-x));
+        //std::cout << "transformed " << x << std::endl;
+	return x;
     }
 
     void genotype_to_mat(const std::vector<float> &weights)
@@ -203,6 +225,7 @@ typedef FeatureSelectionMap feature_map_t;
 struct LinearFeatureMap
 {
     weight_t W;
+    static constexpr float min = 0.20f, max =0.800f;
     LinearFeatureMap() {}
     LinearFeatureMap(const std::vector<float> &weights)
     {
@@ -234,10 +257,16 @@ struct LinearFeatureMap
         fm.W = W;
         return fm;
     }
+    static float normalise(float x)
+    {
+	x =  (x - min)/(max - min);// from [0.125,0.875] to [0,1]
+	return std::min(std::max(x, 0.0f), 1.0f);
+    }
+    
     bottom_features_t out(const base_features_t &b)
     {
         bottom_features_t f;
-        return W * b;
+        return (W * b).unaryExpr(std::ptr_fun(LinearFeatureMap::normalise));
     }
 
     void genotype_to_mat(const std::vector<float> &weights)
