@@ -200,13 +200,13 @@ ParameterControl<MetaPhen, B_Params, C_Params> *init_parameter_control(std::stri
     {
         return new MutationAnnealing<MetaPhen, B_Params, C_Params>(1.f, 1.f,2.f);
     }
-    else if (choice == "mutationannealing_b1p1m10")
+    else if (choice == "mutationannealing_b1p1m8")
     {
-        return new MutationAnnealing<MetaPhen, B_Params, C_Params>(1.f, 1.f,10.f);
+        return new MutationAnnealing<MetaPhen, B_Params, C_Params>(1.f, 1.f,8.f);
     }
-    else if (choice == "mutationendogeneous_b1p1m10")
+    else if (choice == "mutationendogeneous_b1p1m8")
     {
-        return new MutationEndogenous<MetaPhen, B_Params, C_Params>(1.f, 1.f,10.f);
+        return new MutationEndogenous<MetaPhen, B_Params, C_Params>(1.f, 1.f,8.f);
     }
     else
     {
