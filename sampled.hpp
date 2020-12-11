@@ -50,7 +50,6 @@
 #include <sferes/dbg/dbg.hpp>
 #include <iostream>
 
-
 namespace sferes {
   namespace gen {
     template<int Size, typename Params, typename Exact = stc::Itself>
@@ -63,24 +62,7 @@ namespace sferes {
       }
 
       //@{
-      void mutate() {
-        if (Params::sampled::ordered) {
-          for (size_t i = 0; i < _data.size(); ++i)
-            if (misc::rand<float>() < Params::sampled::mutation_rate) {
-              if (misc::flip_coin())
-                _data[i] = std::max(0, (int)_data[i] - 1);
-              else
-                _data[i] = std::min((int)Params::sampled::values_size() - 1,
-                                    (int)_data[i] + 1);
-            }
-        } else {
-          BOOST_FOREACH(size_t & v, _data)
-          if (misc::rand<float>() < Params::sampled::mutation_rate)
-            v = misc::rand<size_t>(0, Params::sampled::values_size());
-          _check_invariant();
-        }
-        _check_invariant();
-      }
+      void mutate();
 
       // 1-point cross-over
       void cross(const Sampled& o, Sampled& c1, Sampled& c2) {
