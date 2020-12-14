@@ -93,7 +93,9 @@ namespace sferes
           this->_pop[i]->develop(); // modified braces here: no need to develop the genotype multiple times
         }
         // eval
+#if META()
         sferes::eval::eval_stats.set_stats<Phen>(this->_pop);
+#endif
         this->_eval_pop(this->_pop, 0, this->_pop.size());
         this->apply_modifier();
         for (size_t i = 0; i < this->_pop.size(); ++i)
