@@ -448,6 +448,17 @@ public:
   {
     return it->second;
   }
+
+        // squared Euclidean distance
+      float dist(const boost::shared_ptr<MapElitesPhenotype<Phen>>& params) const {
+        assert(params->size() == this->size());
+        float d = 0.0f;
+        for (size_t i = 0; i < this->_params.size(); ++i) {
+          float x = this->_params[i] - params->_params[i];
+          d += x * x;
+        }
+        return d;
+      }
 };
 
 

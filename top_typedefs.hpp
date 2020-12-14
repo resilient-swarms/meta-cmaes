@@ -18,6 +18,4 @@ typedef sferes::fit::FitTop<CMAESParams>  fit_t;
 typedef sferes::phen::Parameters<gen_t, fit_t, CMAESParams> meta_phen_t;
 typedef MapElitesPhenotype<meta_phen_t> phen_t; 
 
-ParameterControl<phen_t,BottomParams,CMAESParams> *param_ctrl;
-
 #endif 
