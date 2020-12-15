@@ -81,7 +81,7 @@ namespace sferes
                         for (size_t i = begin; i < end; ++i)
                         {
                               param_ctrl->phenotype = *pop[i];
-                              param_ctrl->eval_stats = eval_stats;
+                              param_ctrl->set_stats(eval_stats);
                               size_t bot_epochs = param_ctrl->get_bottom_epochs();
 #ifdef PRINTING
                               std::cout << "running the map for " + std::to_string(bot_epochs) + " epochs" << std::endl;

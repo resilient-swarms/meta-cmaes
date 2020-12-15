@@ -313,12 +313,12 @@ public:
         parameter_types_[name] = type;
         parameter_ranges_[name] = std::pair<float, float>{min, max};
     }
-    float getNextValue(std::string name)
+    float getNextValue(const std::string& name, float normal)
     {
         if (!initialized_)
             throw std::runtime_error("Attempting to get parameter value before initializing.");
         if (std::find(parameters_.begin(), parameters_.end(), name) == parameters_.end())
-            throw new std::runtime_error("Attempting to get value of nonexistent parameter with name '" + name + "'. Add a parameter using 'addParameter()' before initialization.");
+            return normal;
         return implementNextValue(name);
     }
     void updateObservables(const std::vector<float> &obs)
