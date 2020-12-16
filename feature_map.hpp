@@ -16,15 +16,16 @@ struct NonLinearFeatureMap
     {
         NonLinearFeatureMap fm = NonLinearFeatureMap();
         weight1_t W1 = weight1_t::Random();       //random numbers between (-1,1)
-        W1 = (W1 + weight1_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
+        //W1 = (W1 + weight1_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W.W1 = W1;
 
         weight2_t W2 = weight2_t::Random();       //random numbers between (-1,1)
-        W2 = (W2 + weight2_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
+        //W2 = (W2 + weight2_t::Constant(1.)) / 2.; // add 1 to the matrix to have values between 0 and 2; divide by 2 --> [0,1]
         fm.W.W2 = W2;
 
         boost::random::mt19937 gen;
-        boost::random::uniform_real_distribution<> dist(0, 1);
+        //boost::random::uniform_real_distribution<> dist(0, 1);
+	boost::random::uniform_real_distribution<> dist(-1, 1);
         fm.W.B1 = dist(gen);
         fm.W.B2 = dist(gen);
         return fm;
@@ -39,24 +40,29 @@ struct NonLinearFeatureMap
 
     static float sigmoidInner(float x)
     {
-	// from range [0,NUM_BASE_FEATURES + 1] to [-5,5]
+	// from range [0,NUM_BASE_FEATURES + 1] to [-20,20]
         //std::cout << "raw " << x << std::endl;
         return normSigmoid(x,(float)(NUM_BASE_FEATURES+1.0));
     }
 
     static float sigmoidOuter(float x)
     {
-	// from range [0,NUM_HIDDEN + 1] to [-5,5]
+	// from range [0,NUM_HIDDEN + 1] to [-20,20]
         //std::cout << "raw " << x << std::endl;
         return normSigmoid(x,(float)(NUM_HIDDEN+1.0));
     }
     static float normSigmoid(float x, float norm)
     {
 
-	x = -10.0f + 30.0f * x/norm;//
-	if(x > 20.0f || x < -10.0f)
+	//x = -10.0f + 30.0f * x/norm;
+	//if(x > 20.0f || x < -10.0f)
+	//{
+	//    std::cout << "WARNING: normalisation not in [-10,20]; if performing random_pop(), OK; otherwise you have a problem" << std::endl;
+	//}
+	x = 30.0f * x/norm;// [-30,30]
+	if(x > 30.0f || x < -30.0f)
 	{
-	    std::cout << "WARNING: normalisation not in [-10,20]; if performing random_pop(), OK; otherwise you have a problem" << std::endl;
+	    std::cout << "WARNING: normalisation not in [-30,30]; if performing random_pop(), OK; otherwise you have a problem" << std::endl;
 	}
         //std::cout << "normalised " << x << std::endl;
         x = 1.f / (1.f + std::exp(-x));

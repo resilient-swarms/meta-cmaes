@@ -75,7 +75,7 @@ namespace sferes
                         assert(pop.size());
                         assert(begin < pop.size());
                         assert(end <= pop.size());
-			eval_stats.set_stats<MetaIndiv>(pop);
+			      eval_stats.set_stats<MetaIndiv>(pop);
                         param_ctrl->set_stats(eval_stats);//evaluate the statistics of the meta-population
                         for (size_t i = begin; i < end; ++i)
                         {

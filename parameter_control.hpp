@@ -15,6 +15,7 @@ struct ParameterControl
     float mutation_rate_factor = 1.0f;
     MetaPhen phenotype;
     EvalStats eval_stats;
+    size_t evaluations = 0;
     ParameterControl(float bf, float pf, float mf = 1.0f)
     {
         this->bottom_epochs_factor = bf;
@@ -44,7 +45,11 @@ struct ParameterControl
     virtual float get_mutation_rate()
     {
         float mutation_rate = this->mutation_rate_factor * B_Pars::sampled::mutation_rate;
-        std::cout << "mutation rate = " << mutation_rate << std::endl;
+        if(global::nb_evals > this->evaluations)
+        {
+            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        }
+        this->evaluations = global::nb_evals;
         return mutation_rate;
     }
 
@@ -101,7 +106,11 @@ struct MutationAnnealing : public ParameterControl<EvalStats, MetaPhen, B_Pars, 
     {
         float ratio = (float)(C_Pars::pop::max_evals - global::nb_evals) / (float)C_Pars::pop::max_evals;
         float mutation_rate = this->min_mutation_rate + ratio * (this->mutation_rate_factor * B_Pars::sampled::mutation_rate - this->min_mutation_rate); //
-        std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        if(global::nb_evals > this->evaluations)
+        {
+            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        }
+        this->evaluations = global::nb_evals;
         return mutation_rate;
     }
 };
@@ -119,7 +128,11 @@ struct MutationEndogenous : public ParameterControl<EvalStats, MetaPhen, B_Pars,
         size_t last = NUM_GENES - 1;
         float last_gene = this->phenotype.gen().data()[last];                                                                                                // in [0,1]
         float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * B_Pars::sampled::mutation_rate - this->min_mutation_rate); //
-        std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        if(global::nb_evals > this->evaluations)
+        {
+            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        }
+        this->evaluations = global::nb_evals;
         return mutation_rate;
     }
 };
@@ -127,7 +140,7 @@ template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Par
 struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
     float f_last;
-    size_t evaluations = 0, stagnation = 0;
+    size_t stagnation = 0;
     size_t num_params;
     RLController controller;
     float mutation_rate, bottom_epochs;
@@ -161,7 +174,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
     }
     virtual float get_mutation_rate()
     {
-        std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
+        //std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         return mutation_rate;
     }
 
@@ -192,7 +205,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         {
             ratio = f_last / cf;
         }
-        float rwrd = std::min(reward_max, scale * (ratio - 1) / (global::nb_evals - evaluations));
+        float rwrd = std::min(reward_max, scale * (ratio - 1) / (global::nb_evals - this->evaluations));
         //	System.out.println(rwrd);
         if (rwrd < 0)
             rwrd = 0;
@@ -217,6 +230,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 
         float normal_mr = ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>::get_mutation_rate();
         mutation_rate = controller.getNextValue("mutation_rate", normal_mr);
+	    std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         //set_action(obs);//done directly in get_mutation_rate and get_bottom_epochs
         // Update stagnation count
         if (cf > f_last)
@@ -231,7 +245,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         // Update the last current best fitness
         f_last = this->eval_stats.best_metafitness;
         // Update evaluations
-        evaluations = global::nb_evals;
+        this->evaluations = global::nb_evals;
     }
 };
 template <typename EvalStats, typename MetaPhen, typename B_Params, typename C_Params>

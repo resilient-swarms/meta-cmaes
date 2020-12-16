@@ -63,8 +63,13 @@ namespace sferes
     public:
       Cmaes()
       {
-        _ar_funvals = cmaes_init(&global::evo, dim, NULL, NULL, 0, Params::pop::size, NULL); // modified here: use of custom population size
-        _lambda = cmaes_Get(&global::evo, "lambda");                                         // default lambda (pop size)
+        double mid = ((double)Params::parameters::max + (double)Params::parameters::min) / 2.0;
+        double sd = ((double)Params::parameters::max - (double)Params::parameters::min) / 3.0;
+        std::cout << "will start from x=" << mid << " and sd=" << sd << std::endl;
+        std::vector<double> start(dim, mid);
+        std::vector<double> sigma(dim, sd);
+        _ar_funvals = cmaes_init(&global::evo, dim, start.data(), sigma.data(), 0, Params::pop::size, NULL); // modified here: use of custom population size
+        _lambda = cmaes_Get(&global::evo, "lambda");                                                         // default lambda (pop size)
       }
       ~Cmaes()
       {
@@ -87,7 +92,7 @@ namespace sferes
         {
           for (size_t j = 0; j < this->_pop[i]->size(); ++j)
           {
-            _cmaes_pop[i][j] = std::max(0.0, std::min(1.0, _cmaes_pop[i][j])); // modified: truncate to [0,1]
+            _cmaes_pop[i][j] = std::max((double) Params::parameters::min, std::min((double) Params::parameters::max, _cmaes_pop[i][j])); // modified: truncate to parameter range
             this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
           }
           this->_pop[i]->develop(); // modified braces here: no need to develop the genotype multiple times
@@ -103,10 +108,9 @@ namespace sferes
         //
         cmaes_UpdateDistribution(&global::evo, _ar_funvals);
 
-        if(global::nb_evals > Params::pop::max_evals )
+        if (global::nb_evals > Params::pop::max_evals)
         {
-          this->stop();// interrupt the ea
-
+          this->stop(); // interrupt the ea
         }
       }
 

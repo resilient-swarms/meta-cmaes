@@ -116,10 +116,13 @@ struct CMAESParams
         SFERES_CONST int max_evals = 10000000;// nb_gen*(size*2) for comparability with control
     };
 
-    // parameter limits between 1.0 and 2.0  ( avoids negative weights ! )
     struct parameters
     {
+#if FEATUREMAP == NONLINEAR
+	SFERES_CONST float min = -1.0f;
+#else
         SFERES_CONST float min = 0.0f;
+#endif
         SFERES_CONST float max = 1.0f;
     };
 };
