@@ -6,6 +6,9 @@
 #include <meta-cmaes/global.hpp>
 #include <meta-cmaes/params.hpp>
 #include <meta-cmaes/parameter_controller.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/base_object.hpp>
 
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct ParameterControl
@@ -16,12 +19,16 @@ struct ParameterControl
     MetaPhen phenotype;
     EvalStats eval_stats;
     size_t evaluations = 0;
+    ParameterControl()
+    {
+    }
     ParameterControl(float bf, float pf, float mf = 1.0f)
     {
         this->bottom_epochs_factor = bf;
         this->percentage_evaluated_factor = pf;
         this->mutation_rate_factor = mf;
     }
+
     /* update the parameter control algorithm */
     virtual void update()
     {
@@ -45,7 +52,7 @@ struct ParameterControl
     virtual float get_mutation_rate()
     {
         float mutation_rate = this->mutation_rate_factor * B_Pars::sampled::mutation_rate;
-        if(global::nb_evals > this->evaluations)
+        if (global::nb_evals > this->evaluations)
         {
             std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         }
@@ -57,11 +64,24 @@ struct ParameterControl
     {
         this->eval_stats = eval_stats;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // reset the data-base
+        // ar &BOOST_SERIALIZATION_NVP(eval_stats);// don't care as these stats are only used one time (before saving)
+        // phenotype similarly
+        ar &BOOST_SERIALIZATION_NVP(bottom_epochs_factor);
+        ar &BOOST_SERIALIZATION_NVP(percentage_evaluated_factor);
+        ar &BOOST_SERIALIZATION_NVP(mutation_rate_factor);
+        ar &BOOST_SERIALIZATION_NVP(evaluations);
+    }
 };
 
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct EpochAnnealing : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
+    friend class boost::serialization::access;
     float min_bottom_epochs = 1.0f;
     EpochAnnealing(float bf, float pf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf)
     {
@@ -74,11 +94,20 @@ struct EpochAnnealing : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_P
         std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         return bot_epochs;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &boost::serialization::base_object < ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>>(*this);
+        ar &BOOST_SERIALIZATION_NVP(min_bottom_epochs);
+    }
 };
 
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct EpochEndogenous : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
+    friend class boost::serialization::access;
     float min_bottom_epochs = 1.0f;
     EpochEndogenous(float bf, float pf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf)
     {
@@ -92,11 +121,20 @@ struct EpochEndogenous : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_
         std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         return bot_epochs;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &boost::serialization::base_object < ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>>(*this);
+        ar &BOOST_SERIALIZATION_NVP(min_bottom_epochs);
+    }
 };
 
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct MutationAnnealing : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
+    friend class boost::serialization::access;
     float min_mutation_rate = 0.001f;
     MutationAnnealing(float bf, float pf, float mf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf, mf)
     {
@@ -106,18 +144,27 @@ struct MutationAnnealing : public ParameterControl<EvalStats, MetaPhen, B_Pars, 
     {
         float ratio = (float)(C_Pars::pop::max_evals - global::nb_evals) / (float)C_Pars::pop::max_evals;
         float mutation_rate = this->min_mutation_rate + ratio * (this->mutation_rate_factor * B_Pars::sampled::mutation_rate - this->min_mutation_rate); //
-        if(global::nb_evals > this->evaluations)
+        if (global::nb_evals > this->evaluations)
         {
             std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &boost::serialization::base_object <ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>>(*this);
+        ar &BOOST_SERIALIZATION_NVP(min_mutation_rate);
+    }
 };
 
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct MutationEndogenous : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
+    friend class boost::serialization::access;
     float min_mutation_rate = 0.001f;
     MutationEndogenous(float bf, float pf, float mf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf, mf)
     {
@@ -128,27 +175,36 @@ struct MutationEndogenous : public ParameterControl<EvalStats, MetaPhen, B_Pars,
         size_t last = NUM_GENES - 1;
         float last_gene = this->phenotype.gen().data()[last];                                                                                                // in [0,1]
         float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * B_Pars::sampled::mutation_rate - this->min_mutation_rate); //
-        if(global::nb_evals > this->evaluations)
+        if (global::nb_evals > this->evaluations)
         {
             std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
     }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &boost::serialization::base_object <ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>>(*this);
+        ar &BOOST_SERIALIZATION_NVP(min_mutation_rate);
+    }
 };
 template <typename EvalStats, typename MetaPhen, typename B_Pars, typename C_Pars> //bottom params
 struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 {
+    friend class boost::serialization::access;
     float f_last;
     size_t stagnation = 0;
     size_t num_params;
     RLController controller;
     float mutation_rate, bottom_epochs;
-    float scale; //scale accounting for average number of bottom-level evaluations
-    const float reward_max = 10.0f;// beyond 10-fold improvement is not meaningful
+    float scale;                    //scale accounting for average number of bottom-level evaluations
+    const float reward_max = 10.0f; // beyond 10-fold improvement is not meaningful
     RL(long seed, std::string &parameter, float bf, float pf, float mf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf, mf)
     {
-        scale = C_Pars::pop::size * (B_Pars::bottom_epochs * 2 * B_Pars::pop::size + C_Pars::percentage_evaluated*4096.0f ) ;
+        scale = C_Pars::pop::size * (B_Pars::bottom_epochs * 2 * B_Pars::pop::size + C_Pars::percentage_evaluated * 4096.0f);
         controller = RLController();
         if (parameter == "mutation_rate")
         {
@@ -217,7 +273,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         obs[4] = this->eval_stats.metagenotype_diversity;
         obs[5] = stagnation;
         obs[6] = obs[0];
-        std::cout << "obs " << std::endl; 
+        std::cout << "obs " << std::endl;
         for (size_t i = 0; i < obs.size(); ++i)
         {
             std::cout << obs[i] << ", ";
@@ -230,8 +286,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
 
         float normal_mr = ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>::get_mutation_rate();
         mutation_rate = controller.getNextValue("mutation_rate", normal_mr);
-	    std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
-        //set_action(obs);//done directly in get_mutation_rate and get_bottom_epochs
+        std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << C_Pars::pop::max_evals << std::endl;
         // Update stagnation count
         if (cf > f_last)
         {
@@ -246,6 +301,21 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         f_last = this->eval_stats.best_metafitness;
         // Update evaluations
         this->evaluations = global::nb_evals;
+    }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &boost::serialization::base_object <ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>>(*this);
+        ar &BOOST_SERIALIZATION_NVP(f_last);
+        ar &BOOST_SERIALIZATION_NVP(stagnation);
+        ar &BOOST_SERIALIZATION_NVP(num_params);
+        ar &BOOST_SERIALIZATION_NVP(controller);
+        ar &BOOST_SERIALIZATION_NVP(mutation_rate);
+        ar &BOOST_SERIALIZATION_NVP(bottom_epochs);
+        ar &BOOST_SERIALIZATION_NVP(scale);                    //scale accounting for average number of bottom-level evaluations
+        ar &BOOST_SERIALIZATION_NVP(reward_max); // beyond 10-fold improvement is not meaningful
     }
 };
 template <typename EvalStats, typename MetaPhen, typename B_Params, typename C_Params>
@@ -326,6 +396,11 @@ ParameterControl<EvalStats, MetaPhen, B_Params, C_Params> *init_parameter_contro
     else if (choice == "epochendogeneous_b10p1")
     {
         return new EpochEndogenous<EvalStats, MetaPhen, B_Params, C_Params>(10.f, 1.f);
+    }
+    else if (choice == "epochrl_b10p1")
+    {
+        std::string parameter = "bottom_epochs";
+        return new RL<EvalStats, MetaPhen, B_Params, C_Params>(seed, parameter, 10.f, 1.f, 1.f);
     }
     else if (choice == "mutationannealing_b1p1m2")
     {
