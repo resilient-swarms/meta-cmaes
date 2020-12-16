@@ -28,6 +28,29 @@ protected:
             reward_ = reward;
             //	value_ = reward_ + getState(result_).V_;
         }
+
+        void print()
+        {
+            std::cout << "I=";
+            for (size_t i = 0; i < input_.size(); ++i)
+            {
+                std::cout << input_[i] << "," << std::endl;
+            }
+            std::cout << std::endl;
+
+            std::cout << "A=" << action_ << std::endl;
+
+            std::cout << "I'=";
+            for (size_t i = 0; i < result_.size(); ++i)
+            {
+                std::cout << result_[i] << "," << std::endl;
+            }
+            std::cout << std::endl;
+
+            std::cout << "R=" << reward_ << std::endl;
+
+            std::cout << "V=" << value_ << std::endl;
+        }
     };
 
     class TransitionComparator
@@ -187,6 +210,38 @@ protected:
                 return res;
             }
         }
+
+        void print()
+        {
+            std::cout << "TreeNode summary\n ------------------" << std::endl;
+            std::cout << "id=" << this->id_ << std::endl;
+            for (size_t i = 0; i < Q_.size(); ++i)
+            {
+                std::cout << "Q_" << i << "=" << Q_[i] << std::endl;
+            }
+            std::cout << "value=" << this->V_ << std::endl;
+            if (left_ != NULL)
+            {
+                std::cout << "left_id=" << left_->id_ << std::endl;
+            }
+            if (right_ != NULL)
+            {
+                std::cout << "right_id=" << right_->id_ << std::endl;
+            }
+            std::cout << "trace=" << trace_ << std::endl;
+            std::cout << "action_traces=";
+            for (size_t i = 0; i < action_traces_.size(); ++i)
+            {
+                std::cout << action_traces_[i] << ",";
+            }
+            std::cout << std::endl;
+            std::cout << "attribute" << attribute_ << std::endl;
+            std::cout << "point" << point_ << std::endl;
+            for (auto transition : transitions_)
+            {
+                transition.print();
+            }
+        }
     };
     struct KolmogorovSmirnoff
     {
@@ -212,7 +267,9 @@ protected:
         }
         static float critical_value(float alpha)
         {
-            return std::sqrt(-(alpha / 2.0f) / 2.0f);
+            float c_a = std::sqrt(-std::log(alpha / 2.0f) / 2.0f);
+            std::cout << "critical value =" << c_a << std::endl;
+            return c_a;
         }
         static float proportion_leq(const std::vector<float> &a, float x)
         {
@@ -241,6 +298,7 @@ protected:
                 float p1 = proportion_leq(a, x);
                 float p2 = proportion_leq(b, x);
                 float diff = std::abs(p1 - p2);
+                std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
                 if (diff > maxdiff)
                 {
                     maxdiff = diff;
@@ -252,11 +310,13 @@ protected:
                 float p1 = proportion_leq(a, x);
                 float p2 = proportion_leq(b, x);
                 float diff = std::abs(p1 - p2);
+                std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
                 if (diff > maxdiff)
                 {
                     maxdiff = diff;
                 }
             }
+            std::cout << "maxdiff=" << maxdiff << std::endl;
             return maxdiff;
         }
         static bool significant(float md, float m, float n, float alpha)
@@ -313,7 +373,7 @@ public:
         parameter_types_[name] = type;
         parameter_ranges_[name] = std::pair<float, float>{min, max};
     }
-    float getNextValue(const std::string& name, float normal)
+    float getNextValue(const std::string &name, float normal)
     {
         if (!initialized_)
             throw std::runtime_error("Attempting to get parameter value before initializing.");
@@ -335,8 +395,8 @@ public:
     //--------------------------------------------------------------------------------------//
 
     //-----------------------------------Implementation-------------------------------------//
-    virtual float implementNextValue(const std::string& name) = 0;
-    virtual void initializeSpecific(const std::string& settings) = 0;
+    virtual float implementNextValue(const std::string &name) = 0;
+    virtual void initializeSpecific(const std::string &settings) = 0;
     virtual void implementUpdate(const std::vector<float> &obs) = 0;
     virtual std::vector<float> implementStats() = 0;
     virtual std::string getName() = 0;
@@ -383,7 +443,7 @@ private:
 protected:
     //-----------------------------Controller Implementation--------------------------------//
 
-    void initializeSpecific(const std::string& settings)
+    void initializeSpecific(const std::string &settings)
     {
         std::stringstream ss(settings);
         // Get settings
@@ -444,7 +504,7 @@ protected:
         //
         //		t_ = System.currentTimeMillis();
     }
-    virtual float implementNextValue(const std::string& name)
+    virtual float implementNextValue(const std::string &name)
     {
         auto it = std::find(parameters_.begin(), parameters_.end(), name);
         int index = it - parameters_.begin();
@@ -461,7 +521,7 @@ protected:
             return std::get<0>(rng) + ((std::get<1>(rng) - std::get<0>(rng)) / action_bins_) * (a + random_->nextFloat());
         }
     }
-    virtual void implementUpdate(const std::vector<float>& obs)
+    virtual void implementUpdate(const std::vector<float> &obs)
     {
         // Increase counter
         //	updates_++;
@@ -476,6 +536,8 @@ protected:
         int next_action = selectAction(next_state);
         // Calculate TD error
         float action_delta = reward + gamma_ * next_state->Q_[next_action] - current_state_->Q_[current_action_];
+        current_state_->print();
+        std::cout << "delta = " << action_delta << std::endl;
         // Update trace of current state and state-action pair and add to eligible list if necessary
         current_state_->action_traces_[current_action_] = 1;
         current_state_->trace_ = 1;
@@ -492,7 +554,7 @@ protected:
                 eligible_states_.erase(s);
         }
         // Add transition to state archive (if not first action)
-        if (current_observables_.empty())
+        if (!current_observables_.empty())
             current_state_->transitions_.push_back(Transition(current_observables_, current_action_, input, reward));
         // Try splitting if the transition archive is bigger than the threshold
         if (current_state_->transitions_.size() > split_threshold_ && random_->nextFloat() < 0.1)
@@ -618,14 +680,13 @@ private:
     {
         // Update values of datapoints in the state's archive
         std::vector<Transition> archive = state->transitions_;
-        for (int i = 0; i < archive.size(); i++)
+        for (Transition &t : archive)
         {
-            Transition t = archive[i];
             t.value_ = t.reward_ + getState(t.result_)->V_;
         }
         // Find the best split point
         int obs_n = archive[0].input_.size();
-        float best = 100;
+        float best_D = 0.f; //start low, increase
         //	float best = 0;
         int best_att = 0;
         float best_pnt = 0;
@@ -671,12 +732,12 @@ private:
 					best_pnt = (archive.elementAt(point-1).input_[att]+archive.elementAt(point).input_[att])/2;
 				}*/
                 // Check if p is acceptable (smaller than threshold)
-                if (D < KolmogorovSmirnoff::critical_value(ks_p_threshold_))
+                if (D > KolmogorovSmirnoff::critical_value(ks_p_threshold_))
                 {
                     // If so, then consider for a splitting point
-                    if (D < best)
+                    if (D > best_D)
                     {
-                        best = D;
+                        best_D = D;
                         best_att = att;
                         // Place the splitting point between the two values
                         best_pnt = (archive[point - 1].input_[att] + archive[point].input_[att]) / 2;
@@ -687,7 +748,7 @@ private:
             }
         }
         // If best point found is not good enough don't split
-        if (best > KolmogorovSmirnoff::critical_value(ks_p_threshold_))
+        if (best_D < KolmogorovSmirnoff::critical_value(ks_p_threshold_))
             return false;
         //	if(best==0) return false;
         // Perform split
@@ -744,6 +805,8 @@ private:
         tree_size_ += 2;
         split_nodes_++;
         state_nodes_++;
+        std::cout << "split node: there are now splitnodes=" << split_nodes_ << "and statenodes=" << state_nodes_ << std::endl;
+        std::cout << "tree_size=" << tree_size_ << std::endl;
         return true;
     }
     int treeToFloat(TreeNode *root, std::vector<float> res, int pos)

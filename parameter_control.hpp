@@ -48,7 +48,7 @@ struct ParameterControl
         return mutation_rate;
     }
 
-    virtual void set_stats(EvalStats& eval_stats)
+    virtual void set_stats(EvalStats &eval_stats)
     {
         this->eval_stats = eval_stats;
     }
@@ -131,8 +131,11 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
     size_t num_params;
     RLController controller;
     float mutation_rate, bottom_epochs;
+    float scale; //scale accounting for average number of bottom-level evaluations
+    const float reward_max = 10.0f;// beyond 10-fold improvement is not meaningful
     RL(long seed, std::string &parameter, float bf, float pf, float mf) : ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>(bf, pf, mf)
     {
+        scale = C_Pars::pop::size * (B_Pars::bottom_epochs * 2 * B_Pars::pop::size + C_Pars::percentage_evaluated*4096.0f ) ;
         controller = RLController();
         if (parameter == "mutation_rate")
         {
@@ -168,7 +171,7 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         return bottom_epochs;
     }
 
-    virtual void set_stats(EvalStats& eval_stats)
+    virtual void set_stats(EvalStats &eval_stats)
     {
         this->eval_stats = eval_stats;
         float cf = this->eval_stats.best_metafitness;
@@ -187,9 +190,9 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         }
         else if (cf < 0 && f_last < 0)
         {
-            ratio = f_last/cf;
+            ratio = f_last / cf;
         }
-        float rwrd = 1000000 * (ratio - 1) / (global::nb_evals - evaluations);
+        float rwrd = std::min(reward_max, scale * (ratio - 1) / (global::nb_evals - evaluations));
         //	System.out.println(rwrd);
         if (rwrd < 0)
             rwrd = 0;
@@ -201,10 +204,16 @@ struct RL : public ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>
         obs[4] = this->eval_stats.metagenotype_diversity;
         obs[5] = stagnation;
         obs[6] = obs[0];
+        std::cout << "obs " << std::endl; 
+        for (size_t i = 0; i < obs.size(); ++i)
+        {
+            std::cout << obs[i] << ", ";
+        }
+        std::cout << std::endl;
         controller.updateObservables(obs);
         // Update parameters
         float normal_be = ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>::get_bottom_epochs();
-        bottom_epochs = controller.getNextValue("bottom_epochs",normal_be);
+        bottom_epochs = controller.getNextValue("bottom_epochs", normal_be);
 
         float normal_mr = ParameterControl<EvalStats, MetaPhen, B_Pars, C_Pars>::get_mutation_rate();
         mutation_rate = controller.getNextValue("mutation_rate", normal_mr);

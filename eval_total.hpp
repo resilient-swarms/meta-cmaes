@@ -18,56 +18,54 @@ namespace sferes
 {
       namespace eval
       {
-	          struct EvalStats
+            struct EvalStats
+            {
+                  float best_metafitness;
+                  float sd_metafitness;
+                  float avg_metafitness;
+                  float metagenotype_diversity;
+                  template <typename MetaIndiv>
+                  void get_diversity(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
                   {
-                        float best_metafitness;
-                        float sd_metafitness;
-                        float avg_metafitness;
-                        float metagenotype_diversity;
-			template<typename MetaIndiv>
-                        void get_diversity(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
+                        metagenotype_diversity = 0.0f;
+                        for (size_t i = 0; i < pop.size(); ++i)
                         {
-                              metagenotype_diversity = 0.0f;
-                              for (size_t i = 0; i < pop.size(); ++i)
+                              for (size_t j = i + 1; j < pop.size(); ++j)
                               {
-                                    for (size_t j = i + 1; j < pop.size(); ++j)
-                                    {
-                                          metagenotype_diversity += pop[i]->dist(pop[j]);
-                                    }
+                                    metagenotype_diversity += pop[i]->dist(pop[j]);
                               }
                         }
-			template<typename MetaIndiv>
-                        void set_stats(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
+                  }
+                  template <typename MetaIndiv>
+                  void set_stats(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
+                  {
+                        best_metafitness = -INFINITY;
+                        sd_metafitness = 0;
+                        avg_metafitness = 0;
+                        for (size_t i = 0; i < pop.size(); ++i)
                         {
-                              float best_metafitness = -INFINITY;
-                              float sd_metafitness = 0;
-                              float avg_metafitness = 0;
-                              for (size_t i = 0; i < pop.size(); ++i)
+                              float newfit = pop[i]->fit().value();
+                              if (newfit > best_metafitness)
                               {
-                                    float newfit = pop[i]->fit().value();
-                                    if(newfit > best_metafitness )
-                                    {
-                                          best_metafitness = newfit;
-                                    }
-                                    avg_metafitness += newfit;
+                                    best_metafitness = newfit;
                               }
-                              avg_metafitness/=(float) pop.size();
-                              for (size_t i = 0; i < pop.size(); ++i)
-                              {
-                                    float deviation = (pop[i]->fit().value() - avg_metafitness);
-                                    sd_metafitness+=(deviation*deviation);
-                              }
-                              sd_metafitness = std::sqrt(sd_metafitness/(float)pop.size());
-                              get_diversity<MetaIndiv>(pop);
+                              avg_metafitness += newfit;
                         }
-                  } eval_stats;
-	    ParameterControl<EvalStats,phen_t,BottomParams,CMAESParams> *param_ctrl;
+                        avg_metafitness /= (float)pop.size();
+                        for (size_t i = 0; i < pop.size(); ++i)
+                        {
+                              float deviation = (pop[i]->fit().value() - avg_metafitness);
+                              sd_metafitness += (deviation * deviation);
+                        }
+                        sd_metafitness = std::sqrt(sd_metafitness / (float)pop.size());
+                        get_diversity<MetaIndiv>(pop);
+                  }
+            } eval_stats;
+            ParameterControl<EvalStats, phen_t, BottomParams, CMAESParams> *param_ctrl;
             SFERES_EVAL(EvalTotal, Eval)
             {
             public:
                   EvalTotal() {}
-
-  
 
                   template <typename MetaIndiv>
                   void eval(std::vector<boost::shared_ptr<MetaIndiv>> & pop, size_t begin, size_t end,
@@ -77,11 +75,11 @@ namespace sferes
                         assert(pop.size());
                         assert(begin < pop.size());
                         assert(end <= pop.size());
-
+			eval_stats.set_stats<MetaIndiv>(pop);
+                        param_ctrl->set_stats(eval_stats);//evaluate the statistics of the meta-population
                         for (size_t i = begin; i < end; ++i)
                         {
                               param_ctrl->phenotype = *pop[i];
-                              param_ctrl->set_stats(eval_stats);
                               size_t bot_epochs = param_ctrl->get_bottom_epochs();
 #ifdef PRINTING
                               std::cout << "running the map for " + std::to_string(bot_epochs) + " epochs" << std::endl;
