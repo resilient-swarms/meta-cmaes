@@ -49,7 +49,7 @@ namespace sferes
             size_t _capacity, _sp, _max_sp;
             global::database_t _database;
             size_t _nb_evals;
-	    ParameterControl<sferes::eval::EvalStats,phen_t,BottomParams, CMAESParams>* _param_ctrl;
+            boost::shared_ptr<ParameterControl> _param_ctrl;
             template <typename E>
             void refresh(const E &ea)
             {
@@ -65,6 +65,7 @@ namespace sferes
                     get_database();
                     std::cout << "number of evaluations so far " << _nb_evals << std::endl;
                     _resume_file = (ea.res_dir() + "/resume_file_gen_" + std::to_string(ea.gen()) + ".dat");
+                    this->_param_ctrl = sferes::eval::param_ctrl;
                 }
             }
 
@@ -89,7 +90,7 @@ namespace sferes
                 char *_resume_f = new char[n + 1];
                 strcpy(_resume_f, _resume_file.c_str());
                 resume_distr(_resume_f);
-		sferes::eval::param_ctrl = this->_param_ctrl;
+                sferes::eval::param_ctrl = this->_param_ctrl;
             }
             // show the n-th individual from zero'th map in the population
             void show(std::ostream & os, size_t k)
@@ -188,7 +189,7 @@ namespace sferes
 
                 ar &BOOST_SERIALIZATION_NVP(_nb_evals);
                 ar &BOOST_SERIALIZATION_NVP(_resume_file);
-		ar &BOOST_SERIALIZATION_NVP(_param_ctrl);
+                ar &BOOST_SERIALIZATION_NVP(_param_ctrl);
                 if (Archive::is_loading::value)
                 {
                     set_globals();

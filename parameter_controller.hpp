@@ -10,11 +10,21 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/string.hpp>
+
 //
 class ParameterController
 {
+public:
+    enum ParameterType
+    {
+        NUMERIC_DOUBLE_,
+        NUMERIC_INT_,
+        SYMBOLIC_
+    };
+
 protected:
     class Transition
     {
@@ -24,7 +34,7 @@ protected:
         std::vector<float> result_;
         float reward_;
         float value_;
-
+        Transition() {}
         Transition(const std::vector<float> &input, int action, const std::vector<float> &result, float reward)
         {
             input_ = input;
@@ -56,18 +66,17 @@ protected:
 
             std::cout << "V=" << value_ << std::endl;
         }
-	template <class Archive>
-            void serialize(Archive & ar, const unsigned int version)
-            {
-                // reset the data-base
-                ar &BOOST_SERIALIZATION_NVP(input_);
+        template <class Archive>
+        void serialize(Archive &ar, const unsigned int version)
+        {
+            ar &BOOST_SERIALIZATION_NVP(input_);
 
-                ar &BOOST_SERIALIZATION_NVP(action_);
+            ar &BOOST_SERIALIZATION_NVP(action_);
 
-                ar &BOOST_SERIALIZATION_NVP(result_);
-                ar &BOOST_SERIALIZATION_NVP(reward_);
- 		ar &BOOST_SERIALIZATION_NVP(value_);
-            }
+            ar &BOOST_SERIALIZATION_NVP(result_);
+            ar &BOOST_SERIALIZATION_NVP(reward_);
+            ar &BOOST_SERIALIZATION_NVP(value_);
+        }
     };
 
     class TransitionComparator
@@ -100,12 +109,14 @@ protected:
     {
         std::random_device rd;
         std::mt19937 gen;
+        long seed;
 
     public:
         Random() {}
-        Random(long seed)
+        Random(long s)
         {
-            gen = std::mt19937(seed);
+            gen = std::mt19937(s);
+            seed = s;
         }
         /* int in [0,num-1] */
         int nextInt(size_t num)
@@ -119,14 +130,15 @@ protected:
             std::uniform_real_distribution<float> distrib(0.0f, 1.0f);
             return distrib(gen);
         }
-		template <class Archive>
-            void serialize(Archive & ar, const unsigned int version)
+        template <class Archive>
+        void serialize(Archive &ar, const unsigned int version)
+        {
+            ar &BOOST_SERIALIZATION_NVP(seed);
+            if (Archive::is_loading::value)
             {
-                // reset the data-base
-                ar &BOOST_SERIALIZATION_NVP(rd);
-
-                ar &BOOST_SERIALIZATION_NVP(gen);
+                gen = std::mt19937(seed);
             }
+        }
     };
     class TreeNode
     {
@@ -140,7 +152,11 @@ protected:
         int attribute_;
         float point_;
         std::vector<Transition> transitions_;
-
+        TreeNode()
+        {
+            left_ = NULL;
+            right_ = NULL;
+        }
         TreeNode(int actions, int id)
         {
             // ID
@@ -245,14 +261,7 @@ protected:
                 std::cout << "Q_" << i << "=" << Q_[i] << std::endl;
             }
             std::cout << "value=" << this->V_ << std::endl;
-            if (left_ != NULL)
-            {
-                std::cout << "left_id=" << left_->id_ << std::endl;
-            }
-            if (right_ != NULL)
-            {
-                std::cout << "right_id=" << right_->id_ << std::endl;
-            }
+
             std::cout << "trace=" << trace_ << std::endl;
             std::cout << "action_traces=";
             for (size_t i = 0; i < action_traces_.size(); ++i)
@@ -266,27 +275,36 @@ protected:
             {
                 transition.print();
             }
-        }
-	   template <class Archive>
-            void serialize(Archive & ar, const unsigned int version)
+
+            if (left_ != NULL)
             {
- 		
-                ar &BOOST_SERIALIZATION_NVP(id_);
-
-                ar &BOOST_SERIALIZATION_NVP(Q_);
-
-                ar &BOOST_SERIALIZATION_NVP(V_);
-                ar &BOOST_SERIALIZATION_NVP(trace_);
- 		ar &BOOST_SERIALIZATION_NVP(action_traces_);
-		ar &BOOST_SERIALIZATION_NVP(attribute_);
- 		ar &BOOST_SERIALIZATION_NVP(point_);
-		ar &BOOST_SERIALIZATION_NVP(transitions_);
-
-                ar &BOOST_SERIALIZATION_NVP(*left_);
-		ar &BOOST_SERIALIZATION_NVP(*right_);
-		std::cout << "serialised treenode:\n"; 
-		this->print();
+                left_->print();
             }
+            if (right_ != NULL)
+            {
+                right_->print();
+            }
+        }
+        template <class Archive>
+        void serialize(Archive &ar, const unsigned int version)
+        {
+
+            ar &BOOST_SERIALIZATION_NVP(id_);
+
+            ar &BOOST_SERIALIZATION_NVP(Q_);
+
+            ar &BOOST_SERIALIZATION_NVP(V_);
+            ar &BOOST_SERIALIZATION_NVP(trace_);
+            ar &BOOST_SERIALIZATION_NVP(action_traces_);
+            ar &BOOST_SERIALIZATION_NVP(attribute_);
+            ar &BOOST_SERIALIZATION_NVP(point_);
+            ar &BOOST_SERIALIZATION_NVP(transitions_);
+
+            ar &BOOST_SERIALIZATION_NVP(left_);
+            ar &BOOST_SERIALIZATION_NVP(right_);
+            std::cout << "serialised treenode:\n";
+            this->print();
+        }
     };
     struct KolmogorovSmirnoff
     {
@@ -378,12 +396,7 @@ protected:
     };
     // The type of the parameter, i.e. numeric or symbolic. For numeric parameters there are options for int or
     // float to simplify getting and setting.
-    enum ParameterType
-    {
-        NUMERIC_DOUBLE_,
-        NUMERIC_INT_,
-        SYMBOLIC_
-    };
+
     // Random
     Random *random_;
     long seed_;
@@ -396,6 +409,8 @@ protected:
     bool initialized_ = false;
 
 public:
+    virtual ~ParameterController() {}
+    ParameterController() {}
     //--------------------------------Controller Interface----------------------------------//
     void initialize(long seed, const std::string &settings)
     {
@@ -440,31 +455,35 @@ public:
     //--------------------------------------------------------------------------------------//
 
     //-----------------------------------Implementation-------------------------------------//
-    virtual float implementNextValue(const std::string &name) = 0;
-    virtual void initializeSpecific(const std::string &settings) = 0;
-    virtual void implementUpdate(const std::vector<float> &obs) = 0;
-    virtual std::vector<float> implementStats() = 0;
-    virtual std::string getName() = 0;
+    virtual float implementNextValue(const std::string &name) { throw std::runtime_error("don't implement"); };
+    virtual void initializeSpecific(const std::string &settings){};
+    virtual void implementUpdate(const std::vector<float> &obs){};
+    virtual std::vector<float> implementStats() { return std::vector<float>(); };
+    virtual std::string getName() { return "ParameterController"; };
     //--------------------------------------------------------------------------------------//
-    	   template <class Archive>
-            void serialize(Archive & ar, const unsigned int version)
-            {
-                ar &BOOST_SERIALIZATION_NVP(random_);
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        ar &BOOST_SERIALIZATION_NVP(random_);
 
-                ar &BOOST_SERIALIZATION_NVP(seed_);
+        ar &BOOST_SERIALIZATION_NVP(seed_);
 
-                ar &BOOST_SERIALIZATION_NVP(parameters_);
-                ar &BOOST_SERIALIZATION_NVP(parameter_types_);
- 		ar &BOOST_SERIALIZATION_NVP(parameter_ranges_);
-		ar &BOOST_SERIALIZATION_NVP(current_observables_);
- 		ar &BOOST_SERIALIZATION_NVP(initialized_);
-            }
+        ar &BOOST_SERIALIZATION_NVP(parameters_);
+        ar &BOOST_SERIALIZATION_NVP(parameter_types_);
+        ar &BOOST_SERIALIZATION_NVP(parameter_ranges_);
+        ar &BOOST_SERIALIZATION_NVP(current_observables_);
+        ar &BOOST_SERIALIZATION_NVP(initialized_);
+    }
 };
 
 class RLController : public ParameterController
 {
-    friend class boost::serialization::access;
+public:
+    virtual ~RLController() {}
+    RLController(){};
+
 private:
+    friend class boost::serialization::access;
     // Action discretization bins
     int action_bins_ = 5;
     // Actions encoding into single number
@@ -500,38 +519,40 @@ private:
     //	long t_;
 protected:
     //-----------------------------Controller Implementation--------------------------------//
-        template <class Archive>
+    template <class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
         // serialize base class information
-        ar &boost::serialization::base_object < ParameterController>(*this);
+        ar &BOOST_SERIALIZATION_BASE_OBJECT_NVP(ParameterController);
+
+        // serialize the rest
         ar &BOOST_SERIALIZATION_NVP(action_bins_);
-    ar &BOOST_SERIALIZATION_NVP(action_num_);
-    ar &BOOST_SERIALIZATION_NVP(action_periods_); // Period of each action in single encoding
-    ar &BOOST_SERIALIZATION_NVP(action_sizes_);   // Number of distinct values for each action
-    ar &BOOST_SERIALIZATION_NVP(state_tree_);
-    ar &BOOST_SERIALIZATION_NVP(tree_size_);
-    ar &BOOST_SERIALIZATION_NVP(split_nodes_);
-    ar &BOOST_SERIALIZATION_NVP(state_nodes_);
-    ar &BOOST_SERIALIZATION_NVP(node_serial_);
-    // RL parameters
-    ar &BOOST_SERIALIZATION_NVP(epsilon_);
-    ar &BOOST_SERIALIZATION_NVP(gamma_);
-    ar &BOOST_SERIALIZATION_NVP(alpha_);
-    ar &BOOST_SERIALIZATION_NVP(alpha_zero_);
-    // UTree parameters
-    ar &BOOST_SERIALIZATION_NVP(split_threshold_);
-    ar &BOOST_SERIALIZATION_NVP(min_sample_);
-    ar &BOOST_SERIALIZATION_NVP(ks_p_threshold_);
-    ar &BOOST_SERIALIZATION_NVP(split_fail_threshold_);
-    // Eligibility traces
-    ar &BOOST_SERIALIZATION_NVP(eligible_states_);
-    ar &BOOST_SERIALIZATION_NVP(eligibility_threshold_);
-    ar &BOOST_SERIALIZATION_NVP(lambda_);
-    // The current state and action
-    ar &BOOST_SERIALIZATION_NVP(current_observables_);
-    ar &BOOST_SERIALIZATION_NVP(current_state_);
-    ar &BOOST_SERIALIZATION_NVP(current_action_);
+        ar &BOOST_SERIALIZATION_NVP(action_num_);
+        ar &BOOST_SERIALIZATION_NVP(action_periods_); // Period of each action in single encoding
+        ar &BOOST_SERIALIZATION_NVP(action_sizes_);   // Number of distinct values for each action
+        ar &BOOST_SERIALIZATION_NVP(state_tree_);
+        ar &BOOST_SERIALIZATION_NVP(tree_size_);
+        ar &BOOST_SERIALIZATION_NVP(split_nodes_);
+        ar &BOOST_SERIALIZATION_NVP(state_nodes_);
+        ar &BOOST_SERIALIZATION_NVP(node_serial_);
+        // RL parameters
+        ar &BOOST_SERIALIZATION_NVP(epsilon_);
+        ar &BOOST_SERIALIZATION_NVP(gamma_);
+        ar &BOOST_SERIALIZATION_NVP(alpha_);
+        ar &BOOST_SERIALIZATION_NVP(alpha_zero_);
+        // UTree parameters
+        ar &BOOST_SERIALIZATION_NVP(split_threshold_);
+        ar &BOOST_SERIALIZATION_NVP(min_sample_);
+        ar &BOOST_SERIALIZATION_NVP(ks_p_threshold_);
+        ar &BOOST_SERIALIZATION_NVP(split_fail_threshold_);
+        // Eligibility traces
+        ar &BOOST_SERIALIZATION_NVP(eligible_states_);
+        ar &BOOST_SERIALIZATION_NVP(eligibility_threshold_);
+        ar &BOOST_SERIALIZATION_NVP(lambda_);
+        // The current state and action
+        ar &BOOST_SERIALIZATION_NVP(current_observables_);
+        ar &BOOST_SERIALIZATION_NVP(current_state_);
+        ar &BOOST_SERIALIZATION_NVP(current_action_);
     }
     void initializeSpecific(const std::string &settings)
     {
@@ -927,3 +948,6 @@ private:
 	}*/
     //--------------------------------------------------------------------------------------//
 };
+
+BOOST_CLASS_EXPORT_KEY(RLController)
+BOOST_SERIALIZATION_SHARED_PTR(RLController)

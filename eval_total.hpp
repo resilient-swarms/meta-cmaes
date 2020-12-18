@@ -9,7 +9,7 @@
 #include <meta-cmaes/bottom_typedefs.hpp>
 #include <meta-cmaes/top_typedefs.hpp>
 #include <sferes/phen/parameters.hpp>
-
+#include <meta-cmaes/parameter_control.hpp>
 // eval class which allows us to:
 // 1.  develop the individual maps for a few generations after which they are evaluated by their recovered performance
 // 2.  count the total number of function evaluations (including those for the recovered performance calc.)
@@ -18,50 +18,6 @@ namespace sferes
 {
       namespace eval
       {
-            struct EvalStats
-            {
-                  float best_metafitness;
-                  float sd_metafitness;
-                  float avg_metafitness;
-                  float metagenotype_diversity;
-                  template <typename MetaIndiv>
-                  void get_diversity(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
-                  {
-                        metagenotype_diversity = 0.0f;
-                        for (size_t i = 0; i < pop.size(); ++i)
-                        {
-                              for (size_t j = i + 1; j < pop.size(); ++j)
-                              {
-                                    metagenotype_diversity += pop[i]->dist(pop[j]);
-                              }
-                        }
-                  }
-                  template <typename MetaIndiv>
-                  void set_stats(std::vector<boost::shared_ptr<MetaIndiv>> &pop)
-                  {
-                        best_metafitness = -INFINITY;
-                        sd_metafitness = 0;
-                        avg_metafitness = 0;
-                        for (size_t i = 0; i < pop.size(); ++i)
-                        {
-                              float newfit = pop[i]->fit().value();
-                              if (newfit > best_metafitness)
-                              {
-                                    best_metafitness = newfit;
-                              }
-                              avg_metafitness += newfit;
-                        }
-                        avg_metafitness /= (float)pop.size();
-                        for (size_t i = 0; i < pop.size(); ++i)
-                        {
-                              float deviation = (pop[i]->fit().value() - avg_metafitness);
-                              sd_metafitness += (deviation * deviation);
-                        }
-                        sd_metafitness = std::sqrt(sd_metafitness / (float)pop.size());
-                        get_diversity<MetaIndiv>(pop);
-                  }
-            } eval_stats;
-            ParameterControl<EvalStats, phen_t, BottomParams, CMAESParams> *param_ctrl;
             SFERES_EVAL(EvalTotal, Eval)
             {
             public:
