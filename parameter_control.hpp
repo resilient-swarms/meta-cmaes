@@ -238,6 +238,53 @@ BOOST_CLASS_EXPORT_KEY(MutationAnnealing)
 BOOST_SERIALIZATION_SHARED_PTR(MutationAnnealing)
 
 //bottom params
+struct BothAnnealing : public ParameterControl
+{
+    friend class boost::serialization::access;
+    float min_mutation_rate = 0.001f;
+    float min_bottom_epochs = 1.0f;
+    BothAnnealing()
+    {
+    }
+    BothAnnealing(float bf, float pf, float mf) : ParameterControl(bf, pf, mf)
+    {
+    }
+    virtual ~BothAnnealing(){};
+
+    virtual int get_bottom_epochs()
+    {
+        float ratio = (float)(CMAESParams::pop::max_evals - global::nb_evals) / (float)CMAESParams::pop::max_evals;
+        int bot_epochs = (int)std::round(this->min_bottom_epochs + ratio * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
+        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        return bot_epochs;
+    }
+
+    virtual float get_mutation_rate()
+    {
+        float ratio = (float)(CMAESParams::pop::max_evals - global::nb_evals) / (float)CMAESParams::pop::max_evals;
+        float mutation_rate = this->min_mutation_rate + ratio * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
+        if (global::nb_evals > this->evaluations)
+        {
+            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        }
+        this->evaluations = global::nb_evals;
+        return mutation_rate;
+    }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &BOOST_SERIALIZATION_BASE_OBJECT_NVP(ParameterControl);
+        ar &BOOST_SERIALIZATION_NVP(min_mutation_rate);
+	ar &BOOST_SERIALIZATION_NVP(min_bottom_epochs);
+    }
+};
+
+BOOST_CLASS_EXPORT_KEY(BothAnnealing)
+BOOST_SERIALIZATION_SHARED_PTR(BothAnnealing)
+
+//bottom params
 struct MutationEndogenous : public ParameterControl
 {
     friend class boost::serialization::access;
@@ -249,6 +296,7 @@ struct MutationEndogenous : public ParameterControl
     {
     }
     virtual ~MutationEndogenous(){};
+    
     virtual float get_mutation_rate()
     {
         size_t last = NUM_GENES - 1;
@@ -276,6 +324,58 @@ struct MutationEndogenous : public ParameterControl
 
 BOOST_CLASS_EXPORT_KEY(MutationEndogenous)
 BOOST_SERIALIZATION_SHARED_PTR(MutationEndogenous)
+
+//bottom params
+struct BothEndogenous : public ParameterControl
+{
+    friend class boost::serialization::access;
+    float min_mutation_rate = 0.001f;
+    float min_bottom_epochs = 1.0f;
+    BothEndogenous()
+    {
+    }
+    BothEndogenous(float bf, float pf, float mf) : ParameterControl(bf, pf, mf)
+    {
+    }
+    virtual ~BothEndogenous(){};
+    virtual int get_bottom_epochs()
+    {
+        size_t last = NUM_GENES - 1;
+        float last_gene = this->phenotype.gen().data()[last];  
+	float M = CMAESParams::parameters::max;
+	float m = CMAESParams::parameters::min;
+	last_gene = (last_gene - m)/(M-m) ; // normalise in [0,1]                                                                                                 // in [0,1]
+        int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
+        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        return bot_epochs;
+    }
+    virtual float get_mutation_rate()
+    {
+        size_t last = NUM_GENES - 1;
+        float last_gene = this->phenotype.gen().data()[last];  
+	float M = CMAESParams::parameters::max;
+	float m = CMAESParams::parameters::min;
+	last_gene = (last_gene - m)/(M-m) ; // normalise in [0,1]
+        float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
+        if (global::nb_evals > this->evaluations)
+        {
+            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        }
+        this->evaluations = global::nb_evals;
+        return mutation_rate;
+    }
+
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar &BOOST_SERIALIZATION_BASE_OBJECT_NVP(ParameterControl);
+        ar &BOOST_SERIALIZATION_NVP(min_mutation_rate);
+    }
+};
+
+BOOST_CLASS_EXPORT_KEY(BothEndogenous)
+BOOST_SERIALIZATION_SHARED_PTR(BothEndogenous)
 
 //bottom params
 struct RL : public ParameterControl
@@ -324,8 +424,9 @@ struct RL : public ParameterControl
 
     virtual int get_bottom_epochs()
     {
-        std::cout << "bottom epochs " << bottom_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
-        return bottom_epochs;
+	int be = (int)std::round(bottom_epochs);
+        std::cout << "bottom epochs " << be << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        return be;
     }
 
     virtual void set_stats(EvalStats &eval_stats)
@@ -525,6 +626,19 @@ boost::shared_ptr<ParameterControl> init_parameter_control(long seed, std::strin
     {
         std::string parameter = "mutation_rate";
         return boost::make_shared<RL>(seed, parameter, 1.f, 1.f, 8.f);
+    }
+    else if (choice == "bothendogeneous_b10p1m8")
+    {
+        return boost::make_shared<BothEndogenous>(10.f, 1.f, 8.f);
+    }
+    else if (choice == "bothrl_b10p1m8")
+    {
+        std::string parameter = "both";
+        return boost::make_shared<RL>(seed, parameter, 10.f, 1.f, 8.f);
+    }
+    else if (choice == "bothannealing_b10p1m8")
+    {
+        return boost::make_shared<BothAnnealing>(10.f, 1.f, 8.f);
     }
     else
     {
