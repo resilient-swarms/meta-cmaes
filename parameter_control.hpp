@@ -178,7 +178,10 @@ struct EpochEndogenous : public ParameterControl
     virtual int get_bottom_epochs()
     {
         size_t last = NUM_GENES - 1;
-        float last_gene = this->phenotype.gen().data()[last];                                                                                                   // in [0,1]
+        float last_gene = this->phenotype.gen().data()[last];  
+	float M = CMAESParams::parameters::max;
+	float m = CMAESParams::parameters::min;
+	last_gene = (last_gene - m)/(M-m) ; // normalise in [0,1]                                                                                                 // in [0,1]
         int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
         std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
         return bot_epochs;
@@ -249,7 +252,10 @@ struct MutationEndogenous : public ParameterControl
     virtual float get_mutation_rate()
     {
         size_t last = NUM_GENES - 1;
-        float last_gene = this->phenotype.gen().data()[last];                                                                                                // in [0,1]
+        float last_gene = this->phenotype.gen().data()[last];  
+	float M = CMAESParams::parameters::max;
+	float m = CMAESParams::parameters::min;
+	last_gene = (last_gene - m)/(M-m) ; // normalise in [0,1]
         float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
         if (global::nb_evals > this->evaluations)
         {
@@ -468,6 +474,22 @@ boost::shared_ptr<ParameterControl> init_parameter_control(long seed, std::strin
     else if (choice == "b10p10")
     {
         return boost::make_shared<ParameterControl>(10.f, 10.f); //100%
+    }
+    else if (choice == "b1p1m1")
+    {
+        return boost::make_shared<ParameterControl>(1.f, 1.f, 1.f);
+    }
+    else if (choice == "b1p1m2")
+    {
+        return boost::make_shared<ParameterControl>(1.f, 1.f, 2.f);
+    }
+    else if (choice == "b1p1m4")
+    {
+        return boost::make_shared<ParameterControl>(1.f, 1.f, 4.f);
+    }
+    else if (choice == "b1p1m8")
+    {
+        return boost::make_shared<ParameterControl>(1.f, 1.f, 8.f); //100%
     }
     else if (choice == "epochannealing_b2p1")
     {
