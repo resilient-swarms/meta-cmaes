@@ -86,6 +86,7 @@ namespace sferes
             {
                 // reset the data-base
                 global::database = _database;
+                global::nb_evals = _nb_evals;
                 int n = _resume_file.length();
                 char *_resume_f = new char[n + 1];
                 strcpy(_resume_f, _resume_file.c_str());
