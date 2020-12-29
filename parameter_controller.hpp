@@ -302,8 +302,8 @@ protected:
 
             ar &BOOST_SERIALIZATION_NVP(left_);
             ar &BOOST_SERIALIZATION_NVP(right_);
-            std::cout << "serialised treenode:\n";
-            this->print();
+            //std::cout << "serialised treenode:\n";
+            //this->print();
         }
     };
     struct KolmogorovSmirnoff
@@ -361,7 +361,7 @@ protected:
                 float p1 = proportion_leq(a, x);
                 float p2 = proportion_leq(b, x);
                 float diff = std::abs(p1 - p2);
-                std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
+                //std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
                 if (diff > maxdiff)
                 {
                     maxdiff = diff;
@@ -373,13 +373,13 @@ protected:
                 float p1 = proportion_leq(a, x);
                 float p2 = proportion_leq(b, x);
                 float diff = std::abs(p1 - p2);
-                std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
+                //std::cout << "x=" << x << ", p1=" << p1 << "  p2=" << p2 << std::endl;
                 if (diff > maxdiff)
                 {
                     maxdiff = diff;
                 }
             }
-            std::cout << "maxdiff=" << maxdiff << std::endl;
+            //std::cout << "maxdiff=" << maxdiff << std::endl;
             return maxdiff;
         }
         static bool significant(float md, float m, float n, float alpha)
