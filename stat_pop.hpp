@@ -189,10 +189,18 @@ namespace sferes
                 ar &BOOST_SERIALIZATION_NVP(_database);
 
                 ar &BOOST_SERIALIZATION_NVP(_nb_evals);
+
                 ar &BOOST_SERIALIZATION_NVP(_resume_file);
                 ar &BOOST_SERIALIZATION_NVP(_param_ctrl);
                 if (Archive::is_loading::value)
                 {
+#ifndef TEST
+                    if (_nb_evals > CMAESParams::pop::max_evals)
+                    {
+                        std::cout << "this evolutionary run has already finished" << std::endl;
+                        exit(0);
+                    }
+#endif
                     set_globals();
                 }
                 else
