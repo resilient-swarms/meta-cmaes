@@ -141,45 +141,12 @@ namespace sferes
                 std::cout << "show stat" << std::endl;
                 std::cout << "read the archive" << std::endl;
 #ifdef INDIVIDUAL_DAMAGE
-                test_max_recovery(os, archive);
+                sferes::fit::RecoveredPerformance<base_phen_t>::test_max_recovery(os, archive);
 #else
-                test_recoveredperformance(os, archive);
+                sferes::fit::RecoveredPerformance<base_phen_t>::test_recoveredperformance(os, archive);
 #endif
             }
-            void test_recoveredperformance(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
-            {
-                float val = 0.0f;
 
-                for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
-                {
-                    if (*k)
-                    {
-                        val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**k);
-#ifdef EVAL_ENVIR
-                        val /= (float)global::world_options.size();
-#else
-                        val /= (float)global::damage_sets.size();
-#endif
-                        os << val << std::endl;
-                    }
-                }
-
-                os << "END TEST META-INDIVIDUAL" << std::endl;
-            }
-            // assess maximal recovery for each damage separately
-            void test_max_recovery(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
-            {
-
-                std::vector<bottom_indiv_t> individuals;
-                for (const bottom_indiv_t *k = archive.data(); k < (archive.data() + archive.num_elements()); ++k)
-                {
-                    if (*k)
-                    {
-                        individuals.push_back(*k);
-                    }
-                }
-                sferes::fit::RecoveredPerformance<base_phen_t>::_eval_taskmax(os, individuals);
-            }
             template <class Archive>
             void serialize(Archive & ar, const unsigned int version)
             {
