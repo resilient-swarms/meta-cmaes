@@ -83,7 +83,7 @@ namespace sferes
                         //random choice
                         std::uniform_int_distribution<> dis(0, ids_left.size() - 1);
                         int index = dis(gen);
-                        float val = sferes::fit::RecoveredPerformance<Phen>::_eval_single_envir(*ids_left[index], world, damage);
+                        float val = _eval_single_envir(*ids_left[index], world, damage);
                         if (val > best_so_far)
                         {
                             best_so_far = val;
@@ -94,7 +94,7 @@ namespace sferes
                     }
                 }
             }
-            static void test_recoveredperformance(std::ostream &os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
+            static void test_recoveredperformance(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>, BottomParams::ea::behav_dim> &archive)
             {
                 float val = 0.0f;
 
@@ -102,7 +102,7 @@ namespace sferes
                 {
                     if (*k)
                     {
-                        val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**k);
+                        val = _eval_all(**k);
 #ifdef EVAL_ENVIR
                         val /= (float)global::world_options.size();
 #else
@@ -115,7 +115,7 @@ namespace sferes
                 os << "END TEST META-INDIVIDUAL" << std::endl;
             }
             // assess maximal recovery for each damage separately
-            static void test_max_recovery(std::ostream &os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
+            static void test_max_recovery(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>, BottomParams::ea::behav_dim> &archive)
             {
 
                 std::vector<bottom_indiv_t> individuals;
@@ -126,7 +126,30 @@ namespace sferes
                         individuals.push_back(*k);
                     }
                 }
-                sferes::fit::RecoveredPerformance<base_phen_t>::_eval_taskmax(os, individuals);
+                _eval_taskmax(os, individuals);
+            }
+
+	    static void test_recoveredperformance(std::ostream &os, std::vector<boost::shared_ptr<Phen>> &archive)
+            {
+                float val = 0.0f;
+
+                for (size_t k = 0; k < archive.size(); ++k)
+                {
+                        val =_eval_all(*archive[k]);
+#ifdef EVAL_ENVIR
+                        val /= (float)global::world_options.size();
+#else
+                        val /= (float)global::damage_sets.size();
+#endif
+                        os << val << std::endl;
+                }
+
+                os << "END TEST META-INDIVIDUAL" << std::endl;
+            }
+            // assess maximal recovery for each damage separately
+            static void test_max_recovery(std::ostream &os, std::vector<boost::shared_ptr<Phen>> &archive)
+            {
+                _eval_taskmax(os, archive);
             }
 #ifdef EVAL_ENVIR
             static float _eval_all(const Phen &indiv)

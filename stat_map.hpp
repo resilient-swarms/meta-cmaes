@@ -47,7 +47,6 @@ public:
     behav_index_t behav_shape;
     behav_index_t behav_strides;
     behav_index_t behav_indexbase;
-    float *m_pfSharedMem;
 
     Map() : behav_dim(Params::ea::behav_dim)
     {
@@ -81,29 +80,7 @@ public:
 #endif
         }
     }
-    void wait_and_erase(std::ostream & os, std::map<size_t, pid_t> & SlavePIDs)
-    {
-        // wait for a new process to finish and erase it from the list
-        int *status;
-        pid_t pid = waitpid(-1, status, 0); // -1: any child; status; 0: only children that exit
-        // //std::cout<<"waited for pid "<<pid<<std::endl;
-        auto it = SlavePIDs.begin();
-        while (it != SlavePIDs.end())
-        {
-            // Check if value of this entry matches with given value
-            if (it->second == pid)
-            {
-                //std::cout << "writing " << it->first << std::endl;
-                os << m_pfSharedMem[it->first] << std::endl; // remove the process from the list
-                os.flush();
-                //std::cout << "erasing " << it->first << "," << std::endl;
-                SlavePIDs.erase(it); // remove the process from the list
-                break;
-            }
-            // Go to next entry in map
-            it++;
-        }
-    }
+
     void show(std::ostream & os, size_t n)
     {
         std::cout << "NUM_CORES " << NUM_CORES << std::endl;
@@ -137,81 +114,11 @@ public:
 
 #else
 #ifdef INDIVIDUAL_DAMAGE
-        test_max_recovery(os, individuals);
+        sferes::fit::RecoveredPerformance<Phen>::test_max_recovery(os, individuals);
 #else
-        test_recoveredperformance(os, individuals);
+        sferes::fit::RecoveredPerformance<Phen>::test_recoveredperformance(os, individuals);
 #endif
 #endif
-    }
-    void test_recoveredperformance(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
-    {
-        float val = 0.0f;
-        std::cout << "will do " << individuals.size() << "individuals" << std::endl;
-        size_t i = 0;
-        size_t unShareMemSize = individuals.size() * sizeof(float); //m_unPopSize *
-        std::map<size_t, pid_t> SlavePIDs;
-        /* Get pointer to shared memory area */
-        // Memory buffer will be readable and writable:
-        int protection = PROT_READ | PROT_WRITE;
-        // The buffer will be shared (meaning other processes can access it), but
-        // anonymous (meaning third-party processes cannot obtain an address for it),
-        // so only this process and its children will be able to use it:
-        int visibility = MAP_ANONYMOUS | MAP_SHARED;
-        m_pfSharedMem = reinterpret_cast<float *>(::mmap(NULL, unShareMemSize, protection, visibility, -1, 0));
-        if (m_pfSharedMem == MAP_FAILED)
-        {
-            ::perror("shared memory, vector float");
-            exit(1);
-        }
-        //os << NUM_CORES << std::endl;
-        while (i < individuals.size())
-        {
-
-            if (SlavePIDs.size() < NUM_CORES) // still need more
-            {
-                /* Perform fork */
-
-                SlavePIDs[i] = ::fork();
-                if (SlavePIDs[i] == 0)
-                {
-                    /* We're in a slave */
-                    val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*individuals[i]);
-#ifdef EVAL_ENVIR
-                    val /= (float)global::world_options.size();
-#else
-                    val /= (float)global::damage_sets.size();
-#endif
-                    //os << "child" << k << std::endl;
-                    /* fitness is copied to the 0'th index of each block */
-                    ::memcpy(m_pfSharedMem + i,
-                             &val,
-                             sizeof(float));
-                    //os << val << std::endl;
-                    //os.flush(); //make sure it is already flushed !
-                    exit(EXIT_SUCCESS);
-                }
-                else
-                {
-                    i++; //continue because you finished one
-                }
-            }
-            else
-            {
-                this->wait_and_erase(os, SlavePIDs);
-            }
-        }
-        // now wait for all the other child processes to finish
-        while (!SlavePIDs.empty())
-        {
-            wait_and_erase(os, SlavePIDs);
-        } // keep performing waits until an error returns, meaning no more child existing
-    }
-
-    // assess maximal recovery for each damage separately
-    void test_max_recovery(std::ostream & os, std::vector<bottom_indiv_t> & individuals)
-    {
-        //
-        sferes::fit::RecoveredPerformance<Phen>::_eval_taskmax(os,individuals);
     }
 
     template <class Archive>
