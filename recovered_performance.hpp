@@ -143,8 +143,6 @@ namespace sferes
 #endif
                         os << val << std::endl;
                 }
-
-                os << "END TEST META-INDIVIDUAL" << std::endl;
             }
             // assess maximal recovery for each damage separately
             static void test_max_recovery(std::ostream &os, std::vector<boost::shared_ptr<Phen>> &archive)
