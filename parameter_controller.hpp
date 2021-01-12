@@ -11,12 +11,14 @@
 #include <algorithm>
 #include <set>
 #include <sstream>
+#ifndef NO_SERIALIZATION 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/string.hpp>
+#endif
 
 //
 class ParameterController
@@ -70,6 +72,7 @@ protected:
 
             std::cout << "V=" << value_ << std::endl;
         }
+#ifndef NO_SERIALIZATION 
         template <class Archive>
         void serialize(Archive &ar, const unsigned int version)
         {
@@ -81,6 +84,7 @@ protected:
             ar &BOOST_SERIALIZATION_NVP(reward_);
             ar &BOOST_SERIALIZATION_NVP(value_);
         }
+#endif
     };
 
     class TransitionComparator
@@ -134,6 +138,7 @@ protected:
             std::uniform_real_distribution<float> distrib(0.0f, 1.0f);
             return distrib(gen);
         }
+#ifndef NO_SERIALIZATION 
         template <class Archive>
         void serialize(Archive &ar, const unsigned int version)
         {
@@ -143,6 +148,7 @@ protected:
                 gen = std::mt19937(seed);
             }
         }
+#endif
     };
     class TreeNode
     {
@@ -289,6 +295,7 @@ protected:
                 right_->print();
             }
         }
+#ifndef NO_SERIALIZATION 
         template <class Archive>
         void serialize(Archive &ar, const unsigned int version)
         {
@@ -309,6 +316,7 @@ protected:
             //std::cout << "serialised treenode:\n";
             //this->print();
         }
+#endif
     };
     struct KolmogorovSmirnoff
     {
@@ -460,6 +468,8 @@ public:
     virtual std::vector<float> implementStats() { return std::vector<float>(); };
     virtual std::string getName() { return "ParameterController"; };
     //--------------------------------------------------------------------------------------//
+    
+#ifndef NO_SERIALIZATION     
     template <class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
@@ -473,6 +483,7 @@ public:
         ar &BOOST_SERIALIZATION_NVP(current_observables_);
         ar &BOOST_SERIALIZATION_NVP(initialized_);
     }
+#endif
 };
 
 class RLController : public ParameterController
@@ -482,7 +493,9 @@ public:
     RLController(){};
 
 private:
+#ifndef NO_SERIALIZATION 
     friend class boost::serialization::access;
+#endif
     // Action discretization bins
     int action_bins_ = 5;
     // Actions encoding into single number
@@ -518,6 +531,8 @@ private:
     //	long t_;
 protected:
     //-----------------------------Controller Implementation--------------------------------//
+    
+#ifndef NO_SERIALIZATION     
     template <class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
@@ -553,6 +568,7 @@ protected:
         ar &BOOST_SERIALIZATION_NVP(current_state_);
         ar &BOOST_SERIALIZATION_NVP(current_action_);
     }
+#endif
     void initializeSpecific(const std::string &settings)
     {
         std::stringstream ss(settings);
@@ -948,7 +964,9 @@ private:
     //--------------------------------------------------------------------------------------//
 };
 
+#ifndef NO_SERIALIZATION 
 BOOST_CLASS_EXPORT_KEY(RLController)
 BOOST_SERIALIZATION_SHARED_PTR(RLController)
+#endif
 
 #endif
