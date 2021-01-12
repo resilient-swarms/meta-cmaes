@@ -353,11 +353,6 @@ protected:
         }
         static float max_diff(const std::vector<float> &a, const std::vector<float> &b)
         {
-            //std::pair<float, float> r = range(a);
-            //std::pair<float, float> r2 = range(b);
-            //float min = std::min(std::get<0>(r), std::get<0>(r2));
-            //float max = std::max(std::get<1>(r), std::get<1>(r2));
-            //float stepsize = 0.001f * (max - min);
             float maxdiff = 0.f;
             // iterate over a
             for (float x : a)
