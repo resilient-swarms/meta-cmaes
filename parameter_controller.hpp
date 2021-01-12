@@ -1,3 +1,7 @@
+
+#ifndef RL_CONTROLLER
+#define RL_CONTROLLER
+
 /* note this is a translation of RLController in http://www.few.vu.nl/~gks290/resources/gecco2014.tar.gz */
 
 #include <iostream>
@@ -181,7 +185,7 @@ protected:
         {
             // The max Q value found
             float max = 0;
-            for (int i = 0; i < Q_.size(); i++)
+            for (size_t i = 0; i < Q_.size(); i++)
             {
                 // Calculate Q' and update max
                 Q_[i] += alpha * error * action_traces_[i];
@@ -196,7 +200,7 @@ protected:
             // Decay state trace
             trace_ *= gamma * lambda;
             // Decay all action traces of the state
-            for (int j = 0; j < action_traces_.size(); j++)
+            for (size_t j = 0; j < action_traces_.size(); j++)
                 action_traces_[j] *= gamma * lambda;
             // The highest action trace cannot be higher than the state trace
             // If the state trace is below the threshold, return false
@@ -351,9 +355,9 @@ protected:
         {
             std::pair<float, float> r = range(a);
             std::pair<float, float> r2 = range(b);
-            float min = std::min(std::get<0>(r), std::get<0>(r2));
-            float max = std::max(std::get<1>(r), std::get<1>(r2));
-            float stepsize = 0.001f * (max - min);
+            //float min = std::min(std::get<0>(r), std::get<0>(r2));
+            //float max = std::max(std::get<1>(r), std::get<1>(r2));
+            //float stepsize = 0.001f * (max - min);
             float maxdiff = 0.f;
             // iterate over a
             for (float x : a)
@@ -582,7 +586,7 @@ protected:
         action_num_ = 1;
         action_sizes_ = std::vector<int>(parameters_.size());
         action_periods_ = std::vector<int>(parameters_.size());
-        for (int i = 0; i < parameters_.size(); i++)
+        for (size_t i = 0; i < parameters_.size(); i++)
         {
             if (parameter_types_[parameters_[i]] == ParameterType::SYMBOLIC_)
             {
@@ -640,7 +644,7 @@ protected:
         float reward = obs[0];
         // The rest of the vector is the observables input
         std::vector<float> input(obs.size() - 1);
-        for (int i = 0; i < input.size(); i++)
+        for (size_t i = 0; i < input.size(); i++)
             input[i] = obs[i + 1];
         // Get next state from tree and decide action
         TreeNode *next_state = getState(input);
@@ -740,7 +744,7 @@ private:
     {
         std::vector<int> res(parameters_.size());
         int prev = 1;
-        for (int i = 0; i < parameters_.size(); i++)
+        for (size_t i = 0; i < parameters_.size(); i++)
         {
             res[i] = (action % action_periods_[i]) / prev;
             prev = action_periods_[i];
@@ -816,17 +820,17 @@ private:
             int len = 1;
             if (archive.size() - 2 * minp > 200)
                 len = (int)std::round((float)(archive.size() - 2 * minp) / 100.0);
-            for (int point = minp; point < archive.size() - minp; point += len)
+            for (size_t point = minp; point < archive.size() - minp; point += len)
             {
                 // If points' values are too close cannot split between them
                 if (std::abs(archive[point - 1].input_[att] - archive[point].input_[att]) < 0.001)
                     continue;
                 // Create sample arrays
                 std::vector<float> a(point);
-                for (int k = 0; k < point; k++)
+                for (size_t k = 0; k < point; k++)
                     a[k] = archive[k].value_;
                 std::vector<float> b(archive.size() - point);
-                for (int k = 0; k < archive.size() - point; k++)
+                for (size_t k = 0; k < archive.size() - point; k++)
                     b[k] = archive[point + k].value_;
                 // Do the Kolmogorov-Smirnov test to get the probability that the two samples come from the same distribution
                 float D = KolmogorovSmirnoff::normalised_dvalue(a, b);
@@ -869,7 +873,7 @@ private:
         // Split archive
         //	System.out.println("Splitting on attribute " + best_att + " at point " + best_pnt);
         //	System.out.println("Parent state with " + archive.size() + " points");
-        for (int i = 0; i < archive.size(); i++)
+        for (size_t i = 0; i < archive.size(); i++)
         {
             Transition t = archive[i];
             if (t.input_[best_att] < best_pnt)
@@ -951,3 +955,5 @@ private:
 
 BOOST_CLASS_EXPORT_KEY(RLController)
 BOOST_SERIALIZATION_SHARED_PTR(RLController)
+
+#endif
