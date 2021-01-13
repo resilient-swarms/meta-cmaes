@@ -48,6 +48,14 @@ void resume_distr(char *filename)
 {
   //
   std::cout << "will resume " << filename << std::endl;
+  // ensure the file exists because cmaes_resume_distribution does not do anything except say it in the log
+  FILE *fp = fopen(filename, "r");
+  if (fp == NULL)
+  {
+    std::cout << "cmaes_resume_distribution(): could not open " << filename << std::endl;
+    exit(1);
+  }
+  // now do cmaes_resume_distribution
   cmaes_resume_distribution(&global::evo, filename);
   std::cout << "resumed cmaes" << std::endl;
 }
@@ -92,7 +100,7 @@ namespace sferes
         {
           for (size_t j = 0; j < this->_pop[i]->size(); ++j)
           {
-            _cmaes_pop[i][j] = std::max((double) Params::parameters::min, std::min((double) Params::parameters::max, _cmaes_pop[i][j])); // modified: truncate to parameter range
+            _cmaes_pop[i][j] = std::max((double)Params::parameters::min, std::min((double)Params::parameters::max, _cmaes_pop[i][j])); // modified: truncate to parameter range
             this->_pop[i]->gen().data(j, _cmaes_pop[i][j]);
           }
           this->_pop[i]->develop(); // modified braces here: no need to develop the genotype multiple times

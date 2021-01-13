@@ -59,7 +59,23 @@ struct EvalStats
 
 } eval_stats;
 
-std::ofstream logfile;
+std::string mutationlogfile, epochslogfile;
+
+void write_mutation(float mutation_rate)
+{
+    const char *file = mutationlogfile.c_str();
+    std::ofstream mutationlog(file, std::ios::app);
+    mutationlog << mutation_rate << " " << global::nb_evals << std::endl;
+    mutationlog.close();
+}
+
+void write_epochs(int bot_epochs)
+{
+    const char *file = epochslogfile.c_str();
+    std::ofstream epochslog(file, std::ios::app);
+    epochslog << bot_epochs << " " << global::nb_evals << std::endl;
+    epochslog.close();
+}
 
 //bottom params
 struct ParameterControl
@@ -89,14 +105,15 @@ struct ParameterControl
     virtual int get_bottom_epochs()
     {
         int bot_epochs = (int)std::round(this->bottom_epochs_factor * BottomParams::bottom_epochs);
-        std::cout << "bottom epochs " << bot_epochs << std::endl;
+        //std::cout << "bottom epochs " << bot_epochs << std::endl;
+        write_epochs(bot_epochs);
         return bot_epochs;
     }
     /* get the percentage of solutions to be evaluated for meta-fitness computation */
     virtual float get_percentage_evaluated()
     {
         float percentage = this->percentage_evaluated_factor * CMAESParams::percentage_evaluated;
-        std::cout << "percentage = " << percentage << std::endl;
+        //std::cout << "percentage = " << percentage << std::endl;
         return percentage;
     }
 
@@ -106,7 +123,7 @@ struct ParameterControl
         float mutation_rate = this->mutation_rate_factor * BottomParams::sampled::mutation_rate;
         if (global::nb_evals > this->evaluations)
         {
-            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+           write_mutation(mutation_rate);
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
@@ -146,7 +163,7 @@ struct EpochAnnealing : public ParameterControl
     {
         float ratio = (float)(CMAESParams::pop::max_evals - global::nb_evals) / (float)CMAESParams::pop::max_evals;
         int bot_epochs = (int)std::round(this->min_bottom_epochs + ratio * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
-        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_epochs(bot_epochs);
         return bot_epochs;
     }
 
@@ -181,9 +198,9 @@ struct EpochEndogenous : public ParameterControl
         float last_gene = this->phenotype.gen().data()[last];
         float M = CMAESParams::parameters::max;
         float m = CMAESParams::parameters::min;
-        last_gene = (last_gene - m) / (M - m);                                                                                                                        // normalise in [0,1]                                                                                                 // in [0,1]
+        last_gene = (last_gene - m) / (M - m); // normalise in [0,1] 
         int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
-        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_epochs(bot_epochs);
         return bot_epochs;
     }
 
@@ -218,7 +235,7 @@ struct MutationAnnealing : public ParameterControl
         float mutation_rate = this->min_mutation_rate + ratio * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
         if (global::nb_evals > this->evaluations)
         {
-            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+            write_mutation(mutation_rate);
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
@@ -254,7 +271,7 @@ struct BothAnnealing : public ParameterControl
     {
         float ratio = (float)(CMAESParams::pop::max_evals - global::nb_evals) / (float)CMAESParams::pop::max_evals;
         int bot_epochs = (int)std::round(this->min_bottom_epochs + ratio * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
-        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_epochs(bot_epochs);
         return bot_epochs;
     }
 
@@ -264,7 +281,7 @@ struct BothAnnealing : public ParameterControl
         float mutation_rate = this->min_mutation_rate + ratio * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
         if (global::nb_evals > this->evaluations)
         {
-            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+            write_mutation(mutation_rate);
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
@@ -306,7 +323,7 @@ struct MutationEndogenous : public ParameterControl
         float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
         if (global::nb_evals > this->evaluations)
         {
-            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+            write_mutation(mutation_rate);
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
@@ -345,7 +362,7 @@ struct BothEndogenous : public ParameterControl
         float m = CMAESParams::parameters::min;
         last_gene = (last_gene - m) / (M - m);                                                                                                                        // normalise in [0,1]                                                                                                 // in [0,1]
         int bot_epochs = (int)std::round(this->min_bottom_epochs + last_gene * (this->bottom_epochs_factor * BottomParams::bottom_epochs - this->min_bottom_epochs)); //
-        std::cout << "bottom epochs " << bot_epochs << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_epochs(bot_epochs);
         return bot_epochs;
     }
     virtual float get_mutation_rate()
@@ -358,7 +375,7 @@ struct BothEndogenous : public ParameterControl
         float mutation_rate = this->min_mutation_rate + last_gene * (this->mutation_rate_factor * BottomParams::sampled::mutation_rate - this->min_mutation_rate); //
         if (global::nb_evals > this->evaluations)
         {
-            std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+            write_mutation(mutation_rate);
         }
         this->evaluations = global::nb_evals;
         return mutation_rate;
@@ -424,7 +441,7 @@ struct RL : public ParameterControl
     virtual int get_bottom_epochs()
     {
         int be = (int)std::round(bottom_epochs);
-        std::cout << "bottom epochs " << be << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_epochs(be);
         return be;
     }
 
@@ -474,7 +491,7 @@ struct RL : public ParameterControl
 
         float normal_mr = ParameterControl::get_mutation_rate();
         mutation_rate = controller.getNextValue("mutation_rate", normal_mr);
-        std::cout << "mutation rate " << mutation_rate << " at evals " << global::nb_evals << " / " << CMAESParams::pop::max_evals << std::endl;
+        write_mutation(mutation_rate);
         // Update stagnation count
         if (cf > f_last)
         {
@@ -509,9 +526,10 @@ struct RL : public ParameterControl
 BOOST_CLASS_EXPORT_KEY(RL)
 BOOST_SERIALIZATION_SHARED_PTR(RL)
 
-boost::shared_ptr<ParameterControl> init_parameter_control(long seed, std::string choice,const char* resultsdir)
+boost::shared_ptr<ParameterControl> init_parameter_control(long seed, std::string choice, const char *resultsdir)
 {
-    logfile = std::ofstream(resultsdir, std::ios::app);
+    mutationlogfile = std::string(resultsdir) + std::string("/mutation_log.txt");
+    epochslogfile = std::string(resultsdir) + std::string("/epochs_log.txt");
     if (choice == "b1p1")
     {
         return boost::make_shared<ParameterControl>(1.f, 1.f);

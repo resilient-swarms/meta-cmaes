@@ -97,13 +97,12 @@ namespace sferes
             void show(std::ostream & os, size_t k)
             {
 
-                
                 //first get the mean
                 boost::shared_ptr<Phen> mean = boost::shared_ptr<Phen>(new Phen());
                 size_t num_weights = this->_pop[0]->gen().data().size();
                 for (size_t i = 0; i < num_weights; ++i)
                 {
-                    mean->gen().data(i, (float) global::evo.rgxmean[i]);
+                    mean->gen().data(i, (float)global::evo.rgxmean[i]);
                 }
                 mean->develop();
                 mean->feature_map.print_weights(os);
@@ -139,7 +138,7 @@ namespace sferes
 
 #else
                 // first do population mean
-		_show_(os, mean->archive());
+                _show_(os, mean->archive());
                 os << "END STATS POPULATION MEAN " << std::endl;
                 // don't take into account any additions to the database; so you know which one is the best according to evolution
                 for (size_t i = 0; i < this->_pop.size(); ++i)
