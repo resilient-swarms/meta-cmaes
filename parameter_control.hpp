@@ -59,7 +59,7 @@ struct EvalStats
 
 } eval_stats;
 
-std::string mutationlogfile, epochslogfile;
+std::string mutationlogfile, epochslogfile, rewardlogfile;
 
 void write_mutation(float mutation_rate)
 {
@@ -75,6 +75,14 @@ void write_epochs(int bot_epochs)
     std::ofstream epochslog(file, std::ios::app);
     epochslog << bot_epochs << " " << global::nb_evals << std::endl;
     epochslog.close();
+}
+
+void write_reward(double reward, double meta_fitness)
+{
+    const char *file = rewardlogfile.c_str();
+    std::ofstream rewardlog(file, std::ios::app);
+    rewardlog << reward << " " << meta_fitness << " " << global::nb_evals << std::endl;
+    rewardlog.close();
 }
 
 //bottom params
@@ -450,26 +458,25 @@ struct RL : public ParameterControl
         this->eval_stats = eval_stats;
         float cf = this->eval_stats.best_metafitness;
         float ratio = 0;
-        if (cf == 0)
+        float rwrd;
+        if (f_last == 0 && cf > 0)  
         {
-            ratio = f_last;
+            rwrd = reward_max;
         }
-        else if (cf > 0 && f_last >= 0)
+        else if (cf >= 0 && f_last >= 0)
         {
             ratio = cf / f_last;
+            rwrd = std::min(reward_max, scale * (ratio - 1) / (global::nb_evals - this->evaluations));
         }
-        else if (cf < 0 && f_last >= 0)
-        {
-            ratio = cf - f_last;
+        else{
+            throw std::runtime_error("meta-fitness cannot be negative; if this is not an error, please reformulate the meta-fitness");
         }
-        else if (cf < 0 && f_last < 0)
-        {
-            ratio = f_last / cf;
-        }
-        float rwrd = std::min(reward_max, scale * (ratio - 1) / (global::nb_evals - this->evaluations));
-        //	System.out.println(rwrd);
-        if (rwrd < 0)
+        
+        if (rwrd < 0) 
             rwrd = 0;
+
+        
+        write_reward(rwrd,cf);
         std::vector<float> obs(7);
         obs[0] = rwrd;
         obs[1] = this->eval_stats.best_metafitness;
@@ -530,6 +537,7 @@ boost::shared_ptr<ParameterControl> init_parameter_control(long seed, std::strin
 {
     mutationlogfile = std::string(resultsdir) + std::string("/mutation_log.txt");
     epochslogfile = std::string(resultsdir) + std::string("/epochs_log.txt");
+    rewardlogfile = std::string(resultsdir) + std::string("/reward_log.txt");
     if (choice == "b1p1")
     {
         return boost::make_shared<ParameterControl>(1.f, 1.f);
