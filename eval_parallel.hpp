@@ -387,9 +387,9 @@ namespace sferes
         for (int i = 0; i < to_add; ++i)
         {
 #if META()
-          shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+          shared_memory.push_back(new Memory(BEHAV_DIM, NUM_BASE_FEATURES));
 #else
-          shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
+          shared_memory.push_back(new Memory(BEHAV_DIM));
 #endif
         }
         //std::cout<<"allocated memory: "<<shared_memory.size()<<std::endl;// this should happen only at the 0'th generation
@@ -552,9 +552,9 @@ namespace sferes
       for (size_t i = 0; i < num_memory; ++i)
       {
 #if META()
-        shared_memory.push_back(new Memory(BottomParams::ea::behav_dim, NUM_BASE_FEATURES));
+        shared_memory.push_back(new Memory(BEHAV_DIM, NUM_BASE_FEATURES));
 #else
-        shared_memory.push_back(new Memory(BottomParams::ea::behav_dim));
+        shared_memory.push_back(new Memory(BEHAV_DIM));
 #endif
       }
     }
