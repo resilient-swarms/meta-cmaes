@@ -104,9 +104,18 @@ namespace sferes
                 {
                     mean->gen().data(i, (float)global::evo.rgxmean[i]);
                 }
-                mean->develop();
+                std::map<typename Phen::behav_index_t, Eigen::VectorXd>  feature_list;
+                mean->develop(feature_list);
+                                
+                for (auto it = feature_list.begin(); it != feature_list.end(); ++it)
+                {
+                    os << it->second.transpose() << std::endl;
+                }
+                os << "END FEATURES POPULATION MEAN " << std::endl;
                 mean->feature_map.print_weights(os);
                 os << "END WEIGHTS POPULATION MEAN " << std::endl;
+                //
+
                 // then get the current meta-population
                 auto t1 = Clock::now();
                 for (size_t i = 0; i < this->_pop.size(); ++i)
@@ -118,6 +127,7 @@ namespace sferes
                 std::cout << "database load time for 5 maps: "
                           << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
                           << " milliseconds" << std::endl;
+                
 #ifdef GRAPHIC // we are just interested in observing a particular individual
                 size_t count = 0;
                 std::cout << "loading individual" << k << std::endl;

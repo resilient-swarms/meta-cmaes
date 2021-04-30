@@ -41,7 +41,7 @@ struct _eval_serial_individuals
 };
 
 #ifdef PARALLEL_RUN
-typedef sferes::eval::_eval_parallel_individuals<shared_memory_t,base_phen_t, bottom_fit_t> bottom_eval_helper_t;
+typedef sferes::eval::_eval_parallel_individuals<shared_memory_t, base_phen_t, bottom_fit_t> bottom_eval_helper_t;
 #else
 typedef _eval_serial_individuals<base_phen_t> bottom_eval_helper_t;
 #endif
@@ -279,9 +279,65 @@ public:
     }
     return false;
   }
+
+  bool _add_to_archive(bottom_indiv_t &i1, base_features_t &b, std::map<behav_index_t, Eigen::VectorXd> &feature_list)
+  {
+    if (i1->fit().dead())
+    {
+#ifdef PRINTING
+      std::cout << "dead" << std::endl;
+
+#endif
+      return false;
+    }
+
+    point_t p = _get_point(i1);
+
+    behav_index_t behav_pos;
+    for (size_t i = 0; i < BottomParams::ea::behav_shape_size(); ++i)
+    {
+      behav_pos[i] = round(p[i] * behav_shape[i]);
+      behav_pos[i] = std::min(behav_pos[i], behav_shape[i] - 1);
+      assert(behav_pos[i] < behav_shape[i]);
+#ifdef PRINTING
+      std::cout << "b" << i << " " << behav_pos[i] << std::endl;
+#endif
+    }
+#ifdef PRINTING
+    std::cout << "checkingg" << std::endl;
+
+#endif
+    if (!_array(behav_pos) || (i1->fit().value() - _array(behav_pos)->fit().value()) > BottomParams::ea::epsilon || (fabs(i1->fit().value() - _array(behav_pos)->fit().value()) <= BottomParams::ea::epsilon && _dist_center(i1) < _dist_center(_array(behav_pos))))
+    {
+#ifdef PRINTING
+      std::cout << "inserting" << std::endl;
+
+#endif
+      _array(behav_pos) = i1;
+      _non_empty_indices.insert(behav_pos);
+      Eigen::VectorXd conc(b.size() + behav_dim);
+      for (size_t i = 0; i < b.size(); ++i)
+      {
+        conc[i] = p[i];
+      }
+      for (size_t i = 0; i < behav_dim; ++i)
+      {
+        conc[b.size() + i] = p[i];
+      }
+      feature_list[behav_pos] = conc;
+#ifdef PRINTING
+      std::cout << "inserted" << std::endl;
+
+#endif
+      return true;
+    }
+
+    return false;
+  }
+
   std::vector<bottom_indiv_t> sample_individuals(float percent)
   {
-    
+
     int num_individuals = std::max(1, (int)std::round(percent * _non_empty_indices.size()));
     std::cout << "will pick " << num_individuals << "out of " << _non_empty_indices.size() << "individuals" << std::endl;
     return _pick(_non_empty_indices.size(), num_individuals);
@@ -380,6 +436,36 @@ public:
     }
     eval_individuals.eval<base_phen_t>(ptmp); // note that W is not initialised but we do not care here, just for the database; no need for archive therefore
   }
+
+  /* get rid of the previous map at this meta-population index */
+  void undevelop()
+  {
+    this->_array = array_t(behav_shape); //
+    //std::cout << "map empty : "<<  this->_non_empty_indices.empty() << std::endl;
+    this->_non_empty_indices.clear();
+  }
+  global::data_entry_t iterator_get(std::vector<global::data_entry_t>::iterator it)
+  {
+    return *it;
+  }
+  std::vector<global::data_entry_t> iterator_get(std::map<std::vector<float>, std::vector<global::data_entry_t>>::iterator it)
+  {
+    return it->second;
+  }
+
+  // squared Euclidean distance
+  float dist(const boost::shared_ptr<MapElitesPhenotype<Phen>> &params) const
+  {
+    assert(params->size() == this->size());
+    float d = 0.0f;
+    for (size_t i = 0; i < this->_params.size(); ++i)
+    {
+      float x = this->_params[i] - params->_params[i];
+      d += x * x;
+    }
+    return d;
+  }
+  /* functions used in evolution (no adding to feature-list) */
   void develop()
   {
 #ifdef PRINTING
@@ -396,14 +482,6 @@ public:
     std::cout << "stop developing the map-phenotype" << std::endl;
 #endif
   }
-  /* get rid of the previous map at this meta-population index */
-  void undevelop()
-  {
-    this->_array = array_t(behav_shape); //
-    //std::cout << "map empty : "<<  this->_non_empty_indices.empty() << std::endl;
-    this->_non_empty_indices.clear();
-  }
-
   void entry_to_map(const global::data_entry_t &entry)
   {
 
@@ -430,8 +508,6 @@ public:
       entry_to_map(entry);
     }
   }
-
-  // do several entries at a time, useful for BestKPerBin database type
   void database_to_map()
   {
     for (auto it = global::database.begin(); it != global::database.end(); ++it)
@@ -439,29 +515,60 @@ public:
       entry_to_map(iterator_get(it));
     }
   }
-
-  global::data_entry_t iterator_get(std::vector<global::data_entry_t>::iterator it)
+  /* functions used in test for visualisation (adding to feature-list) */
+  void develop(std::map<behav_index_t, Eigen::VectorXd> &feature_list)
   {
-    return *it;
-  }
-  std::vector<global::data_entry_t> iterator_get(std::map<std::vector<float>, std::vector<global::data_entry_t>>::iterator it)
-  {
-    return it->second;
+#ifdef PRINTING
+    std::cout << "start developing the map-phenotype" << std::endl;
+#endif
+    /* do develop of the subclass phenotype*/
+    Phen::develop();
+
+    undevelop();
+    /* fill map j with individuals */
+    feature_map = feature_map_t(this->gen().data());
+    database_to_map(feature_list);
+#ifdef PRINTING
+    std::cout << "stop developing the map-phenotype" << std::endl;
+#endif
   }
 
-        // squared Euclidean distance
-      float dist(const boost::shared_ptr<MapElitesPhenotype<Phen>>& params) const {
-        assert(params->size() == this->size());
-        float d = 0.0f;
-        for (size_t i = 0; i < this->_params.size(); ++i) {
-          float x = this->_params[i] - params->_params[i];
-          d += x * x;
-        }
-        return d;
-      }
+  void entry_to_map(const global::data_entry_t &entry, std::map<behav_index_t, Eigen::VectorXd> &feature_list)
+  {
+
+    // use weight and base features --> bottom-level features
+
+    // create new individual
+    boost::shared_ptr<base_phen_t> individual(new base_phen_t());
+    //
+    base_features_t b = entry.base_features;
+    individual->fit() = bottom_fit_t(feature_map);
+    individual->fit().set_desc(individual->fit().get_desc(b));
+    individual->fit().set_value(entry.fitness);
+    entry.set_genotype<boost::shared_ptr<base_phen_t>>(individual);
+
+    this->_add_to_archive(individual, b, feature_list);
+#ifdef PRINTING
+    std::cout << "added individual to archive " << std::endl;
+#endif
+  }
+
+  void entry_to_map(const std::vector<global::data_entry_t> &entries, std::map<behav_index_t, Eigen::VectorXd> &feature_list)
+  {
+    for (global::data_entry_t entry : entries)
+    {
+      entry_to_map(entry, entry.base_features, feature_list);
+    }
+  }
+
+  void database_to_map(std::map<behav_index_t, Eigen::VectorXd> &feature_list)
+  {
+    for (auto it = global::database.begin(); it != global::database.end(); ++it)
+    {
+      auto entry_or_entries = iterator_get(it);
+      entry_to_map(entry_or_entries, feature_list);
+    }
+  }
 };
-
-
-
 
 #endif
