@@ -42,8 +42,9 @@
 #include <sferes/fit/fitness.hpp>
 #include <sferes/parallel.hpp>
 #include <sferes/ea/cmaes_interface.h>
+#if META()
 #include <meta-cmaes/eval_total.hpp>
-
+#endif
 void resume_distr(char *filename)
 {
   //
