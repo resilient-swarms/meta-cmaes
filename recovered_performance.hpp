@@ -94,7 +94,7 @@ namespace sferes
                     }
                 }
             }
-            static void test_recoveredperformance(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>,  BEHAV_DIM> &archive)
+            static void test_recoveredperformance(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>,BEHAV_DIM> &archive)
             {
                 float val = 0.0f;
 
