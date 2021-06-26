@@ -115,7 +115,7 @@ namespace sferes
                 os << "END TEST META-INDIVIDUAL" << std::endl;
             }
             // assess maximal recovery for each damage separately
-            static void test_max_recovery(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>, BottomParams::ea::behav_dim> &archive)
+            static void test_max_recovery(std::ostream &os, const boost::multi_array<boost::shared_ptr<Phen>, BEHAV_DIM> &archive)
             {
 
                 std::vector<bottom_indiv_t> individuals;

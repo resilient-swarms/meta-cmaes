@@ -128,25 +128,6 @@ namespace sferes
                           << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
                           << " milliseconds" << std::endl;
                 
-#ifdef GRAPHIC // we are just interested in observing a particular individual
-                size_t count = 0;
-                std::cout << "loading individual" << k << std::endl;
-                for (const bottom_indiv_t *j = this->_pop[0]->archive().data(); j < (this->_pop[0]->archive().data() + this->_pop[0]->archive().num_elements()); ++j)
-                {
-                    if (*j)
-                    {
-                        if (count == k)
-                        {
-                            float val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**j);
-                            std::cout << val << std::endl;
-                            break;
-                        }
-                        ++count;
-                    }
-                    //std::cout << count;
-                }
-
-#else
                 // first do population mean
                 _show_(os, mean->archive());
                 os << "END STATS POPULATION MEAN " << std::endl;
@@ -156,7 +137,6 @@ namespace sferes
 
                     _show_(os, this->_pop[i]->archive());
                 }
-#endif
             }
 
             void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
