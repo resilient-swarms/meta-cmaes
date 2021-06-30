@@ -464,8 +464,13 @@ namespace sferes
           this->_pop[i]->fit().set_b(shared_memory[i]->getBaseDescriptor());
 #endif
           bd = shared_memory[i]->getDescriptor();
-          this->_pop[i]->fit().set_desc(bd);
-          this->_pop[i]->fit().set_dead(shared_memory[i]->getDeath());
+          bool dead = shared_memory[i]->getDeath();
+	  this->_pop[i]->fit().set_dead(dead);
+	  if(!dead)
+          {
+              this->_pop[i]->fit().set_desc(bd);
+	  }
+          
 
 #if META()
           Fit::add_to_database(*this->_pop[i]);
