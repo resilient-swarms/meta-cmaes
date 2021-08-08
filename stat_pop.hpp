@@ -94,7 +94,7 @@ namespace sferes
                 sferes::eval::param_ctrl = this->_param_ctrl;
             }
             // show the n-th individual from zero'th map in the population
-            void show(std::ostream & os, size_t k)
+            void show(std::ostream & os, size_t n)
             {
 
                 //first get the mean
@@ -106,7 +106,26 @@ namespace sferes
                 }
                 std::map<typename Phen::behav_index_t, Eigen::VectorXd>  feature_list;
                 mean->develop(feature_list);
-                                
+#ifdef GRAPHIC // just display solution n of the mean_archive
+
+	     	float val = 0.0f;
+                size_t count = 0;
+                std::cout << "loading individual" << n << std::endl;
+		for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
+                {
+                    if (count == n)
+                    {
+                        float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*indiv);
+                        std::cout << val << std::endl;
+                        return;
+                    }
+                    ++count;
+
+                    //std::cout << count;
+                }
+
+
+#else      // write down all test performances                          
                 for (auto it = feature_list.begin(); it != feature_list.end(); ++it)
                 {
                     os << it->second.transpose() << std::endl;
@@ -131,12 +150,33 @@ namespace sferes
                 // first do population mean
                 _show_(os, mean->archive());
                 os << "END STATS POPULATION MEAN " << std::endl;
+		//also write the mean archive to file
+		std::string s = _resume_file;
+		std::string delimiter = "resume";
+		std::string folder = s.substr(0, s.find(delimiter)); // get the folder in which the resume file is
+		std::ostream meanarchive_file(folder+"/mean_archive.dat");
+		size_t count=0; 
+		for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
+                {
+                    if (*k)
+                    {
+			meanarchive_file << count;
+			std::vector<float> bd = k->fit().desc();
+	                for(size_t i=0; i < bd.size(); ++i)
+			{
+			    meanarchive_file <<  " " << bd[i] ;	
+			}
+			meanarchive_file << " " << *k->fit() << std::endl;
+		    }
+		    ++count;
+		}
                 // don't take into account any additions to the database; so you know which one is the best according to evolution
                 for (size_t i = 0; i < this->_pop.size(); ++i)
                 {
 
                     _show_(os, this->_pop[i]->archive());
                 }
+#endif
             }
 
             void _show_(std::ostream & os, const boost::multi_array<bottom_indiv_t, BottomParams::ea::behav_dim> &archive)
