@@ -104,18 +104,18 @@ namespace sferes
                 {
                     mean->gen().data(i, (float)global::evo.rgxmean[i]);
                 }
-                std::map<typename Phen::behav_index_t, Eigen::VectorXd>  feature_list;
+                std::map<typename Phen::behav_index_t, Eigen::VectorXd> feature_list;
                 mean->develop(feature_list);
 #ifdef GRAPHIC // just display solution n of the mean_archive
 
-	     	float val = 0.0f;
+                float val = 0.0f;
                 size_t count = 0;
                 std::cout << "loading individual" << n << std::endl;
-		for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
+                for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
                 {
                     if (count == n)
                     {
-                        float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(*indiv);
+                        float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
                         std::cout << val << std::endl;
                         return;
                     }
@@ -124,8 +124,7 @@ namespace sferes
                     //std::cout << count;
                 }
 
-
-#else      // write down all test performances                          
+#else // write down all test performances
                 for (auto it = feature_list.begin(); it != feature_list.end(); ++it)
                 {
                     os << it->second.transpose() << std::endl;
@@ -146,30 +145,31 @@ namespace sferes
                 std::cout << "database load time for 5 maps: "
                           << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
                           << " milliseconds" << std::endl;
-                
-                // first do population mean
-                _show_(os, mean->archive());
-                os << "END STATS POPULATION MEAN " << std::endl;
-		//also write the mean archive to file
-		std::string s = _resume_file;
-		std::string delimiter = "resume";
-		std::string folder = s.substr(0, s.find(delimiter)); // get the folder in which the resume file is
-		std::ostream meanarchive_file(folder+"/mean_archive.dat");
-		size_t count=0; 
-		for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
+                //also write the mean archive to file
+                std::string s = _resume_file;
+                std::string delimiter = "resume";
+                std::string folder = s.substr(0, s.find(delimiter)); // get the folder in which the resume file is
+                std::string name = folder + std::string("/mean_archive.dat");
+                std::ofstream meanarchive_file(name);
+                size_t count = 0;
+                for (const bottom_indiv_t *k = mean->archive().data(); k < (mean->archive().data() + mean->archive().num_elements()); ++k)
                 {
                     if (*k)
                     {
-			meanarchive_file << count;
-			std::vector<float> bd = k->fit().desc();
-	                for(size_t i=0; i < bd.size(); ++i)
-			{
-			    meanarchive_file <<  " " << bd[i] ;	
-			}
-			meanarchive_file << " " << *k->fit() << std::endl;
-		    }
-		    ++count;
-		}
+                        meanarchive_file << count;
+                        std::vector<float> bd = (*k)->fit().desc();
+                        for (size_t i = 0; i < bd.size(); ++i)
+                        {
+                            meanarchive_file << " " << bd[i];
+                        }
+                        meanarchive_file << " " << (*k)->fit().value() << std::endl;
+                    }
+                    ++count;
+                }
+                // first do population mean
+                _show_(os, mean->archive());
+                os << "END STATS POPULATION MEAN " << std::endl;
+
                 // don't take into account any additions to the database; so you know which one is the best according to evolution
                 for (size_t i = 0; i < this->_pop.size(); ++i)
                 {
