@@ -115,7 +115,7 @@ namespace sferes
                 {
                     if (count == n)
                     {
-                        float val = sferes::fit::RecoveredPerformance<Phen>::_eval_all(**k);
+                        float val = sferes::fit::RecoveredPerformance<base_phen_t>::_eval_all(**k);
                         std::cout << val << std::endl;
                         return;
                     }
